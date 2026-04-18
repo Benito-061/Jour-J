@@ -1,0 +1,3712 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catherine & Nicolas - Mariage 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d4af37;
+            --dark: #2c2c2c;
+            --light: #f5f5f5;
+            --accent: #c9a961;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            color: var(--dark);
+            background: white;
+            line-height: 1.6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Prévenir les changements de couleur au clic/sélection */
+        body::selection {
+            background: #5e72e4;
+            color: white;
+        }
+
+        *::selection {
+            background: #5e72e4;
+            color: white;
+        }
+
+        /* ANIMATIONS DE BASE */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(20px);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.8));
+            }
+        }
+
+        @keyframes neon-pulse {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(212, 175, 55, 0.4),
+                            0 0 20px rgba(212, 175, 55, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(212, 175, 55, 0.8),
+                            0 0 40px rgba(212, 175, 55, 0.4),
+                            inset 0 0 20px rgba(212, 175, 55, 0.1);
+            }
+        }
+
+        @keyframes slide-in-subtle {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float-alt {
+            0%, 100% {
+                transform: translateY(0px) rotateZ(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotateZ(2deg);
+            }
+        }
+
+        @keyframes shimmer-gradient {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(-1deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-5px) rotate(1deg); }
+        }
+
+        /* NAVBAR MODERN */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 230, 210, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 64px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            padding: 12px 40px;
+            animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            letter-spacing: 2px;
+            animation: float 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .logo:hover {
+            filter: brightness(1.2);
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 50px;
+            list-style: none;
+            position: relative;
+        }
+
+        .nav-links::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.3), transparent);
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            padding: 8px 0;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--primary), transparent);
+            transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(212, 175, 55, 0.1);
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: -1;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+            letter-spacing: 1px;
+        }
+
+        .nav-links a:hover::before {
+            left: 0;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* HERO */
+        .hero {
+            margin-top: 60px;
+            height: 100vh;
+            background: linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.8s ease;
+        }
+
+        .hero:hover {
+            background: linear-gradient(135deg, #f5eddb 0%, #ede3d0 100%);
+            filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 300%;
+            height: 300%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(201, 169, 97, 0.08) 0%, transparent 50%);
+            animation: slide 25s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+            pointer-events: none;
+        }
+
+        @keyframes slide {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            animation: fadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 900px;
+            padding: 20px;
+        }
+
+        .hero-content h1 {
+            font-size: 5rem;
+            color: var(--dark);
+            margin-bottom: 30px;
+            letter-spacing: 4px;
+            animation: slideInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+
+        .hero-content p {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin: 15px 0;
+            animation: slideInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .hero-content .date {
+            font-size: 1.8rem;
+            margin: 40px 0;
+            animation: slideInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #5e72e4 0%, #6f5ae0 50%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            padding: 20px 40px;
+            display: inline-block;
+            border: 2px solid transparent;
+            border-image: linear-gradient(135deg, #5e72e4, #7c3aed) 1;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .hero-content .date::before {
+            content: '📅';
+            margin-right: 12px;
+            font-size: 1.6rem;
+        }
+
+        .hero-content .date:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 24px rgba(94, 114, 228, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            text-decoration: none;
+            font-weight: 900;
+            border-radius: 50px;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 40px;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+            animation: slideInUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cta-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 25px 60px rgba(212, 175, 55, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            border-color: white;
+        }
+
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+
+        .cta-btn:hover::after {
+            opacity: 1;
+        }
+
+        .cta-btn:active {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        /* SECTION */
+        section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 40px;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(201, 169, 97, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        section h2 {
+            font-size: 3.5rem;
+            text-align: center;
+            margin-bottom: 80px;
+            color: var(--dark);
+            position: relative;
+            padding-bottom: 30px;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(to right, transparent, var(--primary) 20%, var(--primary) 80%, transparent);
+            border-radius: 2px;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* COUNTDOWN */
+        #countdown {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, #d9a84b 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #countdown::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            animation: slide 15s linear infinite;
+            opacity: 0.5;
+        }
+
+        #countdown h2 {
+            color: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        #countdown h2::after {
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6) 20%, rgba(255,255,255,0.6) 80%, transparent);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 30px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 40px 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .countdown-item:nth-child(1) { animation-delay: 0s; }
+        .countdown-item:nth-child(2) { animation-delay: 0.15s; }
+        .countdown-item:nth-child(3) { animation-delay: 0.3s; }
+        .countdown-item:nth-child(4) { animation-delay: 0.45s; }
+
+        .countdown-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .countdown-item:hover {
+            transform: translateY(-15px) scale(1.08) rotateZ(-2deg);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                        inset 0 0 30px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            filter: drop-shadow(0 10px 20px rgba(212, 175, 55, 0.4));
+        }
+
+        .countdown-item:hover::before {
+            opacity: 1;
+        }
+
+        .countdown-value {
+            display: block;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            letter-spacing: 2px;
+        }
+
+        /* TIMELINE */
+        .timeline {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+            animation: slideDown 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 2px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .timeline-item {
+            width: 45%;
+            margin-bottom: 60px;
+            padding: 35px;
+            background: linear-gradient(135deg, white 0%, #fafaf8 100%);
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            border: 2px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.15s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.45s; }
+
+        .timeline-item:hover {
+            box-shadow: 0 25px 60px rgba(212, 175, 55, 0.25),
+                        inset 0 0 25px rgba(255, 255, 255, 0.3);
+            transform: translateY(-15px) scale(1.05) rotateZ(1deg);
+            border-color: rgba(212, 175, 55, 0.5);
+            filter: drop-shadow(0 10px 20px rgba(212, 175, 55, 0.4));
+        }
+
+        .timeline-item:nth-child(odd) {
+            margin-left: 0;
+            margin-right: 55%;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            margin-left: 55%;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            right: -130px;
+            top: 30px;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 3px solid white;
+            font-size: 1.2rem;
+        }
+
+        .timeline-item:hover .timeline-marker {
+            transform: scale(1.2) rotate(360deg);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .timeline-item:nth-child(even) .timeline-marker {
+            left: -130px;
+            right: auto;
+        }
+
+        .timeline-item h3 {
+            color: #000;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+            font-weight: 800;
+        }
+
+        .timeline-item p {
+            color: #000;
+            animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+        }
+
+        /* LOCATION */
+        #location {
+            background: #000000;
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .location-info {
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .location-info h3 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            animation: slideInUp 0.6s ease-out 0.1s both;
+        }
+
+        .location-info p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+            animation: slideInUp 0.6s ease-out both;
+            transition: all 0.3s ease;
+        }
+
+        .location-info p:nth-of-type(1) { animation-delay: 0.2s; }
+        .location-info p:nth-of-type(2) { animation-delay: 0.3s; }
+        .location-info p:nth-of-type(3) { animation-delay: 0.4s; }
+
+        .location-info p:hover {
+            transform: translateX(10px);
+            color: var(--primary);
+        }
+
+        .location-map {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .location-map:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(212, 175, 55, 0.2);
+        }
+
+        /* GALLERY */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 35px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            aspect-ratio: 1;
+            cursor: pointer;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .gallery-item:nth-child(1) { animation-delay: 0s; }
+        .gallery-item:nth-child(2) { animation-delay: 0.1s; }
+        .gallery-item:nth-child(3) { animation-delay: 0.2s; }
+        .gallery-item:nth-child(4) { animation-delay: 0.3s; }
+        .gallery-item:nth-child(5) { animation-delay: 0.4s; }
+        .gallery-item:nth-child(6) { animation-delay: 0.5s; }
+
+        .gallery-item {
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(0) rotateZ(0deg);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-15px) rotateZ(2deg) scale(1.03);
+            filter: drop-shadow(0 15px 35px rgba(212, 175, 55, 0.4));
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: block;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.95), rgba(201, 169, 97, 0.95));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 900;
+            backdrop-filter: blur(10px);
+            letter-spacing: 1px;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+            animation: fadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* GUESTBOOK */
+        #guestbook {
+            background: #f9f7f4;
+        }
+
+        .form-container {
+            max-width: 700px;
+            margin: 0 auto 80px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 230, 210, 0.5));
+            padding: 50px 45px;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(20px);
+            position: relative;
+            z-index: 5;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            position: relative;
+        }
+
+        .form-group:nth-of-type(1) { animation-delay: 0s; }
+        .form-group:nth-of-type(2) { animation-delay: 0.1s; }
+        .form-group:nth-of-type(3) { animation-delay: 0.2s; }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid rgba(212, 175, 55, 0.25);
+            border-radius: 12px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #888;
+            opacity: 1;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15), 0 10px 30px rgba(212, 175, 55, 0.2);
+            transform: translateY(-3px);
+            background: white;
+        }
+
+        .form-group.checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .form-group.checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-group.checkbox label {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .messages-container {
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .messages-container h3 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.4rem;
+            color: #1a1a1a;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .message-item {
+            background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+            animation: slideInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+            overflow: hidden;
+            color: #1a1a1a;
+        }
+
+        .message-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 15px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .message-item:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 25px 60px rgba(212, 175, 55, 0.2);
+            border-left-color: var(--accent);
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        .message-item:hover::before {
+            opacity: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .message-name {
+            font-weight: 900;
+            color: var(--primary);
+            font-size: 1.2rem;
+            animation: slideInLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            letter-spacing: 0.5px;
+        }
+
+        .message-status {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .message-status.yes {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.2) 0%, rgba(39, 174, 96, 0.1) 100%);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+
+        .message-status:hover {
+            transform: scale(1.1);
+        }
+
+        .message-text {
+            color: #555;
+            font-style: italic;
+            margin: 12px 0;
+            line-height: 1.7;
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .message-date {
+            font-size: 0.85rem;
+            color: #999;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* SMOOTH TRANSITIONS FOR ADMIN */
+        #admin-photos-tab,
+        #admin-music-tab,
+        #admin-countdown-tab,
+        #admin-programmes-tab,
+        #admin-names-tab,
+        #admin-design-tab {
+            animation: fadeInSmooth 0.3s ease;
+        }
+
+        @keyframes fadeInSmooth {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* MODAL ADMIN ANIMATIONS */
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes slideOutToRight {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px) scale(0.95);
+            }
+        }
+
+        @keyframes fadeInBkgd {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-music {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 8px 28px rgba(212, 175, 55, 0.6);
+            }
+        }
+
+        #adminModal {
+            animation: fadeInBkgd 0.3s ease;
+        }
+
+        #adminModal > div {
+            animation: slideInFromRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ADMIN HEADER PREMIUM */
+        .admin-header {
+            background: linear-gradient(135deg, #5e72e4 0%, #6f5ae0 50%, #7c3aed 100%);
+            padding: 30px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(94, 114, 228, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .admin-header h2 {
+            color: #000;
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .admin-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #000;
+            font-size: 24px;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .admin-close-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ADMIN TABS PREMIUM */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #e8e8e8;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, rgba(94,114,228,0.05) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-tab-btn {
+            padding: 12px 20px;
+            background: rgba(240, 240, 240, 0.8);
+            color: #000;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-size: 13px;
+        }
+
+        .admin-tab-btn::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #5e72e4, #6f5ae0, #7c3aed);
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .admin-tab-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(94, 114, 228, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            border-radius: 8px;
+        }
+
+        .admin-tab-btn:hover {
+            background: rgba(232, 232, 232, 0.95);
+            border-color: rgba(94, 114, 228, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(94, 114, 228, 0.15);
+        }
+
+        .admin-tab-btn:hover::before {
+            transform: scaleX(1);
+        }
+
+        .admin-tab-btn:hover::after {
+            opacity: 1;
+        }
+
+        .admin-tab-btn.active {
+            background: linear-gradient(135deg, #5e72e4 0%, #6f5ae0 100%);
+            color: #000;
+            border-color: rgba(94, 114, 228, 0.5);
+            box-shadow: 0 8px 24px rgba(94, 114, 228, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-4px);
+        }
+
+        .admin-tab-btn.active::before {
+            transform: scaleX(1);
+        }
+
+        .admin-tab-btn.active::after {
+            opacity: 1;
+        }
+
+        /* ADMIN INPUT PREMIUM */
+        .admin-input-group {
+            margin-bottom: 20px;
+            animation: slideInFromLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .admin-input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #000;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .admin-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            position: relative;
+            z-index: 1;
+            color: #000;
+            user-select: text;
+        }
+
+        .admin-input::placeholder {
+            color: #000;
+            font-style: italic;
+        }
+
+        .admin-input:hover {
+            border-color: #5e72e4;
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+            box-shadow: 0 4px 12px rgba(94, 114, 228, 0.1);
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: #5e72e4;
+            background: white;
+            box-shadow: 0 0 0 5px rgba(94, 114, 228, 0.2), 0 8px 20px rgba(94, 114, 228, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .admin-input[type="color"] {
+            cursor: pointer;
+            height: 50px;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .admin-input[type="range"] {
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, #e8e8e8 0%, #d0d0d0 100%);
+            border-radius: 5px;
+            outline: none;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .admin-input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #5e72e4, #6f5ae0);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(94, 114, 228, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .admin-input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(94, 114, 228, 0.6);
+        }
+
+        .admin-input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #5e72e4, #6f5ae0);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(94, 114, 228, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .admin-input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(94, 114, 228, 0.6);
+        }
+
+        /* Animation pour les inputs */
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ADMIN BUTTON PREMIUM */
+        .admin-btn-primary,
+        .admin-btn-success,
+        .admin-btn-danger {
+            padding: 14px 24px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .admin-btn-primary::before,
+        .admin-btn-success::before,
+        .admin-btn-danger::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .admin-btn-primary {
+            background: linear-gradient(135deg, #5e72e4 0%, #6f5ae0 100%);
+            color: #000;
+            border-color: rgba(94, 114, 228, 0.3);
+        }
+
+        .admin-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(94, 114, 228, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .admin-btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        .admin-btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(94, 114, 228, 0.3);
+        }
+
+        .admin-btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #000;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .admin-btn-success:hover::before {
+            opacity: 1;
+        }
+
+        .admin-btn-success:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-btn-danger {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #000;
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        .admin-btn-danger:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 28px rgba(249, 115, 22, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .admin-btn-danger:hover::before {
+            opacity: 1;
+        }
+
+        .admin-btn-danger:active {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        /* Disabled state */
+        .admin-btn-primary:disabled,
+        .admin-btn-success:disabled,
+        .admin-btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ADMIN MESSAGE NOTIFICATION */
+        #adminMessage {
+            animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        #adminMessage.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left-color: #155724;
+            color: #000;
+            box-shadow: 0 4px 12px rgba(21, 87, 36, 0.2);
+        }
+
+        #adminMessage.error {
+            background: linear-gradient(135deg, #51412d 0%, #f5c6cb 100%);
+            border-left-color: #721c24;
+            color: #000;
+            box-shadow: 0 4px 12px rgba(114, 28, 36, 0.2);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ADMIN CARD DESIGN */
+        .admin-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid #e8e8e8;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            animation: slideInFromLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: #000;
+            user-select: text;
+        }
+
+        .admin-card:hover {
+            border-color: #5e72e4;
+            box-shadow: 0 8px 24px rgba(94, 114, 228, 0.2), inset 0 1px 0 rgba(94, 114, 228, 0.1);
+            transform: translateY(-4px);
+            background: white;
+        }
+
+        .admin-card h3 {
+            color: #000;
+            font-size: 1.1rem;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(94, 114, 228, 0.2);
+            padding-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover h3 {
+            color: #000;
+            border-bottom-color: #5e72e4;
+        }
+
+        .admin-card p {
+            color: #000;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+            line-height: 1.5;
+        }
+
+        /* FOOTER */
+        footer {
+            background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 50%, #0f0f0f 100%);
+            color: rgb(0, 0, 0);
+            text-align: center;
+            padding: 50px 30px;
+            animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        footer p {
+            animation: fadeIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            font-weight: 500;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* RESPONSIVE - TABLET */
+        @media (max-width: 1024px) {
+            .hero-content h1 {
+                font-size: 3.5rem;
+            }
+
+            section h2 {
+                font-size: 2.8rem;
+            }
+
+            .timeline::before {
+                display: none;
+            }
+
+            .timeline-item {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                text-align: left !important;
+            }
+
+            .timeline-marker {
+                position: relative;
+                right: auto;
+                left: 0;
+                top: auto;
+                margin-bottom: 15px;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .countdown-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* RESPONSIVE - MOBILE */
+        @media (max-width: 768px) {
+            nav {
+                padding: 10px 20px;
+            }
+
+            .nav-links {
+                gap: 20px;
+                font-size: 0.9rem;
+            }
+
+            .hero {
+                margin-top: 50px;
+            }
+
+            .hero-content h1 {
+                font-size: 2.2rem;
+                letter-spacing: 1px;
+            }
+
+            .hero-content p {
+                font-size: 1.2rem;
+            }
+
+            section {
+                padding: 60px 20px;
+            }
+
+            section h2 {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+
+            .countdown-value {
+                font-size: 2rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-container {
+                padding: 30px 25px;
+            }
+
+            .message-item {
+                padding: 20px;
+            }
+        }
+
+        /* RESPONSIVE - SMALL MOBILE */
+        @media (max-width: 480px) {
+            nav {
+                padding: 8px 15px;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .logo {
+                font-size: 18px;
+                padding: 6px 12px;
+            }
+
+            .hero {
+                margin-top: 40px;
+            }
+
+            .hero-content h1 {
+                font-size: 1.6rem;
+            }
+
+            .cta-btn {
+                padding: 12px 30px;
+                font-size: 0.95rem;
+            }
+
+            section {
+                padding: 40px 15px;
+            }
+
+            section h2 {
+                font-size: 1.5rem;
+                margin-bottom: 25px;
+            }
+
+            .countdown-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .countdown-item {
+                padding: 25px 15px;
+            }
+
+            .countdown-value {
+                font-size: 1.5rem;
+            }
+
+            .timeline-item {
+                padding: 20px;
+            }
+
+            .timeline-marker {
+                width: 60px;
+                height: 60px;
+                font-size: 0.9rem;
+            }
+
+            .form-container {
+                padding: 20px 15px;
+            }
+
+            .message-item {
+                padding: 15px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-style: italic;
+            animation: pulse 1.5s ease-in-out infinite;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+
+        #formMsg {
+            color: #1a1a1a;
+            font-size: 1rem;
+        }
+
+        #formMsg.success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            color: #27ae60;
+        }
+
+        #formMsg.error {
+            background: rgba(255, 76, 76, 0.1);
+            border: 1px solid rgba(255, 76, 76, 0.3);
+            color: #e74c3c;
+        }
+
+        /* THEME TOGGLE ANIMATIONS */
+        @keyframes rotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        /* INTERSECTION OBSERVER PERFORMANCE */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        nav {
+            animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* LIGHT MODE OVERRIDES FOR CONSISTENCY */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --light: #ffffff;
+                --dark: #2c2c2c;
+                --bg-secondary: #f5f5f5;
+            }
+
+            body {
+                background: linear-gradient(135deg, #ffffff 0%, #f8f6f0 50%, #f0e6d2 100%);
+                color: #2c2c2c;
+            }
+        }
+
+        /* DARK MODE - MODERN SUPPORT */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light: #0f0f0f;
+                --dark: #f0f0f0;
+                --bg-secondary: #1a1a1a;
+            }
+
+            body {
+                background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0d0d0d 100%);
+                color: #e0e0e0;
+            }
+
+            nav {
+                background: rgba(10, 10, 10, 0.92);
+                border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            }
+
+            .nav-links a {
+                color: #e0e0e0;
+            }
+
+            .nav-links a::after {
+                background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+            }
+
+            .nav-links a:hover {
+                color: var(--primary);
+            }
+
+            section {
+                background: transparent;
+            }
+
+            section h2 {
+                color: #f0f0f0;
+                text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+            }
+
+            section p {
+                color: #d0d0d0;
+            }
+
+            .countdown-item {
+                background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(240,230,210,0.03) 100%);
+                border: 1px solid rgba(212, 175, 55, 0.15);
+                color: #f0f0f0;
+            }
+
+            .countdown-value {
+                color: var(--primary);
+            }
+
+            .countdown-label {
+                color: #b0b0b0;
+            }
+
+            .timeline-item {
+                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(212, 175, 55,0.05) 100%);
+                border: 2px solid rgba(212, 175, 55, 0.15);
+                color: #e0e0e0;
+            }
+
+            .timeline-marker {
+                background: linear-gradient(135deg, var(--primary), var(--accent));
+                border: 3px solid rgba(255, 255, 255, 0.2);
+                color: #0d0d0d;
+            }
+
+            .gallery-item {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(212, 175, 55, 0.15);
+            }
+
+            .location-card {
+                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(212, 175, 55, 0.03) 100%);
+                border: 1px solid rgba(212, 175, 55, 0.15);
+                color: #e0e0e0;
+            }
+
+            .location-card h3 {
+                color: var(--primary);
+            }
+
+            .message-item {
+                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(212, 175, 55, 0.03) 100%);
+                border-left: 5px solid var(--primary);
+                border-top: 1px solid rgba(212, 175, 55, 0.15);
+                border-right: 1px solid rgba(212, 175, 55, 0.15);
+                border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+                color: #d0d0d0;
+            }
+
+            .message-name {
+                color: var(--primary);
+            }
+
+            .message-text {
+                color: #c0c0c0;
+            }
+
+            .message-status {
+                background: rgba(212, 175, 55, 0.15);
+                color: var(--primary);
+                border: 1px solid rgba(212, 175, 55, 0.3);
+            }
+
+            .message-status.yes {
+                background: linear-gradient(135deg, rgba(39, 174, 96, 0.3) 0%, rgba(39, 174, 96, 0.15) 100%);
+                color: #4edc78;
+                border: 1px solid rgba(39, 174, 96, 0.4);
+            }
+
+            .form-container {
+                background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(212, 175, 55, 0.03));
+                border: 1px solid rgba(212, 175, 55, 0.15);
+            }
+
+            .form-container h3 {
+                color: #f0f0f0;
+            }
+
+            .form-group label {
+                color: #c0c0c0;
+            }
+
+            input, textarea {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(212, 175, 55, 0.2);
+                color: #f0f0f0;
+            }
+
+            input::placeholder, textarea::placeholder {
+                color: rgba(255, 255, 255, 0.35);
+            }
+
+            input:focus, textarea:focus {
+                background: rgba(255, 255, 255, 0.12);
+                border-color: rgba(212, 175, 55, 0.4);
+                color: #f0f0f0;
+                box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15), 0 10px 30px rgba(212, 175, 55, 0.15);
+            }
+
+            input[type="checkbox"] {
+                accent-color: var(--primary);
+            }
+
+            .submit-btn {
+                background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+                color: #000;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .submit-btn:hover {
+                background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+                box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+            }
+
+            footer {
+                background: linear-gradient(135deg, #000 0%, rgba(10,10,10,0.8) 100%);
+                border-top: 1px solid rgba(212, 175, 55, 0.1);
+                color: #c0c0c0;
+            }
+
+            .loading {
+                color: #999;
+            }
+
+            .logo {
+                box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            }
+
+            .logo:hover {
+                box-shadow: 0 10px 32px rgba(212, 175, 55, 0.6);
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo" id="navbarLogo">💍 CN</div>
+            <ul class="nav-links">
+                <li><a href="#hero">Accueil</a></li>
+                <li><a href="#countdown">Compte à rebours</a></li>
+                <li><a href="#programme">Programme</a></li>
+                <li><a href="#location">Lieu</a></li>
+                <li><a href="#gallery">Galerie</a></li>
+                <li><a href="#guestbook">Livre d'Or</a></li>
+                <li><a href="#" onclick="openAdminModal(); return false;" style="color: rgba(212, 175, 55, 0.6); font-size: 12px;">⚙️ CMS Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1>Catherine & Nicolas</h1>
+            <p>Nous nous marions!</p>
+            <p class="date">24 Mai 2025</p>
+            <a href="#guestbook" class="cta-btn">Signer le Livre d'Or</a>
+        </div>
+    </section>
+
+    <!-- COUNTDOWN -->
+    <section id="countdown">
+        <h2>Compte à rebours</h2>
+        <div class="countdown-grid">
+            <div class="countdown-item">
+                <span class="countdown-value" id="days">0</span>
+                <div>Jours</div>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value" id="hours">0</span>
+                <div>Heures</div>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value" id="minutes">0</span>
+                <div>Minutes</div>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value" id="seconds">0</span>
+                <div>Secondes</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROGRAMME -->
+    <section id="programme">
+        <h2>Notre Journée</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker">09:30</div>
+                <h3>Mariage Civil</h3>
+                <p>Cérémonie civile à la mairie</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker">11:00</div>
+                <h3>Cérémonie Religieuse</h3>
+                <p>Célébration à l'église</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker">12:30</div>
+                <h3>Photos</h3>
+                <p>Séance photos famille et amis</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-marker">19:00</div>
+                <h3>Repas & Festivités</h3>
+                <p>Dîner, danse et réjouissances</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOCATION -->
+    <section id="location">
+        <h2>Le Lieu</h2>
+        <div class="location-grid">
+            <div class="location-info">
+                <h3>Afrique Centrale</h3>
+                <p>East Africa</p>
+                <p>Région du Cœur de l'Afrique</p>
+                <p style="margin-top: 20px; font-style: italic;">Un lieu magique idéal pour célébrer l'amour et partager de beaux moments ensemble.</p>
+            </div>
+            <div class="location-map">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3993366.779047847!2d19.54!3d3.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10d4abc25e7c2a01%3A0x300ed6542da920!2sAfrica%20Centrale!5e0!3m2!1sfr!2sfr!4v1234567890" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery">
+        <h2>Galerie</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 1%3C/text%3E%3C/svg%3E" alt="Photo 1">
+                <div class="gallery-overlay">Engagement</div>
+            </div>
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 2%3C/text%3E%3C/svg%3E" alt="Photo 2">
+                <div class="gallery-overlay">Préparatifs</div>
+            </div>
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 3%3C/text%3E%3C/svg%3E" alt="Photo 3">
+                <div class="gallery-overlay">Cérémonie</div>
+            </div>
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 4%3C/text%3E%3C/svg%3E" alt="Photo 4">
+                <div class="gallery-overlay">Banquet</div>
+            </div>
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 5%3C/text%3E%3C/svg%3E" alt="Photo 5">
+                <div class="gallery-overlay">Danse</div>
+            </div>
+            <div class="gallery-item">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 6%3C/text%3E%3C/svg%3E" alt="Photo 6">
+                <div class="gallery-overlay">Soirée</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GUESTBOOK -->
+    <section id="guestbook">
+        <h2>Livre d'Or</h2>
+        <p style="text-align: center; font-style: italic; margin-bottom: 50px; font-size: 1.2rem; color: #555; font-weight: 500;">Laissez-nous un beau message!</p>
+
+        <div class="form-container">
+            <h3 style="text-align: center; margin-bottom: 30px; color: #1a1a1a; font-size: 1.3rem;">Formulaire de Message</h3>
+            <form id="messageForm">
+                <div class="form-group">
+                    <label for="guestName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c2c2c;">Votre nom</label>
+                    <input type="text" id="guestName" placeholder="Entrez votre nom" required maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="guestMessage" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c2c2c;">Votre message</label>
+                    <textarea id="guestMessage" placeholder="Ecrivez un beau message..." required maxlength="500" rows="5"></textarea>
+                    <small id="charCount" style="display: block; text-align: right; margin-top: 8px; color: #666; font-weight: 500;">0 / 500</small>
+                </div>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="attending" name="attending">
+                    <label for="attending">Je serai présent(e) à cette belle journée</label>
+                </div>
+                <button type="submit" class="cta-btn" style="width: 100%;">Envoyer ✓</button>
+                <div id="formMsg" style="margin-top: 15px; text-align: center; display: none; padding: 12px; border-radius: 8px; font-weight: 500;"></div>
+            </form>
+        </div>
+
+        <div class="messages-container">
+            <h3 style="text-align: center; margin-bottom: 40px; font-size: 1.4rem; color: #1a1a1a;">Messages des invités</h3>
+            <div id="messagesList">
+                <p class="loading">Chargement des messages...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL ADMIN INTÉGRÉ -->
+    <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; overflow: auto;">
+            <div style="background: white; max-width: 900px; margin: 30px auto; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                <!-- Header -->
+                <div class="admin-header">
+                    <h2>📋 CMS Admin</h2>
+                    <button onclick="closeAdminModal()" class="admin-close-btn">✕</button>
+                </div>
+
+            <!-- Login / Admin Content -->
+            <div id="adminLoginForm" style="padding: 40px; text-align: center;">
+                <h3 style="color: #d4af37; margin-bottom: 20px; font-size: 1.5rem;">🔐 Authentification Admin</h3>
+                <div class="admin-input-group" style="max-width: 350px; margin: 0 auto;">
+                    <label>Mot de Passe</label>
+                    <input type="password" id="adminpassword" placeholder="Entrez votre mot de passe" class="admin-input">
+                </div>
+                <button onclick="adminLogin()" class="admin-btn-primary" style="margin-top: 20px; padding: 14px 40px; font-size: 16px;">Se Connecter</button>
+            </div>
+
+            <div id="adminContent" style="display: none; padding: 25px; max-height: 600px; overflow-y: auto;">
+                <!-- Tabs -->
+                <div class="admin-tabs">
+                    <button onclick="switchAdminTab('photos')" class="admin-tab-btn active">📸 Photos</button>
+                    <button onclick="switchAdminTab('music')" class="admin-tab-btn">🎵 Musique</button>
+                    <button onclick="switchAdminTab('countdown')" class="admin-tab-btn">⏰ Countdown</button>
+                    <button onclick="switchAdminTab('programmes')" class="admin-tab-btn">📅 Programmes</button>
+                    <button onclick="switchAdminTab('names')" class="admin-tab-btn">👥 Noms</button>
+                    <button onclick="switchAdminTab('design')" class="admin-tab-btn">🎨 Design</button>
+                    <button onclick="switchAdminTab('logout')" class="admin-tab-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
+                </div>
+
+                <!-- Photos Tab -->
+                <div id="admin-photos-tab">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📸 Gérer les Photos</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>📁 Sélectionner Images</label>
+                            <input type="file" id="adminPhotoInput" accept="image/*" multiple class="admin-input" style="padding: 12px; cursor: pointer; border: 2px dashed #5e72e4; background: linear-gradient(135deg, rgba(94, 114, 228, 0.05) 0%, rgba(111, 90, 224, 0.05) 100%);">
+                        </div>
+                        <button onclick="adminAddPhotos()" class="admin-btn-success" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 10px;">✅ Ajouter Photos</button>
+                    </div>
+                    <div id="adminPhotoPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 20px;"></div>
+                </div>
+
+                <!-- Music Tab -->
+                <div id="admin-music-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">🎵 Gérer la Musique</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>🎼 Titre de la Musique</label>
+                            <input type="text" id="adminMusicTitle" placeholder="Titre de la musique" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>📁 Fichier Audio</label>
+                            <input type="file" id="adminMusicInput" accept="audio/*" class="admin-input" style="padding: 12px; cursor: pointer; border: 2px dashed #5e72e4; background: linear-gradient(135deg, rgba(94, 114, 228, 0.05) 0%, rgba(111, 90, 224, 0.05) 100%);">
+                        </div>
+                        <button onclick="adminSaveMusic()" class="admin-btn-success" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 10px;">✅ Sauvegarder Musique</button>
+                    </div>
+                </div>
+
+                <!-- Countdown Tab -->
+                <div id="admin-countdown-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">⏰ Compte à Rebours</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>📅 Date du Mariage</label>
+                            <input type="date" id="adminCountdownDate" value="2026-04-18" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>🕐 Heure du Mariage</label>
+                            <input type="time" id="adminCountdownTime" value="14:00" class="admin-input">
+                        </div>
+                        <button onclick="adminSaveCountdown()" class="admin-btn-success" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 10px;">✅ Sauvegarder Countdown</button>
+                    </div>
+                </div>
+
+                <!-- Programmes Tab -->
+                <div id="admin-programmes-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📅 Gérer le Déroulement</h3>
+                    <div id="adminProgrammesContainer" style="display: grid; gap: 15px;">
+                        <!-- Les 4 items seront générés dynamiquement avec admin-card -->
+                    </div>
+                    <button onclick="adminSaveProgrammes()" class="admin-btn-success" style="margin-top: 20px; width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Programmes</button>
+                </div>
+
+                <!-- Noms des Mariés Tab -->
+                <div id="admin-names-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">👥 Noms des Mariés</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>👨 Premier Prénom</label>
+                            <input type="text" id="adminName1" placeholder="Ex: Catherine" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>👩 Deuxième Prénom</label>
+                            <input type="text" id="adminName2" placeholder="Ex: Nicolas" class="admin-input">
+                        </div>
+                        <div style="padding: 20px; background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%); border-radius: 12px; text-align: center; margin-bottom: 20px; border: 2px solid #5e72e4; box-shadow: 0 4px 12px rgba(94, 114, 228, 0.15); transition: all 0.3s ease;">
+                            <strong style="color: #5e72e4; font-size: 1.8rem; letter-spacing: 0.5px;" id="coupleNamePreview">Catherine & Nicolas</strong>
+                        </div>
+                        <button onclick="adminSaveNames()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Noms</button>
+                    </div>
+                </div>
+
+                <!-- Design Tab -->
+                <div id="admin-design-tab" style="display: none;">
+                    <h3 style="color: #ff00002e; margin-bottom: 20px;">🎨 Personnaliser le Design</h3>
+                    
+                    <!-- Couleurs Card -->
+                    <div class="admin-card">
+                        <h4 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.2rem;">🎨 Couleurs Principales</h4>
+                        
+                        <div class="admin-input-group">
+                            <label>📘 Couleur Primaire (Bleu)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorPrimary" value="#5e72e4" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorPrimaryText" value="#5e72e4" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#5e72e4" oninput="syncColorInputs('Primary')">
+                            </div>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>🟣 Couleur Secondaire (Violet)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorSecondary" value="#6f5ae0" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorSecondaryText" value="#6f5ae0" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#6f5ae0" oninput="syncColorInputs('Secondary')">
+                            </div>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>💜 Couleur Accent (Violet Foncé)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorAccent" value="#7c3aed" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorAccentText" value="#7c3aed" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#7c3aed" oninput="syncColorInputs('Accent')">
+                            </div>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>✅ Couleur Succès (Vert)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorSuccess" value="#10b981" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorSuccessText" value="#10b981" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#10b981" oninput="syncColorInputs('Success')">
+                            </div>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>⚠️ Couleur Danger (Orange)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorDanger" value="#f97316" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorDangerText" value="#f97316" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#f97316" oninput="syncColorInputs('Danger')">
+                            </div>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label>📝 Couleur Texte Principal</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminColorText" value="#000000" style="width: 60px; height: 50px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                                <input type="text" id="adminColorTextText" value="#000000" class="admin-input" style="flex: 1; font-family: monospace;" placeholder="#000000" oninput="syncColorInputs('Text')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Polices Card -->
+                    <div class="admin-card">
+                        <h4 style="color: #d4af37; margin-bottom: 15px;">✒️ Polices & Tailles</h4>
+                        <div class="admin-input-group">
+                            <label>Police des Titres</label>
+                            <select id="adminFontHeading" class="admin-input" style="padding: 12px;">
+                                <option value="'Georgia', serif">Georgia (Classique)</option>
+                                <option value="'Consolas', monospace">Consolas (Moderne)</option>
+                                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                                <option value="'Arial', sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="'Book Antiqua', serif">Book Antiqua (Élégant)</option>
+                            </select>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>Taille H1 (Titre principal)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="range" id="adminSizeH1" min="24" max="72" value="48" class="admin-input" style="flex: 1; padding: 0; height: 6px; cursor: pointer;">
+                                <input type="number" id="adminSizeH1Value" value="48" min="24" max="72" class="admin-input" style="width: 60px; padding: 8px;"> px
+                            </div>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>Taille H2 (Sous-titre)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="range" id="adminSizeH2" min="20" max="48" value="32" class="admin-input" style="flex: 1; padding: 0; height: 6px; cursor: pointer;">
+                                <input type="number" id="adminSizeH2Value" value="32" min="20" max="48" class="admin-input" style="width: 60px; padding: 8px;"> px
+                            </div>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>Taille Texte (Body)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="range" id="adminSizeBody" min="12" max="22" value="16" class="admin-input" style="flex: 1; padding: 0; height: 6px; cursor: pointer;">
+                                <input type="number" id="adminSizeBodyValue" value="16" min="12" max="22" class="admin-input" style="width: 60px; padding: 8px;"> px
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Card -->
+                    <div class="admin-card" style="background: linear-gradient(135deg, #f5f5f5, #e8e8e8);">
+                        <h4 style="color: #d4af37; margin-bottom: 15px;">👁️ Aperçu</h4>
+                        <div id="designPreview" style="padding: 20px; background: white; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h1 id="previewH1" style="margin-bottom: 10px; font-size: 48px;">Titre H1</h1>
+                            <h2 id="previewH2" style="margin-bottom: 10px; font-size: 32px;">Titre H2</h2>
+                            <p id="previewBody" style="font-size: 16px;">Texte du corps</p>
+                        </div>
+                    </div>
+
+                    <button onclick="adminSaveDesign()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 20px;">✅ Sauvegarder Design</button>
+                </div>
+
+                <div id="adminMessage" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; text-align: center; transition: all 0.3s ease;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2025 Catherine & Nicolas | Heureux Mariage </p>
+    </footer>
+
+    <script>
+        // ========================================
+        // INTERSECTION OBSERVER - Animations au scroll
+        // ========================================
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.animation = `slideInUp 0.8s ease-out forwards`;
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            observer.observe(section);
+        });
+
+        // ========================================
+        // PARALLAX EFFECT
+        // ========================================
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            if (hero) {
+                const heroBefore = hero.querySelector('.hero::before');
+                hero.style.backgroundPosition = `center ${scrolled * 0.5}px`;
+            }
+        });
+
+        // ========================================
+        // NAVBAR SCROLL ANIMATION
+        // ========================================
+        let lastScroll = 0;
+        const navbar = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            if (currentScroll <= 0) {
+                navbar.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+            }
+            lastScroll = currentScroll;
+        });
+
+        // ========================================
+        // COUNTDOWN TIMER - DYNAMIQUE
+        // ========================================
+        function updateCountdown() {
+            // Récupérer la date depuis localStorage (défaut: 2026-04-18T14:00)
+            const countdownData = JSON.parse(localStorage.getItem('weddingCountdown') || JSON.stringify({dateTime: '2026-04-18T14:00:00'}));
+            const weddingDate = new Date(countdownData.dateTime).getTime();
+            const now = new Date().getTime();
+            const distance = weddingDate - now;
+
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+
+            if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
+            if (distance <= 0) {
+                daysEl.textContent = '0';
+                hoursEl.textContent = '0';
+                minutesEl.textContent = '0';
+                secondsEl.textContent = '0';
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            daysEl.textContent = String(days).padStart(2, '0');
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+        }
+
+        // Démarrer le countdown
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // ========================================
+        // FORM SUBMISSION
+        // ========================================
+        const messageForm = document.getElementById('messageForm');
+        const guestName = document.getElementById('guestName');
+        const guestMessage = document.getElementById('guestMessage');
+        const charCount = document.getElementById('charCount');
+        const formMsg = document.getElementById('formMsg');
+        const submitBtn = messageForm.querySelector('button[type="submit"]');
+
+        guestName.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary)';
+        });
+
+        guestMessage.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary)';
+        });
+
+        charCount.style.opacity = '0.7';
+        guestMessage.addEventListener('input', function() {
+            charCount.textContent = `${this.value.length} / 500`;
+            charCount.style.color = this.value.length > 400 ? '#e74c3c' : '#999';
+        });
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = guestName.value.trim();
+            const message = guestMessage.value.trim();
+            const attending = document.getElementById('attending').checked;
+
+            if (!name || !message) {
+                showFormMsg('⚠️ Veuillez remplir tous les champs', '#fff3cd', '#856404');
+                return;
+            }
+
+            submitBtn.style.opacity = '0.7';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/guests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, message, attending })
+                });
+
+                if (response.ok) {
+                    showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
+                    messageForm.reset();
+                    charCount.textContent = '0 / 500';
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    loadMessages();
+                } else {
+                    throw new Error('Erreur');
+                }
+            } catch (error) {
+                showFormMsg('❌ Erreur lors de l\'envoi. Vérifiez la connexion.', '#f8d7da', '#721c24');
+            } finally {
+                submitBtn.style.opacity = '1';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showFormMsg(text, bg, color) {
+            formMsg.textContent = text;
+            formMsg.style.background = bg;
+            formMsg.style.color = color;
+            formMsg.style.display = 'block';
+            formMsg.style.animation = 'slideInUp 0.3s ease-out';
+            setTimeout(() => {
+                formMsg.style.animation = '';
+            }, 300);
+        }
+
+        // ========================================
+        // LOAD MESSAGES WITH ANIMATIONS
+        // ========================================
+        async function loadMessages() {
+            try {
+                const response = await fetch('http://localhost:3000/api/guests');
+                const data = await response.json();
+                const messagesList = document.getElementById('messagesList');
+
+                if (data.guests && data.guests.length > 0) {
+                    const html = data.guests.map((msg, index) => {
+                        const attending = msg.attending ? 'yes' : '';
+                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
+                        return `
+                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
+                                <div class="message-header">
+                                    <span class="message-name">${escapeHtml(msg.name)}</span>
+                                    <span class="message-status ${attending}">${status}</span>
+                                </div>
+                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
+                                <p class="message-date">${new Date(msg.created_at).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                        `;
+                    }).join('');
+                    messagesList.innerHTML = html;
+                    messagesList.style.animation = 'fadeIn 0.6s ease-out';
+                } else {
+                    messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('messagesList').innerHTML = '<p class="loading">Impossible de charger les messages</p>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadMessages();
+        setInterval(loadMessages, 30000);
+
+        // ========================================
+        // SMOOTH SCROLL & ACTIVE NAVIGATION
+        // ========================================
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                const href = a.getAttribute('href');
+                if (href !== '#hero') {
+                    e.preventDefault();
+                }
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ========================================
+        // CURSOR EFFECT
+        // ========================================
+        document.addEventListener('mousemove', (e) => {
+            const buttons = document.querySelectorAll('.cta-btn');
+            buttons.forEach(btn => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (x > 0 && y > 0 && x < rect.width && y < rect.height) {
+                    btn.style.transform = `translate(${(x - rect.width/2) * 0.1}px, ${(y - rect.height/2) * 0.1}px)`;
+                } else {
+                    btn.style.transform = '';
+                }
+            });
+        });
+
+        // ========================================
+        // PAGE LOAD ANIMATION
+        // ========================================
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '1';
+            document.querySelectorAll('section').forEach((section, index) => {
+                setTimeout(() => {
+                    section.style.animation = `slideInUp 0.8s ease-out forwards`;
+                }, index * 100);
+            });
+        });
+
+        // ========================================
+        // MOUSE WHEEL SMOOTH
+        // ========================================
+        let isScrolling = false;
+        window.addEventListener('scroll', () => {
+            isScrolling = true;
+        });
+
+        setInterval(() => {
+            isScrolling = false;
+        }, 150);
+
+        // ========================================
+        // THEME TOGGLE DISABLED
+
+        // ========================================
+        // SMOOTH SCROLL BEHAVIOR
+        // ========================================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ========================================
+        // LOAD ADMIN DATA FROM CMS (TEMPS RÉEL)
+        // ========================================
+        function loadAllCMSData() {
+            // Charger et appliquer le thème personnalisé
+            const theme = JSON.parse(localStorage.getItem('siteTheme') || '{}');
+            if (theme.primary) {
+                document.documentElement.style.setProperty('--gold-color', theme.primary);
+            }
+            if (theme.secondary) {
+                document.documentElement.style.setProperty('--gold-dark', theme.secondary);
+            }
+            if (theme.text) {
+                document.documentElement.style.setProperty('--text-primary', theme.text);
+            }
+
+            // Charger et appliquer le DESIGN personnalisé
+            const designData = JSON.parse(localStorage.getItem('siteDesign') || 'null');
+            if (designData) {
+                applyDesignToSite(designData);
+            }
+
+            // Charger les NOMS DES MARIÉS
+            updateWeddingNames();
+
+            // Charger le contenu HERO
+            const heroData = JSON.parse(localStorage.getItem('heroContent') || '{}');
+            if (heroData.title) {
+                const heroH1 = document.querySelector('.hero-content h1');
+                if (heroH1) heroH1.textContent = heroData.title;
+            }
+            if (heroData.subtitle) {
+                const heroP = document.querySelector('.hero-content p');
+                if (heroP) heroP.textContent = heroData.subtitle;
+            }
+
+            // Charger les INFOS GÉNÉRALES
+            const generalInfo = JSON.parse(localStorage.getItem('generalInfo') || '{}');
+            const coupleNames = generalInfo.coupleNames || 'Sophie & Michel';
+            const location = generalInfo.location || 'République Centrafricaine';
+
+            // Mettre à jour le hero avec les noms
+            if (generalInfo.coupleNames) {
+                const heroTitle = document.querySelector('.hero-content h1');
+                if (heroTitle && !heroData.title) {
+                    heroTitle.textContent = generalInfo.coupleNames;
+                }
+            }
+
+            // Charger le PROGRAMME (TIMELINE)
+            const timelineData = JSON.parse(localStorage.getItem('timelineContent') || '{}');
+            if (timelineData.title) {
+                const timelineTitle = document.getElementById('programme-section');
+                if (timelineTitle) timelineTitle.innerHTML = timelineData.title;
+            }
+            
+            // Charger les PROGRAMMES personnalisés depuis localStorage
+            const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || 'null');
+            if (programmes && programmes.length > 0) {
+                const timelineContainer = document.querySelector('.timeline');
+                if (timelineContainer) {
+                    timelineContainer.innerHTML = '';
+                    programmes.forEach(prog => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'timeline-item';
+                        itemDiv.innerHTML = `
+                            <div class="timeline-marker">${prog.heure}</div>
+                            <h3>${prog.titre}</h3>
+                            <p>${prog.description}</p>
+                        `;
+                        timelineContainer.appendChild(itemDiv);
+                    });
+                    console.log('✅ Programmes chargés depuis localStorage');
+                }
+            }
+
+            // Charger les TEXTES DES SECTIONS
+            const sectionTexts = JSON.parse(localStorage.getItem('sectionTexts') || '{}');
+            if (sectionTexts.galleryTitle) {
+                const galleryTitle = document.querySelector('.gallery .section-title');
+                if (galleryTitle) galleryTitle.textContent = sectionTexts.galleryTitle;
+            }
+            if (sectionTexts.guestbookTitle) {
+                const guestbookTitle = document.querySelector('#guestbook .section-title');
+                if (guestbookTitle) guestbookTitle.textContent = sectionTexts.guestbookTitle;
+            }
+            if (sectionTexts.formNamePlaceholder) {
+                const nameInput = document.querySelector('#guest-name');
+                if (nameInput) nameInput.placeholder = sectionTexts.formNamePlaceholder;
+            }
+            if (sectionTexts.formMessagePlaceholder) {
+                const messageInput = document.querySelector('#guest-message');
+                if (messageInput) messageInput.placeholder = sectionTexts.formMessagePlaceholder;
+            }
+
+            // Charger la GALERIE PHOTOS & VIDÉOS
+            const photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
+            const videos = JSON.parse(localStorage.getItem('weddingVideos') || '[]');
+            const galleryGrid = document.querySelector('.gallery-grid');
+            
+            if (galleryGrid) {
+                // SI IL Y A DES PHOTOS/VIDÉOS DU CMS, les afficher
+                if (photos.length > 0 || videos.length > 0) {
+                    // Vider complètement la galerie
+                    galleryGrid.innerHTML = '';
+                    
+                    // Ajouter les photos
+                    photos.forEach((photo) => {
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        item.innerHTML = `<img src="${photo}" alt="Photo mariage">`;
+                        galleryGrid.appendChild(item);
+                    });
+                    
+                    // Ajouter les vidéos
+                    videos.forEach((video) => {
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        item.innerHTML = `<video controls style="width: 100%; height: 100%; object-fit: cover;"><source src="${video}" type="video/mp4"></video>`;
+                        galleryGrid.appendChild(item);
+                    });
+                }
+                // SINON les cartes par défaut restent visibles
+            }
+
+            // Charger la MUSIQUE
+            const music = JSON.parse(localStorage.getItem('weddingMusic') || 'null');
+            if (music && music.audio) {
+                // Vérifier si le conteneur existe déjà
+                let musicContainer = document.getElementById('music-player-container');
+                if (!musicContainer) {
+                    // Créer le conteneur principal
+                    musicContainer = document.createElement('div');
+                    musicContainer.id = 'music-player-container';
+                    musicContainer.style.cssText = `
+                        position: fixed; 
+                        bottom: 20px; 
+                        right: 20px; 
+                        z-index: 999;
+                        display: flex;
+                        align-items: center;
+                        gap: 0;
+                        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    `;
+                    
+                    // Créer l'icone musicale
+                    const musicIcon = document.createElement('div');
+                    musicIcon.id = 'music-icon-button';
+                    musicIcon.innerHTML = '🎵';
+                    musicIcon.style.cssText = `
+                        width: 50px;
+                        height: 50px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 28px;
+                        background: linear-gradient(135deg, #d4af37 0%, #c9a961 100%);
+                        border-radius: 50%;
+                        cursor: pointer;
+                        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+                        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        user-select: none;
+                        flex-shrink: 0;
+                        border: 2px solid rgba(255, 255, 255, 0.3);
+                        animation: pulse-music 2s ease-in-out infinite;
+                    `;
+                    
+                    // Créer le player audio
+                    const audioElement = document.createElement('audio');
+                    audioElement.id = 'cms-audio-player';
+                    audioElement.controls = true;
+                    audioElement.autoplay = true;
+                    audioElement.loop = true;
+                    audioElement.style.cssText = `
+                        position: absolute;
+                        bottom: 65px;
+                        right: 0;
+                        z-index: 1000;
+                        opacity: 0;
+                        pointer-events: none;
+                        height: 42px;
+                        width: 0;
+                        box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3); 
+                        background: linear-gradient(135deg, white 0%, #fafafa 100%);
+                        padding: 8px; 
+                        border-radius: 12px;
+                        border: 2px solid rgba(212, 175, 55, 0.2);
+                        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    `;
+                    
+                    // Ajouter les éléments au conteneur
+                    musicContainer.appendChild(musicIcon);
+                    musicContainer.appendChild(audioElement);
+                    document.body.appendChild(musicContainer);
+                    
+                    // État du player - Déployé par défaut
+                    let isExpanded = true;
+                    
+                    // Déployer le player par défaut
+                    audioElement.style.opacity = '1';
+                    audioElement.style.pointerEvents = 'auto';
+                    audioElement.style.width = '320px';
+                    musicIcon.style.transform = 'scale(1.15)';
+                    musicContainer.style.gap = '10px';
+                    
+                    // Toggle au click sur l'icone
+                    musicIcon.addEventListener('click', () => {
+                        isExpanded = !isExpanded;
+                        
+                        if (isExpanded) {
+                            // Déployer le player
+                            audioElement.style.opacity = '1';
+                            audioElement.style.pointerEvents = 'auto';
+                            audioElement.style.width = '320px';
+                            musicIcon.style.transform = 'scale(1.15)';
+                            musicContainer.style.gap = '10px';
+                        } else {
+                            // Replier le player
+                            audioElement.style.opacity = '0';
+                            audioElement.style.pointerEvents = 'none';
+                            audioElement.style.width = '0';
+                            musicIcon.style.transform = 'scale(1)';
+                            musicContainer.style.gap = '0';
+                        }
+                    });
+                    
+                    // Empêcher le click du player de fermer le menu
+                    audioElement.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                    
+                    // Animation du play/pause
+                    audioElement.addEventListener('play', () => {
+                        musicIcon.style.animation = 'pulse-music 2s ease-in-out infinite';
+                    });
+                    
+                    audioElement.addEventListener('pause', () => {
+                        musicIcon.style.animation = 'none';
+                    });
+                    
+                    audioElement.addEventListener('loadedmetadata', () => {
+                        audioElement.playbackRate = 1; // Vitesse normale
+                        // Lancer la lecture automatiquement à l'ouverture
+                        audioElement.play().catch(err => {
+                            console.log('❌ Autoplay bloqué par le navigateur. Cliquez sur le bouton pour lancer la musique.', err);
+                        });
+                    });
+                    
+                    // Tracker pour la durée totale
+                    let startTime = Date.now();
+                    let lastPlaybackTime = 0;
+                    
+                    audioElement.addEventListener('play', () => {
+                        startTime = Date.now();
+                        lastPlaybackTime = audioElement.currentTime;
+                    });
+                    
+                    audioElement.addEventListener('timeupdate', () => {
+                        // Calculer le temps écoulé depuis le début (en tenant compte des pauses)
+                        const elapsedTime = (Date.now() - startTime) / 1000;
+                        
+                        // Si plus de 240 secondes se sont écoulées, arrêter la musique
+                        if (elapsedTime >= 240) {
+                            audioElement.pause();
+                            audioElement.currentTime = 0;
+                        }
+                    });
+                    
+                    audioElement.src = music.audio;
+                } else {
+                    // Mettre à jour l'audio src si le conteneur existe déjà
+                    const audioElement = document.getElementById('cms-audio-player');
+                    if (audioElement) {
+                        audioElement.src = music.audio;
+                        // Relancer la lecture après mise à jour du src
+                        audioElement.play().catch(err => {
+                            console.log('Autoplay impossible:', err);
+                        });
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // MONITORING TEMPS RÉEL ULTRA-SIMPLE & FIABLE
+        // ==========================================
+        
+        // Fonction modifiée pour mettre à jour UNIQUEMENT la galerie
+        function refreshGalleryFromLocalStorage() {
+            try {
+                const photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
+                const videos = JSON.parse(localStorage.getItem('weddingVideos') || '[]');
+                const galleryGrid = document.querySelector('.gallery-grid');
+                
+                if (!galleryGrid) return;
+                
+                // Si il y a des photos/vidéos, remplacer la galerie
+                if (photos.length > 0 || videos.length > 0) {
+                    const currentHTML = galleryGrid.innerHTML;
+                    
+                    // Créer le nouvel HTML
+                    let newHTML = '';
+                    
+                    // Ajouter les photos
+                    photos.forEach((photo) => {
+                        newHTML += `<div class="gallery-item"><img src="${photo}" alt="Photo mariage" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                    });
+                    
+                    // Ajouter les vidéos
+                    videos.forEach((video) => {
+                        newHTML += `<div class="gallery-item"><video controls style="width: 100%; height: 100%; object-fit: cover;"><source src="${video}" type="video/mp4"></video></div>`;
+                    });
+                    
+                    // Mettre à jour SEULEMENT si différent
+                    if (currentHTML !== newHTML) {
+                        galleryGrid.innerHTML = newHTML;
+                        console.log('✅ GALERIE MISE À JOUR: ' + photos.length + ' photos, ' + videos.length + ' vidéos');
+                    }
+                }
+            } catch (e) {
+                console.error('❌ Erreur galerie:', e);
+            }
+        }
+        
+        // Démarrer le monitoring IMMÉDIATEMENT après le DOM ready
+        let monitoringStarted = false;
+        
+        function startMonitoring() {
+            if (monitoringStarted) return;
+            monitoringStarted = true;
+            
+            console.log('🚀 MONITORING TEMPS RÉEL ACTIVÉ');
+            
+            // Rafraîchir la galerie TOUTES LES 100ms (très agressif)
+            setInterval(() => {
+                refreshGalleryFromLocalStorage();
+            }, 100);
+            
+            // Aussi sur chaque changement du localStorage (autre onglet)
+            window.addEventListener('storage', (event) => {
+                if (event.key && (event.key.includes('wedding') || event.key.includes('Photo'))) {
+                    console.log('💾 STORAGE CHANGE DÉTECTÉ:', event.key);
+                    refreshGalleryFromLocalStorage();
+                }
+            });
+            
+            // Aussi quand la page devient visible
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    console.log('👁️ PAGE VISIBLE - REFRESH GALERIE');
+                    refreshGalleryFromLocalStorage();
+                }
+            });
+        }
+        
+        // Démarrer dès que possible
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('📄 DOM CHARGÉ - Démarrage du monitoring');
+                loadAllCMSData();
+                startMonitoring();
+            });
+        } else {
+            console.log('📄 DOM DÉJÀ CHARGÉ - Démarrage immédiat du monitoring');
+            loadAllCMSData();
+            startMonitoring();
+        }
+        
+        // Aussi au window load
+        window.addEventListener('load', () => {
+            console.log('🎬 PAGE COMPLÈTEMENT CHARGÉE');
+            loadAllCMSData();
+            startMonitoring();
+        });
+
+        // ========================================
+        // PARALLAX EFFECT ON SCROLL
+        // ========================================
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const heroContent = document.querySelector('.hero-content');
+            if (heroContent) {
+                heroContent.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // ========================================
+        // OPTIMIZE ANIMATIONS WITH REDUCE MOTION
+        // ========================================
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (prefersReducedMotion.matches) {
+            document.documentElement.style.setProperty('--animation-duration', '0s');
+            document.querySelectorAll('*').forEach(el => {
+                el.style.animation = 'none !important';
+                el.style.transition = 'none !important';
+            });
+        }
+
+        // ==========================================
+        // ADMIN MODAL INTÉGRÉ - JAVASCRIPT COMPLET
+        // ==========================================
+        const ADMIN_PASSWORD = 'Benito2003';
+        let adminLoggedIn = false;
+
+        function openAdminModal() {
+            console.log('🔓 Ouverture du modal admin');
+            document.getElementById('adminModal').style.display = 'block';
+            
+            // Initialiser les event listeners pour les noms des mariés
+            setTimeout(() => {
+                const name1Input = document.getElementById('adminName1');
+                const name2Input = document.getElementById('adminName2');
+                
+                if (name1Input) {
+                    name1Input.removeEventListener('input', updateCoupleNamePreview);
+                    name1Input.addEventListener('input', updateCoupleNamePreview);
+                }
+                if (name2Input) {
+                    name2Input.removeEventListener('input', updateCoupleNamePreview);
+                    name2Input.addEventListener('input', updateCoupleNamePreview);
+                }
+            }, 100);
+        }
+
+        function closeAdminModal() {
+            console.log('🔒 Fermeture du modal admin');
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function adminLogin() {
+            const password = document.getElementById('adminpassword').value;
+            if (password === ADMIN_PASSWORD) {
+                adminLoggedIn = true;
+                document.getElementById('adminLoginForm').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                loadAdminPhotos();
+                console.log('✅ ADMIN CONNECTÉ');
+            } else {
+                alert('❌ Mot de passe incorrect');
+            }
+        }
+
+        function adminLogout() {
+            adminLoggedIn = false;
+            document.getElementById('adminLoginForm').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+            document.getElementById('adminpassword').value = '';
+            console.log('🔒 ADMIN DÉCONNECTÉ');
+        }
+
+        function switchAdminTab(tab) {
+            // Cacher tous les tabs
+            document.getElementById('admin-photos-tab').style.display = 'none';
+            document.getElementById('admin-music-tab').style.display = 'none';
+            document.getElementById('admin-countdown-tab').style.display = 'none';
+            document.getElementById('admin-programmes-tab').style.display = 'none';
+            document.getElementById('admin-names-tab').style.display = 'none';
+            document.getElementById('admin-design-tab').style.display = 'none';
+
+            // Réinitialiser les boutons
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Afficher le tab sélectionné et activer le bouton
+            const targetBtn = event.target;
+            targetBtn.classList.add('active');
+
+            if (tab === 'photos') {
+                document.getElementById('admin-photos-tab').style.display = 'block';
+            } else if (tab === 'music') {
+                document.getElementById('admin-music-tab').style.display = 'block';
+            } else if (tab === 'countdown') {
+                document.getElementById('admin-countdown-tab').style.display = 'block';
+            } else if (tab === 'programmes') {
+                document.getElementById('admin-programmes-tab').style.display = 'block';
+                loadAdminProgrammes(); // Charger les programmes quand on ouvre le tab
+            } else if (tab === 'names') {
+                document.getElementById('admin-names-tab').style.display = 'block';
+                loadAdminNames(); // Charger les noms quand on ouvre le tab
+            } else if (tab === 'design') {
+                document.getElementById('admin-design-tab').style.display = 'block';
+                loadAdminDesign(); // Charger les paramètres de design
+            } else if (tab === 'logout') {
+                adminLogout();
+            }
+        }
+
+        function adminShowMessage(text, type) {
+            const msgDiv = document.getElementById('adminMessage');
+            msgDiv.textContent = text;
+            msgDiv.classList.remove('success', 'error');
+            msgDiv.classList.add(type);
+            msgDiv.style.display = 'block';
+            setTimeout(() => msgDiv.style.display = 'none', 4000);
+        }
+
+        function adminAddPhotos() {
+            const input = document.getElementById('adminPhotoInput');
+            const files = Array.from(input.files);
+            
+            if (files.length === 0) {
+                adminShowMessage('Sélectionnez des photos d\'abord', 'error');
+                return;
+            }
+
+            let processed = 0;
+            let photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photos.push(e.target.result);
+                    if (photos.length > 12) photos = photos.slice(-12);
+                    processed++;
+                    
+                    if (processed === files.length) {
+                        localStorage.setItem('weddingPhotos', JSON.stringify(photos));
+                        adminShowMessage('✅ ' + files.length + ' photos ajoutées !', 'success');
+                        input.value = '';
+                        loadAdminPhotos();
+                        refreshGalleryFromLocalStorage(); // Mise à jour immédiate du site !
+                        console.log('📸 PHOTOS AJOUTÉES - Galerie mise à jour');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function loadAdminPhotos() {
+            const photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
+            const container = document.getElementById('adminPhotoPreview');
+            container.innerHTML = '';
+
+            photos.forEach((photo, idx) => {
+                const div = document.createElement('div');
+                div.style.position = 'relative';
+                div.style.width = '100%';
+                div.style.paddingBottom = '100%';
+                div.style.borderRadius = '8px';
+                div.style.overflow = 'hidden';
+                div.style.background = '#f0f0f0';
+                
+                const img = document.createElement('img');
+                img.src = photo;
+                img.style.position = 'absolute';
+                img.style.top = '0';
+                img.style.left = '0';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '✕';
+                deleteBtn.style.position = 'absolute';
+                deleteBtn.style.top = '5px';
+                deleteBtn.style.right = '5px';
+                deleteBtn.style.background = '#e74c3c';
+                deleteBtn.style.color = 'white';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.borderRadius = '50%';
+                deleteBtn.style.width = '25px';
+                deleteBtn.style.height = '25px';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.style.zIndex = '10';
+                deleteBtn.onclick = () => {
+                    photos.splice(idx, 1);
+                    localStorage.setItem('weddingPhotos', JSON.stringify(photos));
+                    loadAdminPhotos();
+                    refreshGalleryFromLocalStorage(); // Mise à jour immédiate !
+                };
+                
+                div.appendChild(img);
+                div.appendChild(deleteBtn);
+                container.appendChild(div);
+            });
+        }
+
+        function adminSaveMusic() {
+            const title = document.getElementById('adminMusicTitle').value;
+            const input = document.getElementById('adminMusicInput');
+
+            if (!title || input.files.length === 0) {
+                adminShowMessage('Entrez un titre et sélectionnez un fichier', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const musicData = {
+                    title: title,
+                    audio: e.target.result,
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem('weddingMusic', JSON.stringify(musicData));
+                adminShowMessage('✅ Musique sauvegardée !', 'success');
+                document.getElementById('adminMusicTitle').value = '';
+                input.value = '';
+                loadAllCMSData(); // Mise à jour du site
+                console.log('🎵 MUSIQUE MISE À JOUR');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function adminSaveCountdown() {
+            const date = document.getElementById('adminCountdownDate').value;
+            const time = document.getElementById('adminCountdownTime').value;
+
+            if (!date || !time) {
+                adminShowMessage('Remplissez la date et l\'heure', 'error');
+                return;
+            }
+
+            const countdownData = {
+                date: date,
+                time: time,
+                dateTime: `${date}T${time}`,
+                savedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('weddingCountdown', JSON.stringify(countdownData));
+            updateCountdown(); // Mettre à jour immédiatement l'affichage
+            adminShowMessage('✅ Compte à rebours sauvegardé !', 'success');
+            console.log('⏰ COUNTDOWN MISE À JOUR:', countdownData);
+        }
+
+        function loadAdminProgrammes() {
+            const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
+                { heure: '09:30', titre: 'Mariage Civil', description: 'Cérémonie civile à la mairie' },
+                { heure: '11:00', titre: 'Cérémonie Religieuse', description: 'Célébration à l\'église' },
+                { heure: '12:30', titre: 'Photos', description: 'Séance photos famille et amis' },
+                { heure: '19:00', titre: 'Repas & Festivités', description: 'Dîner, danse et réjouissances' }
+            ]));
+
+            const container = document.getElementById('adminProgrammesContainer');
+            container.innerHTML = '';
+
+            programmes.forEach((prog, idx) => {
+                const div = document.createElement('div');
+                div.style.background = 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)';
+                div.style.padding = '20px';
+                div.style.marginBottom = '12px';
+                div.style.borderRadius = '12px';
+                div.style.border = '2px solid #5e72e4';
+                div.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                div.style.boxShadow = '0 4px 12px rgba(94, 114, 228, 0.15)';
+
+                // Hover effect
+                div.onmouseover = () => {
+                    div.style.boxShadow = '0 8px 24px rgba(94, 114, 228, 0.3)';
+                    div.style.transform = 'translateY(-4px)';
+                    div.style.borderColor = '#6f5ae0';
+                    div.style.background = 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)';
+                };
+                div.onmouseout = () => {
+                    div.style.boxShadow = '0 4px 12px rgba(94, 114, 228, 0.15)';
+                    div.style.transform = 'translateY(0)';
+                    div.style.borderColor = '#5e72e4';
+                };
+
+                div.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 90px 1.5fr 2fr auto; gap: 12px; align-items: flex-end;">
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">⏰ Heure</label>
+                            <input type="time" id="prog${idx}-heure" value="${prog.heure}" 
+                                style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; cursor: pointer; background: white; color: #000;"
+                                onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">📝 Titre</label>
+                            <input type="text" id="prog${idx}-titre" value="${prog.titre}" 
+                                style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; background: white; color: #000;"
+                                onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">📄 Description</label>
+                            <input type="text" id="prog${idx}-desc" value="${prog.description}" 
+                                style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all 0.3s ease; background: white; color: #000;"
+                                onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                        </div>
+                        <button onclick="deleteProgram(${idx})" 
+                            style="background: #f97316; color: white; border: none; padding: 11px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); font-size: 1.1rem;"
+                            onmouseover="this.style.background='#ea580c'; this.style.transform='scale(1.12) rotate(90deg)';"
+                            onmouseout="this.style.background='#f97316'; this.style.transform='scale(1) rotate(0deg);'">✕</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Bouton pour ajouter un nouveau programme
+            const addBtn = document.createElement('button');
+            addBtn.textContent = '➕ Ajouter un Événement';
+            addBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            addBtn.style.color = '#000';
+            addBtn.style.border = 'none';
+            addBtn.style.padding = '14px 20px';
+            addBtn.style.borderRadius = '10px';
+            addBtn.style.cursor = 'pointer';
+            addBtn.style.fontWeight = 'bold';
+            addBtn.style.marginTop = '20px';
+            addBtn.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            addBtn.style.fontSize = '1rem';
+            addBtn.style.width = '100%';
+            addBtn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
+            addBtn.onmouseover = () => {
+                addBtn.style.transform = 'translateY(-3px)';
+                addBtn.style.boxShadow = '0 8px 28px rgba(16, 185, 129, 0.4)';
+            };
+            addBtn.onmouseout = () => {
+                addBtn.style.transform = 'translateY(0)';
+                addBtn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
+            };
+            addBtn.onclick = addNewProgram;
+            container.appendChild(addBtn);
+        }
+
+        function addNewProgram() {
+            const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
+                { heure: '09:30', titre: 'Mariage Civil', description: 'Cérémonie civile à la mairie' },
+                { heure: '11:00', titre: 'Cérémonie Religieuse', description: 'Célébration à l\'église' },
+                { heure: '12:30', titre: 'Photos', description: 'Séance photos famille et amis' },
+                { heure: '19:00', titre: 'Repas & Festivités', description: 'Dîner, danse et réjouissances' }
+            ]));
+            
+            programmes.push({ heure: '20:00', titre: 'Nouvel Événement', description: 'Décrivez cet événement' });
+            localStorage.setItem('weddingProgrammes', JSON.stringify(programmes));
+            loadAdminProgrammes();
+            adminShowMessage('✅ Événement ajouté !', 'success');
+        }
+
+        function deleteProgram(idx) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+                const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
+                    { heure: '09:30', titre: 'Mariage Civil', description: 'Cérémonie civile à la mairie' },
+                    { heure: '11:00', titre: 'Cérémonie Religieuse', description: 'Célébration à l\'église' },
+                    { heure: '12:30', titre: 'Photos', description: 'Séance photos famille et amis' },
+                    { heure: '19:00', titre: 'Repas & Festivités', description: 'Dîner, danse et réjouissances' }
+                ]));
+                programmes.splice(idx, 1);
+                localStorage.setItem('weddingProgrammes', JSON.stringify(programmes));
+                adminShowMessage('✅ Événement supprimé !', 'success');
+                loadAdminProgrammes();
+                updateTimelineDisplay();
+            }
+        }
+
+        function adminSaveProgrammes() {
+            const programmes = [];
+            const container = document.getElementById('adminProgrammesContainer');
+            const inputs = container.querySelectorAll('[id^="prog"]');
+            
+            // Récupérer les données des 4 première rangées seulement
+            const maxIdx = Math.max(...Array.from(inputs).map(inp => {
+                const match = inp.id.match(/prog(\d+)/);
+                return match ? parseInt(match[1]) : -1;
+            }));
+
+            for (let i = 0; i <= maxIdx; i++) {
+                const heure = document.getElementById(`prog${i}-heure`)?.value;
+                const titre = document.getElementById(`prog${i}-titre`)?.value;
+                const desc = document.getElementById(`prog${i}-desc`)?.value;
+                
+                if (heure && titre && desc) {
+                    programmes.push({ heure, titre, description: desc });
+                }
+            }
+
+            if (programmes.length === 0) {
+                adminShowMessage('Ajoutez au moins un événement', 'error');
+                return;
+            }
+
+            localStorage.setItem('weddingProgrammes', JSON.stringify(programmes));
+            adminShowMessage('✅ Programmes sauvegardés !', 'success');
+            updateTimelineDisplay();
+            console.log('📅 PROGRAMMES MIS À JOUR:', programmes);
+        }
+
+        function updateTimelineDisplay() {
+            const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
+                { heure: '09:30', titre: 'Mariage Civil', description: 'Cérémonie civile à la mairie' },
+                { heure: '11:00', titre: 'Cérémonie Religieuse', description: 'Célébration à l\'église' },
+                { heure: '12:30', titre: 'Photos', description: 'Séance photos famille et amis' },
+                { heure: '19:00', titre: 'Repas & Festivités', description: 'Dîner, danse et réjouissances' }
+            ]));
+
+            const timelineContainer = document.querySelector('.timeline');
+            if (!timelineContainer) return;
+
+            timelineContainer.innerHTML = '';
+            programmes.forEach(prog => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'timeline-item';
+                itemDiv.innerHTML = `
+                    <div class="timeline-marker">${prog.heure}</div>
+                    <h3>${prog.titre}</h3>
+                    <p>${prog.description}</p>
+                `;
+                timelineContainer.appendChild(itemDiv);
+            });
+            console.log('✅ Timeline mise à jour instantanément');
+        }
+
+        function loadAdminNames() {
+            const couples = JSON.parse(localStorage.getItem('weddingCouple') || JSON.stringify({name1: 'Catherine', name2: 'Nicolas'}));
+            document.getElementById('adminName1').value = couples.name1;
+            document.getElementById('adminName2').value = couples.name2;
+            updateCoupleNamePreview();
+        }
+
+        function updateCoupleNamePreview() {
+            const name1 = document.getElementById('adminName1').value || 'Nom1';
+            const name2 = document.getElementById('adminName2').value || 'Nom2';
+            document.getElementById('coupleNamePreview').textContent = `${name1} & ${name2}`;
+        }
+
+        // Ajouter les event listeners pour la mise à jour en direct
+        document.getElementById('adminName1').addEventListener('input', updateCoupleNamePreview);
+        document.getElementById('adminName2').addEventListener('input', updateCoupleNamePreview);
+
+        function adminSaveNames() {
+            const name1 = document.getElementById('adminName1').value.trim();
+            const name2 = document.getElementById('adminName2').value.trim();
+
+            if (!name1 || !name2) {
+                adminShowMessage('Remplissez les deux prénoms', 'error');
+                return;
+            }
+
+            const coupleData = { name1, name2 };
+            localStorage.setItem('weddingCouple', JSON.stringify(coupleData));
+            adminShowMessage('✅ Noms sauvegardés !', 'success');
+            updateWeddingNames();
+            console.log('👥 NOMS MIS À JOUR:', coupleData);
+        }
+
+        function updateWeddingNames() {
+            const couples = JSON.parse(localStorage.getItem('weddingCouple') || JSON.stringify({name1: 'Catherine', name2: 'Nicolas'}));
+            
+            // Mettre à jour le LOGO NAVBAR
+            const navbarLogo = document.getElementById('navbarLogo');
+            if (navbarLogo) {
+                const initials = `${couples.name1.charAt(0)}${couples.name2.charAt(0)}`.toUpperCase();
+                navbarLogo.textContent = `💍 ${initials}`;
+                // Animation d'update du logo
+                navbarLogo.style.animation = 'none';
+                setTimeout(() => {
+                    navbarLogo.style.animation = 'float 3s ease-in-out infinite';
+                }, 10);
+            }
+            
+            // Mettre à jour le titre du hero
+            const heroTitle = document.querySelector('.hero-content h1');
+            if (heroTitle) {
+                heroTitle.textContent = `${couples.name1} & ${couples.name2}`;
+            }
+
+            // Mettre à jour le footer
+            const footer = document.querySelector('footer p');
+            if (footer) {
+                footer.textContent = `© 2026 ${couples.name1} & ${couples.name2} | Heureux Mariage`;
+            }
+            console.log('✅ Noms affichés sur le site:', couples);
+        }
+
+        function loadAdminDesign() {
+            const designData = JSON.parse(localStorage.getItem('siteDesign') || JSON.stringify({
+                colorPrimary: '#d4af37',
+                colorAccent: '#c9a961',
+                colorText: '#1a1a1a',
+                fontHeading: "'Georgia', serif",
+                sizeH1: 48,
+                sizeH2: 32,
+                sizeBody: 16
+            }));
+
+            // Charger les couleurs
+            document.getElementById('adminColorPrimary').value = designData.colorPrimary;
+            document.getElementById('adminColorPrimaryText').value = designData.colorPrimary;
+            document.getElementById('adminColorAccent').value = designData.colorAccent;
+            document.getElementById('adminColorAccentText').value = designData.colorAccent;
+            document.getElementById('adminColorText').value = designData.colorText;
+            document.getElementById('adminColorTextText').value = designData.colorText;
+
+            // Charger les polices et tailles
+            document.getElementById('adminFontHeading').value = designData.fontHeading;
+            document.getElementById('adminSizeH1').value = designData.sizeH1;
+            document.getElementById('adminSizeH1Value').value = designData.sizeH1;
+            document.getElementById('adminSizeH2').value = designData.sizeH2;
+            document.getElementById('adminSizeH2Value').value = designData.sizeH2;
+            document.getElementById('adminSizeBody').value = designData.sizeBody;
+            document.getElementById('adminSizeBodyValue').value = designData.sizeBody;
+
+            updateDesignPreview();
+            
+            // Ajouter les event listeners pour mis à jour en direct
+            document.getElementById('adminColorPrimary').addEventListener('input', (e) => {
+                document.getElementById('adminColorPrimaryText').value = e.target.value;
+            });
+            document.getElementById('adminColorPrimaryText').addEventListener('input', (e) => {
+                document.getElementById('adminColorPrimary').value = e.target.value;
+            });
+
+            document.getElementById('adminColorAccent').addEventListener('input', (e) => {
+                document.getElementById('adminColorAccentText').value = e.target.value;
+            });
+            document.getElementById('adminColorAccentText').addEventListener('input', (e) => {
+                document.getElementById('adminColorAccent').value = e.target.value;
+            });
+
+            document.getElementById('adminColorText').addEventListener('input', (e) => {
+                document.getElementById('adminColorTextText').value = e.target.value;
+            });
+            document.getElementById('adminColorTextText').addEventListener('input', (e) => {
+                document.getElementById('adminColorText').value = e.target.value;
+            });
+
+            // Event listeners pour les tailles
+            document.getElementById('adminSizeH1').addEventListener('input', (e) => {
+                document.getElementById('adminSizeH1Value').value = e.target.value;
+                updateDesignPreview();
+            });
+            document.getElementById('adminSizeH1Value').addEventListener('input', (e) => {
+                document.getElementById('adminSizeH1').value = e.target.value;
+                updateDesignPreview();
+            });
+
+            document.getElementById('adminSizeH2').addEventListener('input', (e) => {
+                document.getElementById('adminSizeH2Value').value = e.target.value;
+                updateDesignPreview();
+            });
+            document.getElementById('adminSizeH2Value').addEventListener('input', (e) => {
+                document.getElementById('adminSizeH2').value = e.target.value;
+                updateDesignPreview();
+            });
+
+            document.getElementById('adminSizeBody').addEventListener('input', (e) => {
+                document.getElementById('adminSizeBodyValue').value = e.target.value;
+                updateDesignPreview();
+            });
+            document.getElementById('adminSizeBodyValue').addEventListener('input', (e) => {
+                document.getElementById('adminSizeBody').value = e.target.value;
+                updateDesignPreview();
+            });
+
+            // Event listener pour la police
+            document.getElementById('adminFontHeading').addEventListener('change', updateDesignPreview);
+        }
+
+        function updateDesignPreview() {
+            const fontHeading = document.getElementById('adminFontHeading').value;
+            const sizeH1 = document.getElementById('adminSizeH1').value;
+            const sizeH2 = document.getElementById('adminSizeH2').value;
+            const sizeBody = document.getElementById('adminSizeBody').value;
+            const colorText = document.getElementById('adminColorText').value;
+
+            const previewH1 = document.getElementById('previewH1');
+            const previewH2 = document.getElementById('previewH2');
+            const previewBody = document.getElementById('previewBody');
+
+            if (previewH1) {
+                previewH1.style.fontSize = sizeH1 + 'px';
+                previewH1.style.fontFamily = fontHeading;
+                previewH1.style.color = colorText;
+            }
+            if (previewH2) {
+                previewH2.style.fontSize = sizeH2 + 'px';
+                previewH2.style.fontFamily = fontHeading;
+                previewH2.style.color = colorText;
+            }
+            if (previewBody) {
+                previewBody.style.fontSize = sizeBody + 'px';
+                previewBody.style.color = colorText;
+            }
+        }
+
+        function adminSaveDesign() {
+            const designData = {
+                colorPrimary: document.getElementById('adminColorPrimary').value,
+                colorAccent: document.getElementById('adminColorAccent').value,
+                colorText: document.getElementById('adminColorText').value,
+                fontHeading: document.getElementById('adminFontHeading').value,
+                sizeH1: parseInt(document.getElementById('adminSizeH1').value),
+                sizeH2: parseInt(document.getElementById('adminSizeH2').value),
+                sizeBody: parseInt(document.getElementById('adminSizeBody').value)
+            };
+
+            localStorage.setItem('siteDesign', JSON.stringify(designData));
+            adminShowMessage('✅ Design sauvegardé !', 'success');
+            applyDesignToSite(designData);
+            console.log('🎨 DESIGN MIS À JOUR:', designData);
+        }
+
+        function applyDesignToSite(designData) {
+            // Appliquer les couleurs via CSS variables
+            document.documentElement.style.setProperty('--primary', designData.colorPrimary);
+            document.documentElement.style.setProperty('--accent', designData.colorAccent);
+            document.documentElement.style.setProperty('--text-color', designData.colorText);
+
+            // Appliquer la police aux titres
+            const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            headings.forEach(h => {
+                h.style.fontFamily = designData.fontHeading;
+            });
+
+            // Appliquer les tailles
+            const h1All = document.querySelectorAll('h1');
+            h1All.forEach(h => {
+                h.style.fontSize = designData.sizeH1 + 'px';
+                h.style.color = designData.colorText;
+            });
+
+            const h2All = document.querySelectorAll('h2');
+            h2All.forEach(h => {
+                h.style.fontSize = designData.sizeH2 + 'px';
+                h.style.color = designData.colorText;
+            });
+
+            // Appliquer la taille du body
+            const body = document.querySelector('body');
+            if (body) {
+                body.style.fontSize = designData.sizeBody + 'px';
+                body.style.color = designData.colorText;
+            }
+
+            console.log('✅ Design appliqué au site en temps réel');
+        }
+
+        // Fermer le modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('adminModal');
+            if (event.target === modal) {
+                closeAdminModal();
+            }
+        }
+    </script>
+</body>
+</html>
