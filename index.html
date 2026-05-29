@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catherine & Nicolas - Mariage 2025</title>
+    <title>Bienvenue a notre mariage</title>
     <style>
         * {
             margin: 0;
@@ -16,6 +16,11 @@
             --dark: #2c2c2c;
             --light: #f5f5f5;
             --accent: #c9a961;
+            --surface: rgba(255, 255, 255, 0.92);
+            --surface-strong: rgba(255, 255, 255, 0.98);
+            --text-muted: #6a6a6a;
+            --shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+            --gold-dark: #a67c34;
         }
 
         html {
@@ -241,6 +246,11 @@
             gap: 50px;
             list-style: none;
             position: relative;
+            /* enable slide animation */
+            overflow: hidden;
+            max-height: 220px;
+            transition: max-height 0.36s cubic-bezier(0.2,0.9,0.2,1), opacity 0.28s ease;
+            opacity: 1;
         }
 
         .nav-links::before {
@@ -303,11 +313,38 @@
             width: 100%;
         }
 
+        .nav-toggle-btn {
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(255,255,255,0.08);
+            color: var(--dark);
+            font-size: 18px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+
+        .nav-toggle-btn:hover { transform: scale(1.04); background: rgba(255,255,255,0.12); }
+
+        /* Collapsed main nav for desktop (also used on mobile) */
+        .nav-links.collapsed {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            pointer-events: none;
+        }
+
         /* HERO */
         .hero {
             margin-top: 60px;
             height: 100vh;
-            background: linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 100%);
+            background: linear-gradient(180deg, rgba(20, 20, 20, 0.35), rgba(20, 20, 20, 0.35)),
+                        url('https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -318,20 +355,22 @@
         }
 
         .hero:hover {
-            background: linear-gradient(135deg, #f5eddb 0%, #ede3d0 100%);
-            filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
+            filter: brightness(1.03) drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
         }
 
         .hero::before {
             content: '';
             position: absolute;
-            width: 300%;
-            height: 300%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(201, 169, 97, 0.08) 0%, transparent 50%);
+            width: 260%;
+            height: 260%;
+            top: -20%;
+            left: -20%;
+            background:
+                radial-gradient(circle at 35% 55%, rgba(255, 255, 255, 0.18) 0%, transparent 42%),
+                radial-gradient(circle at 70% 30%, rgba(212, 175, 55, 0.14) 0%, transparent 38%),
+                radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 45%);
             animation: slide 25s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .hero::after {
@@ -388,7 +427,7 @@
             font-weight: 600;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            background: linear-gradient(135deg, #5e72e4 0%, #6f5ae0 50%, #7c3aed 100%);
+            background: linear-gradient(135deg, #2095b5 0%, #194068 50%, #3b3828 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -396,8 +435,10 @@
             padding: 20px 40px;
             display: inline-block;
             border: 2px solid transparent;
-            border-image: linear-gradient(135deg, #5e72e4, #7c3aed) 1;
+            border-image: linear-gradient(135deg, #d4af37, #ffd700) 1;
+            border-radius: 50px;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-shadow: 0 2px 4px rgba(212, 175, 55, 0.3);
         }
 
         .hero-content .date::before {
@@ -408,9 +449,25 @@
 
         .hero-content .date:hover {
             transform: scale(1.08);
-            box-shadow: 0 8px 24px rgba(94, 114, 228, 0.3);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
             letter-spacing: 2px;
         }
+
+        /* HERO MODERN ADDITIONS */
+        .hero-modern { position: relative; overflow: hidden; }
+        .hero-modern .hero-overlay { position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.25)); z-index:5; pointer-events:none; }
+        .hero-animations { position:absolute; inset:0; z-index:6; pointer-events:none; }
+        .float-shape { position:absolute; border-radius:50%; opacity:0.18; filter: blur(18px); transform: translate3d(0,0,0); }
+        .float-shape.s1 { width:260px; height:260px; left:10%; top:10%; background: radial-gradient(circle, #5e72e4, #6f5ae0); animation: floatA 12s ease-in-out infinite; }
+        .float-shape.s2 { width:200px; height:200px; right:8%; top:20%; background: radial-gradient(circle, #d4af37, #ffd700); animation: floatB 10s ease-in-out infinite; }
+        .float-shape.s3 { width:320px; height:320px; left:40%; bottom:6%; background: radial-gradient(circle, rgba(255,255,255,0.6), rgba(212,175,55,0.2)); animation: floatC 16s ease-in-out infinite; }
+
+        @keyframes floatA { 0%{transform:translateY(0)}50%{transform:translateY(-40px) translateX(20px)}100%{transform:translateY(0)} }
+        @keyframes floatB { 0%{transform:translateY(0)}50%{transform:translateY(30px) translateX(-30px)}100%{transform:translateY(0)} }
+        @keyframes floatC { 0%{transform:translateY(0)}50%{transform:translateY(-20px) translateX(-10px)}100%{transform:translateY(0)} }
+
+        .hero-title { font-size: clamp(2.8rem, 6vw, 5.2rem); line-height:1; margin-bottom:12px; }
+        .hero-message { margin: 12px auto 0; max-width:900px; font-size: clamp(1rem, 1.6vw, 1.5rem); color: rgba(255,255,255,0.95); font-weight:500; text-shadow:0 6px 24px rgba(0,0,0,0.45); z-index:10; }
 
         .cta-btn {
             display: inline-block;
@@ -487,29 +544,6 @@
             animation: fadeIn 1s ease-out forwards;
         }
 
-        section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        section::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(201, 169, 97, 0.06) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
 
         section h2 {
             font-size: 3.5rem;
@@ -558,23 +592,85 @@
             opacity: 0.5;
         }
 
-        #countdown h2 {
-            color: white;
-            position: relative;
-            z-index: 10;
-        }
-
-        #countdown h2::after {
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6) 20%, rgba(255,255,255,0.6) 80%, transparent);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
         .countdown-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 0 8px;
+        }
+
+        .countdown-card {
+            background: var(--surface);
+            padding: 32px 24px;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 1px solid rgba(209, 174, 116, 0.18);
+            min-height: 230px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .countdown-card strong {
+            display: block;
+            font-size: 3rem;
+            color: #1b1b1b;
+            margin-bottom: 12px;
+            letter-spacing: -0.05em;
+        }
+
+        .countdown-card span {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.85rem;
+            margin-bottom: 18px;
+            display: block;
+        }
+
+        .progress-ring {
+            margin-top: auto;
+            width: 100%;
+            height: 14px;
+            background: rgba(209, 174, 116, 0.18);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .progress-ring-inner {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--primary));
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        #programme {
+            background: linear-gradient(180deg, rgba(255,255,255,0.60) 0%, rgba(0,0,0,0.35) 100%),
+                        url('https://images.unsplash.com/photo-1508606572321-901ea4437072?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat;
+            color: white;
             position: relative;
-            z-index: 10;
+            padding: 120px 40px;
+            overflow: hidden;
+        }
+
+        #programme::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6));
+            pointer-events: none;
+        }
+
+        #programme h2,
+        #programme .timeline-item,
+        #programme .timeline-marker {
+            position: relative;
+            z-index: 2;
         }
 
         .countdown-item {
@@ -859,6 +955,22 @@
         /* GUESTBOOK */
         #guestbook {
             background: #f9f7f4;
+            color: #1a1a1a;
+        }
+
+        #guestbook h2,
+        #guestbook p,
+        #guestbook label,
+        #guestbook .message-name,
+        #guestbook .message-status,
+        #guestbook .message-text,
+        #guestbook .message-date,
+        #guestbook .loading {
+            color: #1a1a1a;
+        }
+
+        #guestbook h2 {
+            text-shadow: none;
         }
 
         .form-container {
@@ -1178,6 +1290,28 @@
             border-color: rgba(255, 255, 255, 0.5);
             transform: rotate(90deg) scale(1.1);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .admin-toggle-btn {
+            background: rgba(255,255,255,0.18);
+            border: 2px solid rgba(255,255,255,0.25);
+            color: #000;
+            font-size: 20px;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            z-index: 2;
+        }
+
+        .admin-toggle-btn:hover { background: rgba(255,255,255,0.28); transform: scale(1.03); }
+
+        .admin-tabs.collapsed {
+            display: none;
         }
 
         /* ADMIN TABS PREMIUM */
@@ -1553,9 +1687,6 @@
             margin: 10px 0;
             line-height: 1.5;
         }
-            line-height: 1.5;
-        }
-
         /* FOOTER */
         footer {
             background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 50%, #0f0f0f 100%);
@@ -2009,8 +2140,11 @@
     <!-- NAVBAR -->
     <nav>
         <div class="nav-container">
-            <div class="logo" id="navbarLogo">💍 CN</div>
-            <ul class="nav-links">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="logo" id="navbarLogo">💍 CN</div>
+                <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
+            </div>
+            <ul class="nav-links" id="mainNavLinks">
                 <li><a href="#hero">Accueil</a></li>
                 <li><a href="#countdown">Compte à rebours</a></li>
                 <li><a href="#programme">Programme</a></li>
@@ -2023,34 +2157,52 @@
     </nav>
 
     <!-- HERO -->
-    <section id="hero" class="hero">
+    <section id="hero" class="hero hero-modern">
+        <div class="hero-overlay"></div>
+        <div class="hero-animations" aria-hidden="true">
+            <div class="float-shape s1"></div>
+            <div class="float-shape s2"></div>
+            <div class="float-shape s3"></div>
+        </div>
         <div class="hero-content">
-            <h1>Catherine & Nicolas</h1>
-            <p>Nous nous marions!</p>
+            <h1 class="hero-title">Catherine & Nicolas</h1>
+            <p class="subtitle">Nous nous marions !</p>
+            <p class="hero-message">Nous sommes profondément honorés de partager ce moment avec vous — votre présence rendra cette journée unique. Merci d'être à nos côtés pour célébrer l'amour, l'amitié et les nouveaux départs.</p>
             <p class="date">24 Mai 2025</p>
-            <a href="#guestbook" class="cta-btn">Signer le Livre d'Or</a>
+            <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
+                <a href="#guestbook" class="cta-btn">Signer le Livre d'Or</a>
+                <a href="#programme" class="cta-btn" style="background:transparent; color:var(--primary); border:2px solid rgba(212,175,55,0.15);">Voir le Programme</a>
+            </div>
         </div>
     </section>
 
     <!-- COUNTDOWN -->
     <section id="countdown">
-        <h2>Compte à rebours</h2>
+        <div class="section-head">
+            <span>Compte à rebours</span>
+            <h2>Le grand jour approche</h2>
+            <p>Chaque seconde compte. Suivez le temps jusqu'à notre cérémonie et préparez-vous à célébrer ensemble.</p>
+        </div>
         <div class="countdown-grid">
-            <div class="countdown-item">
-                <span class="countdown-value" id="days">0</span>
-                <div>Jours</div>
+            <div class="countdown-card">
+                <strong id="days">00</strong>
+                <span>Jours</span>
+                <div class="progress-ring"><div class="progress-ring-inner" id="progressDays"></div></div>
             </div>
-            <div class="countdown-item">
-                <span class="countdown-value" id="hours">0</span>
-                <div>Heures</div>
+            <div class="countdown-card">
+                <strong id="hours">00</strong>
+                <span>Heures</span>
+                <div class="progress-ring"><div class="progress-ring-inner" id="progressHours"></div></div>
             </div>
-            <div class="countdown-item">
-                <span class="countdown-value" id="minutes">0</span>
-                <div>Minutes</div>
+            <div class="countdown-card">
+                <strong id="minutes">00</strong>
+                <span>Minutes</span>
+                <div class="progress-ring"><div class="progress-ring-inner" id="progressMinutes"></div></div>
             </div>
-            <div class="countdown-item">
-                <span class="countdown-value" id="seconds">0</span>
-                <div>Secondes</div>
+            <div class="countdown-card">
+                <strong id="seconds">00</strong>
+                <span>Secondes</span>
+                <div class="progress-ring"><div class="progress-ring-inner" id="progressSeconds"></div></div>
             </div>
         </div>
     </section>
@@ -2168,8 +2320,11 @@
             <div style="background: white; max-width: 900px; margin: 30px auto; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
                 <!-- Header -->
                 <div class="admin-header">
-                    <h2>📋 CMS Admin</h2>
-                    <button onclick="closeAdminModal()" class="admin-close-btn">✕</button>
+                    <h2>📋 Admin</h2>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button onclick="toggleAdminTabs()" class="admin-toggle-btn" aria-expanded="false" title="Afficher/Masquer les onglets">☰</button>
+                        <button onclick="closeAdminModal()" class="admin-close-btn">✕</button>
+                    </div>
                 </div>
 
             <!-- Login / Admin Content -->
@@ -2179,19 +2334,20 @@
                     <label>Mot de Passe</label>
                     <input type="password" id="adminpassword" placeholder="Entrez votre mot de passe" class="admin-input">
                 </div>
-                <button onclick="adminLogin()" class="admin-btn-primary" style="margin-top: 20px; padding: 14px 40px; font-size: 16px;">Se Connecter</button>
+                <button type="button" onclick="adminLogin()" class="admin-btn-primary" style="margin-top: 20px; padding: 14px 40px; font-size: 16px;">Se Connecter</button>
             </div>
 
             <div id="adminContent" style="display: none; padding: 25px; max-height: 600px; overflow-y: auto;">
                 <!-- Tabs -->
-                <div class="admin-tabs">
-                    <button onclick="switchAdminTab('photos')" class="admin-tab-btn active">📸 Photos</button>
-                    <button onclick="switchAdminTab('music')" class="admin-tab-btn">🎵 Musique</button>
-                    <button onclick="switchAdminTab('countdown')" class="admin-tab-btn">⏰ Countdown</button>
-                    <button onclick="switchAdminTab('programmes')" class="admin-tab-btn">📅 Programmes</button>
-                    <button onclick="switchAdminTab('names')" class="admin-tab-btn">👥 Noms</button>
-                    <button onclick="switchAdminTab('design')" class="admin-tab-btn">🎨 Design</button>
-                    <button onclick="switchAdminTab('logout')" class="admin-tab-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
+                <div class="admin-tabs collapsed" id="adminTabs">
+                    <button onclick="switchAdminTab('photos', this)" class="admin-tab-btn active" data-tab="photos">📸 Photos</button>
+                    <button onclick="switchAdminTab('music', this)" class="admin-tab-btn" data-tab="music">🎵 Musique</button>
+                    <button onclick="switchAdminTab('countdown', this)" class="admin-tab-btn" data-tab="countdown">⏰ Compte à Rebours</button>
+                    <button onclick="switchAdminTab('programmes', this)" class="admin-tab-btn" data-tab="programmes">📅 Programmes</button>
+                    <button onclick="switchAdminTab('names', this)" class="admin-tab-btn" data-tab="names">👥 Noms</button>
+                    <button onclick="switchAdminTab('hero', this)" class="admin-tab-btn" data-tab="hero">🏠 Accueil</button>
+                    <button onclick="switchAdminTab('design', this)" class="admin-tab-btn" data-tab="design">🎨 Design</button>
+                    <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
                 </div>
 
                 <!-- Photos Tab -->
@@ -2264,6 +2420,38 @@
                             <strong style="color: #5e72e4; font-size: 1.8rem; letter-spacing: 0.5px;" id="coupleNamePreview">Catherine & Nicolas</strong>
                         </div>
                         <button onclick="adminSaveNames()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Noms</button>
+                    </div>
+                </div>
+
+                <!-- Accueil Tab -->
+                <div id="admin-hero-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">🏠 Personnaliser l'Accueil</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>👤 Nom de l'Invité</label>
+                            <input type="text" id="adminGuestName" placeholder="Ex: Marie Dupont" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>📱 URL du Code QR</label>
+                            <input type="url" id="adminQrCodeUrl" placeholder="https://example.com/qr-code.png" class="admin-input">
+                        </div>
+                                <div class="admin-input-group">
+                                    <label>🖼️ Image de fond Accueil (URL)</label>
+                                    <input type="url" id="adminHeroBgUrl" placeholder="https://example.com/hero-bg.jpg" class="admin-input">
+                                </div>
+                                <div class="admin-input-group">
+                                    <label>⬆️ Télécharger une image de fond</label>
+                                    <input type="file" id="adminHeroBgFile" accept="image/*" class="admin-input">
+                                </div>
+                                <div class="admin-input-group">
+                                    <label>✍️ Message profond (Accueil)</label>
+                                    <textarea id="adminHeroMessage" placeholder="Message adressé aux invités" class="admin-input" style="min-height:90px;"></textarea>
+                                </div>
+                        <div class="admin-input-group">
+                            <label>🖼️ Image de fond Programme</label>
+                            <input type="url" id="adminProgrammeBgUrl" placeholder="https://example.com/programme-bg.jpg" class="admin-input">
+                        </div>
+                        <button onclick="adminSaveHero()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Accueil</button>
                     </div>
                 </div>
 
@@ -2438,42 +2626,94 @@
         // ========================================
         // COUNTDOWN TIMER - DYNAMIQUE
         // ========================================
+        const DEFAULT_TARGET_DATE = '2026-10-05T16:00:00';
+        const countdownElements = {
+            days: document.getElementById('days'),
+            hours: document.getElementById('hours'),
+            minutes: document.getElementById('minutes'),
+            seconds: document.getElementById('seconds')
+        };
+
+        const progressDays = document.getElementById('progressDays');
+        const progressHours = document.getElementById('progressHours');
+        const progressMinutes = document.getElementById('progressMinutes');
+        const progressSeconds = document.getElementById('progressSeconds');
+
+        function pad(value) {
+            return String(value).padStart(2, '0');
+        }
+
+        function getCountdownTargetDate() {
+            const stored = JSON.parse(localStorage.getItem('weddingCountdown') || 'null');
+            if (stored && stored.dateTime) {
+                const savedDate = new Date(stored.dateTime);
+                if (!isNaN(savedDate)) {
+                    return savedDate;
+                }
+            }
+            return new Date(DEFAULT_TARGET_DATE);
+        }
+
+        function updateHeroDate() {
+            const heroDateEl = document.querySelector('.hero .date');
+            if (!heroDateEl) return;
+
+            const stored = JSON.parse(localStorage.getItem('weddingCountdown') || 'null');
+            let displayDate = DEFAULT_TARGET_DATE;
+
+            if (stored && stored.dateTime) {
+                displayDate = stored.dateTime;
+            }
+
+            const target = new Date(displayDate);
+            if (!isNaN(target)) {
+                heroDateEl.textContent = target.toLocaleDateString('fr-FR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+        }
+
         function updateCountdown() {
-            // Récupérer la date depuis localStorage (défaut: 2026-04-18T14:00)
-            const countdownData = JSON.parse(localStorage.getItem('weddingCountdown') || JSON.stringify({dateTime: '2026-04-18T14:00:00'}));
-            const weddingDate = new Date(countdownData.dateTime).getTime();
-            const now = new Date().getTime();
-            const distance = weddingDate - now;
+            const targetDate = getCountdownTargetDate();
+            const now = new Date();
+            const diff = targetDate - now;
 
-            const daysEl = document.getElementById('days');
-            const hoursEl = document.getElementById('hours');
-            const minutesEl = document.getElementById('minutes');
-            const secondsEl = document.getElementById('seconds');
-
-            if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
-
-            if (distance <= 0) {
-                daysEl.textContent = '0';
-                hoursEl.textContent = '0';
-                minutesEl.textContent = '0';
-                secondsEl.textContent = '0';
+            if (diff <= 0) {
+                countdownElements.days.textContent = '00';
+                countdownElements.hours.textContent = '00';
+                countdownElements.minutes.textContent = '00';
+                countdownElements.seconds.textContent = '00';
+                if (progressDays) progressDays.style.width = '100%';
+                if (progressHours) progressHours.style.width = '100%';
+                if (progressMinutes) progressMinutes.style.width = '100%';
+                if (progressSeconds) progressSeconds.style.width = '100%';
                 return;
             }
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
 
-            daysEl.textContent = String(days).padStart(2, '0');
-            hoursEl.textContent = String(hours).padStart(2, '0');
-            minutesEl.textContent = String(minutes).padStart(2, '0');
-            secondsEl.textContent = String(seconds).padStart(2, '0');
+            countdownElements.days.textContent = pad(days);
+            countdownElements.hours.textContent = pad(hours);
+            countdownElements.minutes.textContent = pad(minutes);
+            countdownElements.seconds.textContent = pad(seconds);
+            if (progressDays) progressDays.style.width = `${Math.min((days / 365) * 100, 100)}%`;
+            if (progressHours) progressHours.style.width = `${(hours / 24) * 100}%`;
+            if (progressMinutes) progressMinutes.style.width = `${(minutes / 60) * 100}%`;
+            if (progressSeconds) progressSeconds.style.width = `${(seconds / 60) * 100}%`;
         }
 
         // Démarrer le countdown
         updateCountdown();
-        setInterval(updateCountdown, 1000);
+        updateHeroDate();
+        setInterval(() => {
+            updateCountdown();
+            updateHeroDate();
+        }, 1000);
 
         // ========================================
         // FORM SUBMISSION
@@ -2513,24 +2753,35 @@
             submitBtn.style.opacity = '0.7';
             submitBtn.disabled = true;
 
+            const guestData = {
+                name,
+                message,
+                attending,
+                created_at: new Date().toISOString()
+            };
+
             try {
                 const response = await fetch('http://localhost:3000/api/guests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, message, attending })
+                    body: JSON.stringify(guestData)
                 });
 
                 if (response.ok) {
+                    saveLocalGuestMessage(guestData);
                     showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
                     messageForm.reset();
                     charCount.textContent = '0 / 500';
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    loadMessages();
+                    await loadMessages();
                 } else {
                     throw new Error('Erreur');
                 }
             } catch (error) {
-                showFormMsg('❌ Erreur lors de l\'envoi. Vérifiez la connexion.', '#f8d7da', '#721c24');
+                saveLocalGuestMessage(guestData);
+                showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
+                messageForm.reset();
+                charCount.textContent = '0 / 500';
+                await loadMessages();
             } finally {
                 submitBtn.style.opacity = '1';
                 submitBtn.disabled = false;
@@ -2548,14 +2799,24 @@
             }, 300);
         }
 
+        function saveLocalGuestMessage(guestData) {
+            const stored = JSON.parse(localStorage.getItem('guestbookMessages') || '[]');
+            stored.unshift(guestData);
+            localStorage.setItem('guestbookMessages', JSON.stringify(stored.slice(0, 50)));
+        }
+
+        function getLocalGuestMessages() {
+            return JSON.parse(localStorage.getItem('guestbookMessages') || '[]');
+        }
+
         // ========================================
         // LOAD MESSAGES WITH ANIMATIONS
         // ========================================
         async function loadMessages() {
+            const messagesList = document.getElementById('messagesList');
             try {
                 const response = await fetch('http://localhost:3000/api/guests');
                 const data = await response.json();
-                const messagesList = document.getElementById('messagesList');
 
                 if (data.guests && data.guests.length > 0) {
                     const html = data.guests.map((msg, index) => {
@@ -2568,18 +2829,59 @@
                                     <span class="message-status ${attending}">${status}</span>
                                 </div>
                                 <p class="message-text">"${escapeHtml(msg.message)}"</p>
-                                <p class="message-date">${new Date(msg.created_at).toLocaleDateString('fr-FR')}</p>
+                                <p class="message-date">${new Date(msg.created_at || msg.date || Date.now()).toLocaleDateString('fr-FR')}</p>
                             </div>
                         `;
                     }).join('');
                     messagesList.innerHTML = html;
                     messagesList.style.animation = 'fadeIn 0.6s ease-out';
-                } else {
-                    messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
+                    return;
                 }
+
+                const fallbackMessages = getLocalGuestMessages();
+                if (fallbackMessages.length > 0) {
+                    const html = fallbackMessages.map((msg, index) => {
+                        const attending = msg.attending ? 'yes' : '';
+                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
+                        return `
+                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
+                                <div class="message-header">
+                                    <span class="message-name">${escapeHtml(msg.name)}</span>
+                                    <span class="message-status ${attending}">${status}</span>
+                                </div>
+                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
+                                <p class="message-date">${new Date(msg.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                        `;
+                    }).join('');
+                    messagesList.innerHTML = html;
+                    messagesList.style.animation = 'fadeIn 0.6s ease-out';
+                    return;
+                }
+
+                messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
             } catch (error) {
                 console.error('Erreur:', error);
-                document.getElementById('messagesList').innerHTML = '<p class="loading">Impossible de charger les messages</p>';
+                const fallbackMessages = getLocalGuestMessages();
+                if (fallbackMessages.length > 0) {
+                    const html = fallbackMessages.map((msg, index) => {
+                        const attending = msg.attending ? 'yes' : '';
+                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
+                        return `
+                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
+                                <div class="message-header">
+                                    <span class="message-name">${escapeHtml(msg.name)}</span>
+                                    <span class="message-status ${attending}">${status}</span>
+                                </div>
+                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
+                                <p class="message-date">${new Date(msg.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                        `;
+                    }).join('');
+                    messagesList.innerHTML = html;
+                } else {
+                    messagesList.innerHTML = '<p class="loading">Impossible de charger les messages</p>';
+                }
             }
         }
 
@@ -2607,6 +2909,60 @@
                 }
             });
         });
+
+        // Navbar toggle for main page
+        function toggleNavbarLinks() {
+            const links = document.getElementById('mainNavLinks');
+            const btn = document.querySelector('.nav-toggle-btn');
+            if (!links || !btn) return;
+            const collapsed = links.classList.toggle('collapsed');
+            btn.setAttribute('aria-expanded', String(!collapsed));
+            btn.textContent = collapsed ? '☰' : '✖';
+            // play feedback sound (true = opened)
+            try { playToggleSound(!collapsed); } catch (e) { /* ignore */ }
+            try { localStorage.setItem('navbarCollapsed', String(collapsed)); } catch (e) { console.warn('Impossible de sauvegarder navbarCollapsed', e); }
+        }
+
+        // Restaurer l'état du navbar au chargement
+        try {
+            const navCollapsed = localStorage.getItem('navbarCollapsed') === 'true';
+            const links = document.getElementById('mainNavLinks');
+            const btn = document.querySelector('.nav-toggle-btn');
+            if (links && navCollapsed) links.classList.add('collapsed');
+            if (btn) btn.setAttribute('aria-expanded', String(!navCollapsed));
+            if (btn) btn.textContent = navCollapsed ? '☰' : '✖';
+        } catch (e) { /* ignore */ }
+
+        // Small cool sound produced with WebAudio for toggle feedback
+        function playToggleSound(open) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                // open: upward two-tone, close: downward
+                const f1 = open ? 560 : 420;
+                const f2 = open ? 760 : 320;
+                osc.frequency.setValueAtTime(f1, now);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.12, now + 0.005);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                // slide to f2
+                osc.frequency.linearRampToValueAtTime(f2, now + 0.12);
+                // fade out
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+                osc.stop(now + 0.3);
+                // close audio context after short delay
+                setTimeout(() => { try { ctx.close(); } catch (e) {} }, 600);
+            } catch (e) {
+                console.warn('playToggleSound error', e);
+            }
+        }
 
         // ========================================
         // CURSOR EFFECT
@@ -2701,9 +3057,28 @@
                 if (heroH1) heroH1.textContent = heroData.title;
             }
             if (heroData.subtitle) {
-                const heroP = document.querySelector('.hero-content p');
+                const heroP = document.querySelector('.hero-content .subtitle');
                 if (heroP) heroP.textContent = heroData.subtitle;
             }
+
+            const heroBgUrl = localStorage.getItem('heroBackgroundUrl');
+            if (heroBgUrl) {
+                const hero = document.querySelector('.hero');
+                if (hero) {
+                    hero.style.background = `linear-gradient(180deg, rgba(20, 20, 20, 0.35), rgba(20, 20, 20, 0.35)), url('${heroBgUrl}') center/cover no-repeat`;
+                }
+            }
+
+            const programmeBgUrl = localStorage.getItem('programmeBackgroundUrl');
+            if (programmeBgUrl) {
+                const programme = document.getElementById('programme');
+                if (programme) {
+                    programme.style.background = `linear-gradient(180deg, rgba(255,255,255,0.60) 0%, rgba(0,0,0,0.35) 100%), url('${programmeBgUrl}') center/cover no-repeat`;
+                }
+            }
+
+            // Charger les invités HERO
+            updateHeroGuest();
 
             // Charger les INFOS GÉNÉRALES
             const generalInfo = JSON.parse(localStorage.getItem('generalInfo') || '{}');
@@ -3076,6 +3451,35 @@
         function openAdminModal() {
             console.log('🔓 Ouverture du modal admin');
             document.getElementById('adminModal').style.display = 'block';
+
+            const loginForm = document.getElementById('adminLoginForm');
+            const adminContent = document.getElementById('adminContent');
+
+            if (adminLoggedIn) {
+                if (loginForm) loginForm.style.display = 'none';
+                if (adminContent) adminContent.style.display = 'block';
+                switchAdminTab('photos', document.querySelector('.admin-tab-btn.active'));
+            } else {
+                if (loginForm) loginForm.style.display = 'block';
+                if (adminContent) adminContent.style.display = 'none';
+            }
+
+            // Restaurer l'état du menu d'onglets (collapsed ou non)
+            try {
+                const stored = localStorage.getItem('adminTabsCollapsed');
+                const tabs = document.querySelector('.admin-tabs');
+                const toggleBtn = document.querySelector('.admin-toggle-btn');
+                const collapsed = stored === 'true';
+                if (tabs) {
+                    if (collapsed) tabs.classList.add('collapsed'); else tabs.classList.remove('collapsed');
+                }
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+                    toggleBtn.textContent = collapsed ? '☰' : '✖';
+                }
+            } catch (e) {
+                console.warn('Erreur restauration état onglets admin', e);
+            }
             
             // Initialiser les event listeners pour les noms des mariés
             setTimeout(() => {
@@ -3099,33 +3503,56 @@
         }
 
         function adminLogin() {
-            const password = document.getElementById('adminpassword').value;
+            const passwordInput = document.getElementById('adminpassword');
+            if (!passwordInput) {
+                alert('Erreur interne : champ mot de passe introuvable.');
+                return;
+            }
+
+            const password = passwordInput.value.trim();
+            if (password.length === 0) {
+                alert('Veuillez entrer le mot de passe admin.');
+                passwordInput.focus();
+                return;
+            }
+
             if (password === ADMIN_PASSWORD) {
                 adminLoggedIn = true;
-                document.getElementById('adminLoginForm').style.display = 'none';
-                document.getElementById('adminContent').style.display = 'block';
-                loadAdminPhotos();
+                const loginForm = document.getElementById('adminLoginForm');
+                const adminContent = document.getElementById('adminContent');
+                if (loginForm) loginForm.style.display = 'none';
+                if (adminContent) adminContent.style.display = 'block';
+                passwordInput.value = '';
+                if (typeof loadAdminPhotos === 'function') {
+                    loadAdminPhotos();
+                }
+                switchAdminTab('photos');
                 console.log('✅ ADMIN CONNECTÉ');
             } else {
-                alert('❌ Mot de passe incorrect');
+                alert('❌ Mot de passe incorrect. Veuillez réessayer.');
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         }
 
         function adminLogout() {
             adminLoggedIn = false;
-            document.getElementById('adminLoginForm').style.display = 'block';
-            document.getElementById('adminContent').style.display = 'none';
+            const loginForm = document.getElementById('adminLoginForm');
+            const adminContent = document.getElementById('adminContent');
+            if (loginForm) loginForm.style.display = 'block';
+            if (adminContent) adminContent.style.display = 'none';
             document.getElementById('adminpassword').value = '';
             console.log('🔒 ADMIN DÉCONNECTÉ');
         }
 
-        function switchAdminTab(tab) {
+        function switchAdminTab(tab, btn) {
             // Cacher tous les tabs
             document.getElementById('admin-photos-tab').style.display = 'none';
             document.getElementById('admin-music-tab').style.display = 'none';
             document.getElementById('admin-countdown-tab').style.display = 'none';
             document.getElementById('admin-programmes-tab').style.display = 'none';
             document.getElementById('admin-names-tab').style.display = 'none';
+            document.getElementById('admin-hero-tab').style.display = 'none';
             document.getElementById('admin-design-tab').style.display = 'none';
 
             // Réinitialiser les boutons
@@ -3134,8 +3561,10 @@
             });
 
             // Afficher le tab sélectionné et activer le bouton
-            const targetBtn = event.target;
-            targetBtn.classList.add('active');
+            const targetBtn = btn || document.querySelector(`.admin-tab-btn[data-tab="${tab}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
 
             if (tab === 'photos') {
                 document.getElementById('admin-photos-tab').style.display = 'block';
@@ -3149,6 +3578,9 @@
             } else if (tab === 'names') {
                 document.getElementById('admin-names-tab').style.display = 'block';
                 loadAdminNames(); // Charger les noms quand on ouvre le tab
+            } else if (tab === 'hero') {
+                document.getElementById('admin-hero-tab').style.display = 'block';
+                loadAdminHero(); // Charger les paramètres hero
             } else if (tab === 'design') {
                 document.getElementById('admin-design-tab').style.display = 'block';
                 loadAdminDesign(); // Charger les paramètres de design
@@ -3164,6 +3596,16 @@
             msgDiv.classList.add(type);
             msgDiv.style.display = 'block';
             setTimeout(() => msgDiv.style.display = 'none', 4000);
+        }
+
+        function toggleAdminTabs() {
+            const tabs = document.querySelector('.admin-tabs');
+            const btn = document.querySelector('.admin-toggle-btn');
+            if (!tabs || !btn) return;
+            const collapsed = tabs.classList.toggle('collapsed');
+            btn.setAttribute('aria-expanded', String(!collapsed));
+            btn.textContent = collapsed ? '☰' : '✖';
+            try { localStorage.setItem('adminTabsCollapsed', String(collapsed)); } catch (e) { console.warn('Impossible de sauvegarder l\'état des onglets', e); }
         }
 
         function adminAddPhotos() {
@@ -3255,22 +3697,35 @@
                 adminShowMessage('Entrez un titre et sélectionnez un fichier', 'error');
                 return;
             }
-
+            const file = input.files[0];
             const reader = new FileReader();
             reader.onload = (e) => {
-                const musicData = {
-                    title: title,
-                    audio: e.target.result,
-                    savedAt: new Date().toISOString()
-                };
-                localStorage.setItem('weddingMusic', JSON.stringify(musicData));
-                adminShowMessage('✅ Musique sauvegardée !', 'success');
-                document.getElementById('adminMusicTitle').value = '';
-                input.value = '';
-                loadAllCMSData(); // Mise à jour du site
-                console.log('🎵 MUSIQUE MISE À JOUR');
+                const audioSrc = e.target.result;
+                const audio = new Audio();
+                audio.src = audioSrc;
+                audio.addEventListener('loadedmetadata', () => {
+                    const duration = audio.duration || 0;
+                    if (duration < 180) {
+                        adminShowMessage('La piste doit durer au moins 3 minutes (180s).', 'error');
+                        return;
+                    }
+                    const musicData = {
+                        title: title,
+                        audio: audioSrc,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('weddingMusic', JSON.stringify(musicData));
+                    adminShowMessage('✅ Musique sauvegardée !', 'success');
+                    document.getElementById('adminMusicTitle').value = '';
+                    input.value = '';
+                    loadAllCMSData(); // Mise à jour du site
+                    console.log('🎵 MUSIQUE MISE À JOUR (durée:', Math.round(duration), 's)');
+                });
+                audio.addEventListener('error', () => {
+                    adminShowMessage('Impossible de lire le fichier audio sélectionné.', 'error');
+                });
             };
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
 
         function adminSaveCountdown() {
@@ -3291,6 +3746,7 @@
 
             localStorage.setItem('weddingCountdown', JSON.stringify(countdownData));
             updateCountdown(); // Mettre à jour immédiatement l'affichage
+            updateHeroDate(); // Mettre à jour la date dans le hero
             adminShowMessage('✅ Compte à rebours sauvegardé !', 'success');
             console.log('⏰ COUNTDOWN MISE À JOUR:', countdownData);
         }
@@ -3537,6 +3993,116 @@
             console.log('✅ Noms affichés sur le site:', couples);
         }
 
+        function loadAdminHero() {
+            const heroData = JSON.parse(localStorage.getItem('heroGuest') || JSON.stringify({guestName: '', qrCodeUrl: '', heroBgUrl: '', programmeBgUrl: ''}));
+            document.getElementById('adminGuestName').value = heroData.guestName || '';
+            document.getElementById('adminQrCodeUrl').value = heroData.qrCodeUrl || '';
+            document.getElementById('adminHeroBgUrl').value = heroData.heroBgUrl || '';
+            document.getElementById('adminProgrammeBgUrl').value = heroData.programmeBgUrl || '';
+            document.getElementById('adminHeroMessage').value = heroData.heroMessage || '';
+        }
+
+        function adminSaveHero() {
+            const guestName = document.getElementById('adminGuestName').value.trim();
+            const qrCodeUrl = document.getElementById('adminQrCodeUrl').value.trim();
+            const heroBgUrl = document.getElementById('adminHeroBgUrl').value.trim();
+            const programmeBgUrl = document.getElementById('adminProgrammeBgUrl').value.trim();
+            const heroMessage = document.getElementById('adminHeroMessage').value.trim();
+            const heroFileInput = document.getElementById('adminHeroBgFile');
+
+            // Helper to persist and update
+            const persist = (finalHeroBgUrl) => {
+                const heroData = { guestName, qrCodeUrl, heroBgUrl: finalHeroBgUrl || heroBgUrl, programmeBgUrl, heroMessage };
+                localStorage.setItem('heroGuest', JSON.stringify(heroData));
+
+                if (finalHeroBgUrl) {
+                    localStorage.setItem('heroBackgroundUrl', finalHeroBgUrl);
+                } else if (heroBgUrl) {
+                    localStorage.setItem('heroBackgroundUrl', heroBgUrl);
+                } else {
+                    localStorage.removeItem('heroBackgroundUrl');
+                }
+
+                if (programmeBgUrl) {
+                    localStorage.setItem('programmeBackgroundUrl', programmeBgUrl);
+                } else {
+                    localStorage.removeItem('programmeBackgroundUrl');
+                }
+
+                adminShowMessage('✅ Accueil sauvegardé !', 'success');
+                updateHeroGuest();
+                updateHeroBackgrounds();
+                console.log('🏠 HERO GUEST MIS À JOUR:', heroData);
+            };
+
+            // If a file is uploaded, read it as data URL and save
+            if (heroFileInput && heroFileInput.files && heroFileInput.files.length > 0) {
+                const file = heroFileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target.result;
+                    persist(dataUrl);
+                    heroFileInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                persist();
+            }
+        }
+
+        function updateHeroBackgrounds() {
+            const heroBgUrl = localStorage.getItem('heroBackgroundUrl');
+            const programmeBgUrl = localStorage.getItem('programmeBackgroundUrl');
+            const hero = document.querySelector('.hero');
+            const programme = document.getElementById('programme');
+
+            if (hero && heroBgUrl) {
+                hero.style.background = `linear-gradient(180deg, rgba(20, 20, 20, 0.35), rgba(20, 20, 20, 0.35)), url('${heroBgUrl}') center/cover no-repeat`;
+            } else if (hero) {
+                hero.style.background = '';
+            }
+
+            if (programme && programmeBgUrl) {
+                programme.style.background = `linear-gradient(180deg, rgba(255,255,255,0.60) 0%, rgba(0,0,0,0.35) 100%), url('${programmeBgUrl}') center/cover no-repeat`;
+            } else if (programme) {
+                programme.style.background = '';
+            }
+        }
+
+        function updateHeroGuest() {
+            const heroData = JSON.parse(localStorage.getItem('heroGuest') || JSON.stringify({guestName: '', qrCodeUrl: ''}));
+            
+            const heroSubtitle = document.querySelector('.hero-content .subtitle');
+            if (heroSubtitle) {
+                // Reset content
+                heroSubtitle.innerHTML = '';
+                if (heroData.guestName) {
+                    heroSubtitle.textContent = `Bienvenue ${heroData.guestName} à notre mariage !`;
+                } else {
+                    heroSubtitle.textContent = 'Nous nous marions !';
+                }
+
+                // Ajouter le QR code si présent
+                if (heroData.qrCodeUrl) {
+                    const qrImg = document.createElement('img');
+                    qrImg.src = heroData.qrCodeUrl;
+                    qrImg.alt = 'QR Code';
+                    qrImg.style.width = '60px';
+                    qrImg.style.height = '60px';
+                    qrImg.style.marginLeft = '20px';
+                    qrImg.style.borderRadius = '8px';
+                    qrImg.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                    heroSubtitle.appendChild(qrImg);
+                }
+            }
+
+            // Deep message
+            const heroMessageEl = document.querySelector('.hero-content .hero-message');
+            if (heroMessageEl) {
+                heroMessageEl.textContent = heroData.heroMessage || "Nous sommes profondément honorés de partager ce moment avec vous — votre présence rendra cette journée unique.";
+            }
+        }
+
         function loadAdminDesign() {
             const designData = JSON.parse(localStorage.getItem('siteDesign') || JSON.stringify({
                 colorPrimary: '#d4af37',
@@ -3708,5 +4274,12 @@
             }
         }
     </script>
+
+    <?php
+$conn = new mysqli("localhost", "root", "tonMotDePasse", "Gestions_Ceremonies");
+if ($conn->connect_error) {
+    die("Erreur connexion: " . $conn->connect_error);
+}
+?>
 </body>
 </html>
