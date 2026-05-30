@@ -3151,12 +3151,13 @@
                     galleryGrid.innerHTML = '';
                     
                     // Ajouter les photos
-                    photos.forEach((photo) => {
-                        const item = document.createElement('div');
-                        item.className = 'gallery-item';
-                        item.innerHTML = `<img src="${photo}" alt="Photo mariage">`;
-                        galleryGrid.appendChild(item);
-                    });
+                            photos.forEach((photo) => {
+                                const item = document.createElement('div');
+                                item.className = 'gallery-item';
+                                // use lazy loading to reduce mobile memory/network pressure
+                                item.innerHTML = `<img src="${photo}" alt="Photo mariage" loading="lazy" style="width:100%; height:100%; object-fit:cover;">`;
+                                galleryGrid.appendChild(item);
+                            });
                     
                     // Ajouter les vidéos
                     videos.forEach((video) => {
@@ -3349,7 +3350,8 @@
                     
                     // Ajouter les photos
                     photos.forEach((photo) => {
-                        newHTML += `<div class="gallery-item"><img src="${photo}" alt="Photo mariage" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                        // add lazy loading attribute to help mobile browsers
+                        newHTML += `<div class="gallery-item"><img loading="lazy" src="${photo}" alt="Photo mariage" style="width:100%; height:100%; object-fit:cover;"></div>`;
                     });
                     
                     // Ajouter les vidéos
@@ -3377,10 +3379,11 @@
             
             console.log('🚀 MONITORING TEMPS RÉEL ACTIVÉ');
             
-            // Rafraîchir la galerie TOUTES LES 100ms (très agressif)
+            // Rafraîchir la galerie périodiquement — réduire la fréquence sur mobile
+            // (100ms est trop agressif et peut bloquer le chargement d'images sur smartphone)
             setInterval(() => {
                 refreshGalleryFromLocalStorage();
-            }, 100);
+            }, 1500);
             
             // Aussi sur chaque changement du localStorage (autre onglet)
             window.addEventListener('storage', (event) => {
