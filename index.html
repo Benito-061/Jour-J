@@ -2355,7 +2355,7 @@
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📸 Gérer les Photos</h3>
                     <div class="admin-card">
                         <div class="admin-input-group">
-                            <label>📁 Sélectionner Images</label>
+                            <label>📁 Sélectionner Images (max 30 Mo par photo)</label>
                             <input type="file" id="adminPhotoInput" accept="image/*" multiple class="admin-input" style="padding: 12px; cursor: pointer; border: 2px dashed #5e72e4; background: linear-gradient(135deg, rgba(94, 114, 228, 0.05) 0%, rgba(111, 90, 224, 0.05) 100%);">
                         </div>
                         <button onclick="adminAddPhotos()" class="admin-btn-success" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 10px;">✅ Ajouter Photos</button>
@@ -3614,28 +3614,55 @@
         function adminAddPhotos() {
             const input = document.getElementById('adminPhotoInput');
             const files = Array.from(input.files);
-            
+            const MAX_PHOTO_SIZE = 30 * 1024 * 1024; // 30 Mo
+
             if (files.length === 0) {
                 adminShowMessage('Sélectionnez des photos d\'abord', 'error');
                 return;
             }
 
             let processed = 0;
+            let added = 0;
+            let skipped = 0;
             let photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
 
             files.forEach(file => {
+                if (file.size > MAX_PHOTO_SIZE) {
+                    skipped += 1;
+                    processed += 1;
+                    if (processed === files.length) {
+                        const message = skipped === files.length
+                            ? '❌ Aucune photo ajoutée : chaque fichier doit faire au maximum 30 Mo.'
+                            : `✅ ${added} photo(s) ajoutée(s), ${skipped} photo(s) ignorée(s) (max 30 Mo).`;
+                        adminShowMessage(message, skipped === files.length ? 'error' : 'success');
+                        input.value = '';
+                        if (added > 0) {
+                            localStorage.setItem('weddingPhotos', JSON.stringify(photos));
+                            loadAdminPhotos();
+                            refreshGalleryFromLocalStorage();
+                        }
+                    }
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     photos.push(e.target.result);
                     if (photos.length > 12) photos = photos.slice(-12);
-                    processed++;
+                    added += 1;
+                    processed += 1;
                     
                     if (processed === files.length) {
                         localStorage.setItem('weddingPhotos', JSON.stringify(photos));
-                        adminShowMessage('✅ ' + files.length + ' photos ajoutées !', 'success');
+                        const message = skipped > 0
+                            ? `✅ ${added} photo(s) ajoutée(s), ${skipped} photo(s) ignorée(s) (max 30 Mo).`
+                            : `✅ ${added} photo(s) ajoutée(s) !`;
+                        adminShowMessage(message, 'success');
                         input.value = '';
-                        loadAdminPhotos();
-                        refreshGalleryFromLocalStorage(); // Mise à jour immédiate du site !
+                        if (added > 0) {
+                            loadAdminPhotos();
+                            refreshGalleryFromLocalStorage(); // Mise à jour immédiate du site !
+                        }
                         console.log('📸 PHOTOS AJOUTÉES - Galerie mise à jour');
                     }
                 };
