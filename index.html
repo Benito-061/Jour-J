@@ -326,6 +326,7 @@
             align-items: center;
             justify-content: center;
             transition: transform 0.18s ease, background 0.18s ease;
+            animation: float 3s ease-in-out infinite;
         }
 
         .nav-toggle-btn:hover { transform: scale(1.04); background: rgba(255,255,255,0.12); }
@@ -2142,17 +2143,19 @@
         <div class="nav-container">
             <div style="display:flex; align-items:center; gap:12px;">
                 <div class="logo" id="navbarLogo">💍 CN</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <ul class="nav-links" id="mainNavLinks">
+                    <li><a href="#hero">Accueil</a></li>
+                    <li><a href="#countdown">Compte à rebours</a></li>
+                    <li><a href="#programme">Programme</a></li>
+                    <li><a href="#location">Lieu</a></li>
+                    <li><a href="#gallery">Galerie</a></li>
+                    <li><a href="#guestbook">Livre d'Or</a></li>
+                    <li><a href="#" onclick="openAdminModal(); return false;" style="color: rgba(212, 175, 55, 0.6); font-size: 12px;">⚙️ CMS Admin</a></li>
+                </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
-            <ul class="nav-links" id="mainNavLinks">
-                <li><a href="#hero">Accueil</a></li>
-                <li><a href="#countdown">Compte à rebours</a></li>
-                <li><a href="#programme">Programme</a></li>
-                <li><a href="#location">Lieu</a></li>
-                <li><a href="#gallery">Galerie</a></li>
-                <li><a href="#guestbook">Livre d'Or</a></li>
-                <li><a href="#" onclick="openAdminModal(); return false;" style="color: rgba(212, 175, 55, 0.6); font-size: 12px;">⚙️ CMS Admin</a></li>
-            </ul>
         </div>
     </nav>
 
