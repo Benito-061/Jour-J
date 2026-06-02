@@ -253,6 +253,40 @@
             opacity: 1;
         }
 
+        /* Share button styling */
+        #shareBtn {
+            background: transparent;
+            border: 2px solid rgba(212,175,55,0.12);
+            color: var(--primary);
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* Site lock overlay */
+        #siteLockOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            font-size: 1.1rem;
+        }
+        #siteLockOverlay .box {
+            max-width: 720px;
+            background: #111;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
         .nav-links::before {
             content: '';
             position: absolute;
@@ -489,6 +523,16 @@
             box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3),
                         inset 0 1px 0 rgba(255, 255, 255, 0.3);
             letter-spacing: 1px;
+        }
+
+        .messages-container .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0;
+            padding: 10px 14px;
+            min-height: 44px;
+            line-height: 1.2;
         }
 
         .cta-btn::before {
@@ -956,18 +1000,19 @@
         /* GUESTBOOK */
         #guestbook {
             background: #f9f7f4;
-            color: #1a1a1a;
+            color: #000000;
         }
 
-        #guestbook h2,
-        #guestbook p,
-        #guestbook label,
-        #guestbook .message-name,
-        #guestbook .message-status,
-        #guestbook .message-text,
-        #guestbook .message-date,
-        #guestbook .loading {
-            color: #1a1a1a;
+        /* Force black for all text inside the guestbook */
+        #guestbook,
+        #guestbook * {
+            color: #000000 !important;
+        }
+
+        /* Force white for all text inside the gallery */
+        #gallery,
+        #gallery * {
+            color: #ffffff !important;
         }
 
         #guestbook h2 {
@@ -2152,7 +2197,8 @@
                     <li><a href="#location">Lieu</a></li>
                     <li><a href="#gallery">Galerie</a></li>
                     <li><a href="#guestbook">Livre d'Or</a></li>
-                    <li><a href="#" onclick="openAdminModal(); return false;" style="color: rgba(212, 175, 55, 0.6); font-size: 12px;">⚙️ CMS Admin</a></li>
+                    <li><span id="adminNavButton" role="button" tabindex="0" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;">⚙️ CMS Admin</span></li>
+                    <li><button id="shareBtn" type="button" title="Partager le lien" style="background:none;border:none;padding:0;margin-left:6px;">🔗 Partager</button></li>
                 </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
@@ -2179,7 +2225,7 @@
         </div>
     </section>
 
-    <!-- COUNTDOWN -->
+    <!-- COmpte a rebours -->
     <section id="countdown">
         <div class="section-head">
             <span>Compte à rebours</span>
@@ -2305,13 +2351,45 @@
                     <input type="checkbox" id="attending" name="attending">
                     <label for="attending">Je serai présent(e) à cette belle journée</label>
                 </div>
+                <div class="form-group">
+                    <button type="button" class="cta-btn" style="width: 100%; background: #856d06;" onclick="openPrivateMessageDialog()">📩 Envoyer un message privé au marié</button>
+                </div>
                 <button type="submit" class="cta-btn" style="width: 100%;">Envoyer ✓</button>
                 <div id="formMsg" style="margin-top: 15px; text-align: center; display: none; padding: 12px; border-radius: 8px; font-weight: 500;"></div>
             </form>
+
+            <div id="privateMessageModal" style="display:none; position:fixed; inset:0; z-index:10010; background: rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px;">
+                <div style="background:white; border-radius:16px; width:100%; max-width:520px; padding:24px; position:relative; box-shadow:0 25px 80px rgba(0,0,0,0.25);">
+                    <button type="button" onclick="closePrivateMessageDialog()" style="position:absolute; top:16px; right:16px; border:none; background:transparent; font-size:22px; cursor:pointer;">✕</button>
+                    <h3 style="margin-top:0; margin-bottom:20px; color:#1a1a1a;">Message privé au marié</h3>
+                    <div class="form-group">
+                        <label for="privateGuestName" style="display:block; margin-bottom:8px; font-weight:600; color:#2c2c2c;">Votre nom</label>
+                        <input type="text" id="privateGuestName" placeholder="Entrez votre nom" maxlength="100" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:10px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="privateGuestMessage" style="display:block; margin-bottom:8px; font-weight:600; color:#2c2c2c;">Message privé</label>
+                        <textarea id="privateGuestMessage" placeholder="Ecrivez un message privé..." maxlength="500" rows="5" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:10px;"></textarea>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+                        <button type="button" onclick="savePrivateMessage()" class="cta-btn" style="flex:1;">Envoyer au marié</button>
+                        <button type="button" onclick="closePrivateMessageDialog()" class="cta-btn" style="flex:1; background:#ccc; color:#111;">Annuler</button>
+                    </div>
+                    <p id="privateMessageModalFeedback" style="display:none; margin-top:16px; padding:12px; border-radius:10px; font-weight:600;"></p>
+                </div>
+            </div>
         </div>
 
         <div class="messages-container">
-            <h3 style="text-align: center; margin-bottom: 40px; font-size: 1.4rem; color: #1a1a1a;">Messages des invités</h3>
+            <h3 style="text-align: center; margin-bottom: 24px; font-size: 1.4rem; color: #1a1a1a;">Messages des invités</h3>
+
+            <div style="max-width:640px;margin:0 auto 16px;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;">
+                <input id="guestSearchInput" placeholder="Rechercher par nom d'invité..." style="flex:1;min-width:0;padding:10px;border:1px solid #ddd;border-radius:8px;">
+                <button type="button" class="cta-btn" onclick="searchGuestByName()" style="padding:10px 14px;white-space:nowrap;">🔎</button>
+                <button type="button" class="cta-btn" onclick="clearGuestSearch()" style="padding:10px 14px;background:#ccc;color:#111;white-space:nowrap;">✖</button>
+            </div>
+
+            <div id="guestSearchResult" style="max-width:640px;margin:0 auto 16px;display:none;"></div>
+
             <div id="messagesList">
                 <p class="loading">Chargement des messages...</p>
             </div>
@@ -2350,6 +2428,7 @@
                     <button onclick="switchAdminTab('names', this)" class="admin-tab-btn" data-tab="names">👥 Noms</button>
                     <button onclick="switchAdminTab('hero', this)" class="admin-tab-btn" data-tab="hero">🏠 Accueil</button>
                     <button onclick="switchAdminTab('design', this)" class="admin-tab-btn" data-tab="design">🎨 Design</button>
+                    <button onclick="switchAdminTab('privateMessages', this)" class="admin-tab-btn" data-tab="privateMessages">📩 Messages Privés</button>
                     <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
                 </div>
 
@@ -2401,6 +2480,24 @@
                 <!-- Programmes Tab -->
                 <div id="admin-programmes-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📅 Gérer le Déroulement</h3>
+                    <!-- Background customization for Programmes -->
+                    <div class="admin-card" style="margin-bottom:14px;">
+                        <h4 style="color: #d4af37; margin-bottom: 10px;">🖼️ Arrière-plan (Programme)</h4>
+                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center;">
+                            <label style="min-width:140px;">🎨 Couleur de fond</label>
+                            <input type="color" id="adminProgrammeBgColorProg" value="#ffffff" style="width:64px; height:44px; border-radius:8px; border:2px solid #eaeaea;">
+                            <input type="text" id="adminProgrammeBgColorProgText" class="admin-input" style="flex:1; font-family: monospace;" placeholder="#ffffff">
+                        </div>
+                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+                            <label style="min-width:140px;">🖼️ Image (URL)</label>
+                            <input type="url" id="adminProgrammeBgUrlProg" placeholder="https://..." class="admin-input" style="flex:1; padding:10px;">
+                        </div>
+                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+                            <label style="min-width:140px;">⬆️ Télécharger</label>
+                            <input type="file" id="adminProgrammeBgFileProg" accept="image/*" class="admin-input" style="padding:8px;">
+                        </div>
+                        <div id="adminProgrammeBgPreview" style="margin-top:12px; display:flex; gap:12px; align-items:center;"></div>
+                    </div>
                     <div id="adminProgrammesContainer" style="display: grid; gap: 15px;">
                         <!-- Les 4 items seront générés dynamiquement avec admin-card -->
                     </div>
@@ -2565,12 +2662,26 @@
                     <button onclick="adminSaveDesign()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 20px;">✅ Sauvegarder Design</button>
                 </div>
 
+                <div id="admin-privateMessages-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📩 Messages Privés</h3>
+                    <div id="adminPrivateMessagesList" style="display: grid; gap: 16px;"></div>
+                </div>
+
                 <div id="adminMessage" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; text-align: center; transition: all 0.3s ease;"></div>
             </div>
         </div>
     </div>
 
-    <!-- FOOTER -->
+            <!-- Site lock overlay (hidden by default) -->
+            <div id="siteLockOverlay" aria-hidden="true">
+                <div class="box">
+                    <h2 style="margin-top:0;">Le site est verrouillé</h2>
+                    <p style="margin:12px 0 18px;">Le site a été partagé plus d'une fois. Veuillez contacter l'administrateur au <strong>+243 991 048 061</strong> pour débloquer l'accès.</p>
+                    <button onclick="contactAdmin()" style="padding:10px 14px;border-radius:10px;border:2px solid rgba(212,175,55,0.12);background:transparent;color:var(--primary);">Contacter l'administrateur</button>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
     <footer>
         <p>&copy; 2025 Catherine & Nicolas | Heureux Mariage </p>
     </footer>
@@ -2815,74 +2926,50 @@
         // ========================================
         // LOAD MESSAGES WITH ANIMATIONS
         // ========================================
+        function renderMessageList(messages, target) {
+            const html = messages.map((msg, index) => {
+                const attending = msg.attending ? 'yes' : '';
+                const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
+                return `
+                    <div class="message-item" style="animation-delay: ${index * 0.05}s">
+                        <div class="message-header">
+                            <span class="message-name">${escapeHtml(msg.name)}</span>
+                            <span class="message-status ${attending}">${status}</span>
+                        </div>
+                        <p class="message-text">"${escapeHtml(msg.message)}"</p>
+                        <p class="message-date">${new Date(msg.created_at || msg.date || Date.now()).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                `;
+            }).join('');
+            target.innerHTML = html;
+            target.style.animation = 'fadeIn 0.6s ease-out';
+        }
+
         async function loadMessages() {
             const messagesList = document.getElementById('messagesList');
+            const localMessages = getLocalGuestMessages();
+
+            if (localMessages.length > 0) {
+                renderMessageList(localMessages, messagesList);
+            } else {
+                messagesList.innerHTML = '<p class="loading">Chargement des messages...</p>';
+            }
+
             try {
                 const response = await fetch('http://localhost:3000/api/guests');
                 const data = await response.json();
 
-                if (data.guests && data.guests.length > 0) {
-                    const html = data.guests.map((msg, index) => {
-                        const attending = msg.attending ? 'yes' : '';
-                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
-                        return `
-                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
-                                <div class="message-header">
-                                    <span class="message-name">${escapeHtml(msg.name)}</span>
-                                    <span class="message-status ${attending}">${status}</span>
-                                </div>
-                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
-                                <p class="message-date">${new Date(msg.created_at || msg.date || Date.now()).toLocaleDateString('fr-FR')}</p>
-                            </div>
-                        `;
-                    }).join('');
-                    messagesList.innerHTML = html;
-                    messagesList.style.animation = 'fadeIn 0.6s ease-out';
+                if (data.guests && Array.isArray(data.guests) && data.guests.length > 0) {
+                    renderMessageList(data.guests, messagesList);
                     return;
                 }
 
-                const fallbackMessages = getLocalGuestMessages();
-                if (fallbackMessages.length > 0) {
-                    const html = fallbackMessages.map((msg, index) => {
-                        const attending = msg.attending ? 'yes' : '';
-                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
-                        return `
-                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
-                                <div class="message-header">
-                                    <span class="message-name">${escapeHtml(msg.name)}</span>
-                                    <span class="message-status ${attending}">${status}</span>
-                                </div>
-                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
-                                <p class="message-date">${new Date(msg.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
-                            </div>
-                        `;
-                    }).join('');
-                    messagesList.innerHTML = html;
-                    messagesList.style.animation = 'fadeIn 0.6s ease-out';
-                    return;
+                if (!localMessages.length) {
+                    messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
                 }
-
-                messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
             } catch (error) {
-                console.error('Erreur:', error);
-                const fallbackMessages = getLocalGuestMessages();
-                if (fallbackMessages.length > 0) {
-                    const html = fallbackMessages.map((msg, index) => {
-                        const attending = msg.attending ? 'yes' : '';
-                        const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
-                        return `
-                            <div class="message-item" style="animation-delay: ${index * 0.05}s">
-                                <div class="message-header">
-                                    <span class="message-name">${escapeHtml(msg.name)}</span>
-                                    <span class="message-status ${attending}">${status}</span>
-                                </div>
-                                <p class="message-text">"${escapeHtml(msg.message)}"</p>
-                                <p class="message-date">${new Date(msg.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
-                            </div>
-                        `;
-                    }).join('');
-                    messagesList.innerHTML = html;
-                } else {
+                console.warn('Erreur de chargement des messages distants:', error);
+                if (!localMessages.length) {
                     messagesList.innerHTML = '<p class="loading">Impossible de charger les messages</p>';
                 }
             }
@@ -2896,6 +2983,162 @@
 
         loadMessages();
         setInterval(loadMessages, 30000);
+
+        // Recherche par nom dans le Livre d'Or (localStorage + tentative fetch remote)
+        async function searchGuestByName() {
+            const q = document.getElementById('guestSearchInput')?.value.trim().toLowerCase();
+            const resultDiv = document.getElementById('guestSearchResult');
+            if (!resultDiv) return;
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            if (!q) return;
+
+            let messages = getLocalGuestMessages();
+            try {
+                const resp = await fetch('http://localhost:3000/api/guests');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data.guests)) {
+                        // prepend remote guests so remote entries are prioritized
+                        messages = data.guests.concat(messages);
+                    }
+                }
+            } catch (e) {
+                // ignore fetch errors, fallback to local
+            }
+
+            const match = messages.find(m => (m.name || '').toLowerCase().includes(q));
+            if (!match) {
+                resultDiv.innerHTML = `<div style="padding:12px;border-radius:8px;background:#fff3cd;color:#856404;">Aucun message trouvé pour "${escapeHtml(q)}"</div>`;
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <div style="padding:16px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb;">
+                    <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(match.name)}</div>
+                    <div style="margin-bottom:10px;">${escapeHtml(match.message)}</div>
+                    <div style="font-size:12px;color:#6b7280;">${new Date(match.created_at || match.date || Date.now()).toLocaleString('fr-FR')}</div>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        function clearGuestSearch() {
+            const input = document.getElementById('guestSearchInput');
+            const resultDiv = document.getElementById('guestSearchResult');
+            if (input) input.value = '';
+            if (resultDiv) {
+                resultDiv.style.display = 'none';
+                resultDiv.innerHTML = '';
+            }
+        }
+
+        function getRgbFromCssColor(color) {
+            if (!color) return null;
+            color = color.trim();
+            if (color.startsWith('rgb')) {
+                const m = color.match(/rgba?\(([^)]+)\)/);
+                if (!m) return null;
+                const parts = m[1].split(',').map(s => parseFloat(s.trim()));
+                return { r: parts[0], g: parts[1], b: parts[2], a: parts[3] !== undefined ? parts[3] : 1 };
+            }
+            if (color.startsWith('#')) {
+                let hex = color.slice(1);
+                if (hex.length === 3) hex = hex.split('').map(h => h + h).join('');
+                const int = parseInt(hex, 16);
+                return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255, a: 1 };
+            }
+            return null;
+        }
+
+        function getEffectiveBackgroundColor(elem) {
+            let node = elem;
+            while (node && node !== document.documentElement) {
+                try {
+                    const style = window.getComputedStyle(node);
+                    const bg = style && style.backgroundColor;
+                    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
+                } catch (e) {
+                    break;
+                }
+                node = node.parentElement;
+            }
+            return 'rgb(255,255,255)';
+        }
+
+        function getBrightness(rgb) {
+            return (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+        }
+
+        function chooseTextColorForBg(bgColor) {
+            const rgb = getRgbFromCssColor(bgColor);
+            if (!rgb) return '#000000';
+            const brightness = getBrightness(rgb);
+            return brightness > 0.6 ? '#000000' : '#ffffff';
+        }
+
+        function elementHasVisibleText(node) {
+            for (const n of node.childNodes) {
+                if (n.nodeType === 3 && n.textContent.trim().length > 0) return true;
+            }
+            return false;
+        }
+
+        function adjustContrastForElement(elem) {
+            if (!elem || elem.nodeType !== 1) return;
+            const tag = elem.tagName;
+            if (['SCRIPT', 'STYLE', 'LINK', 'META', 'SVG', 'IMG', 'CANVAS'].includes(tag)) return;
+            try {
+                if (elem.matches && elem.matches('input, textarea, select, button, [contenteditable], .editable')) {
+                    elem.style.color = '#000000';
+                    return;
+                }
+            } catch (e) { /* ignore matches errors */ }
+            try {
+                if (elem.closest && elem.closest('#guestbook')) {
+                    elem.style.color = '#000000';
+                    return;
+                }
+            } catch (e) { /* ignore closest errors */ }
+            if (!elementHasVisibleText(elem)) return;
+            const bg = getEffectiveBackgroundColor(elem);
+            if (!bg) return;
+            const textColor = chooseTextColorForBg(bg);
+            elem.style.color = textColor;
+        }
+
+        function adjustAllTextContrast() {
+            try {
+                const nodes = document.querySelectorAll('body *');
+                nodes.forEach(el => {
+                    try { adjustContrastForElement(el); } catch (e) { /* ignore element errors */ }
+                });
+            } catch (e) {
+                console.warn('adjustAllTextContrast error', e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { setTimeout(adjustAllTextContrast, 50); });
+        window.addEventListener('load', () => { setTimeout(adjustAllTextContrast, 150); });
+
+        try {
+            const observer = new MutationObserver((mutations) => {
+                let shouldRun = false;
+                for (const m of mutations) {
+                    if (m.type === 'attributes' || m.addedNodes.length > 0 || m.removedNodes.length > 0) { shouldRun = true; break; }
+                }
+                if (shouldRun) {
+                    if (window._adjustContrastTimeout) clearTimeout(window._adjustContrastTimeout);
+                    window._adjustContrastTimeout = setTimeout(() => { adjustAllTextContrast(); }, 120);
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+        } catch (e) {
+            console.warn('MutationObserver not available', e);
+        }
+
+        try { setTimeout(adjustAllTextContrast, 500); } catch (e) {}
 
         // ========================================
         // SMOOTH SCROLL & ACTIVE NAVIGATION
@@ -2935,6 +3178,29 @@
             if (btn) btn.setAttribute('aria-expanded', String(!navCollapsed));
             if (btn) btn.textContent = navCollapsed ? '☰' : '✖';
         } catch (e) { /* ignore */ }
+
+        // Admin nav button behavior
+        (function attachAdminNavButton() {
+            const adminBtn = document.getElementById('adminNavButton');
+            if (!adminBtn) return;
+
+            adminBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof openAdminModal === 'function') {
+                    openAdminModal();
+                }
+            });
+
+            adminBtn.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    if (typeof openAdminModal === 'function') {
+                        openAdminModal();
+                    }
+                }
+            });
+        })();
 
         // Small cool sound produced with WebAudio for toggle feedback
         function playToggleSound(open) {
@@ -3552,46 +3818,73 @@
         }
 
         function switchAdminTab(tab, btn) {
-            // Cacher tous les tabs
-            document.getElementById('admin-photos-tab').style.display = 'none';
-            document.getElementById('admin-music-tab').style.display = 'none';
-            document.getElementById('admin-countdown-tab').style.display = 'none';
-            document.getElementById('admin-programmes-tab').style.display = 'none';
-            document.getElementById('admin-names-tab').style.display = 'none';
-            document.getElementById('admin-hero-tab').style.display = 'none';
-            document.getElementById('admin-design-tab').style.display = 'none';
+            // Liste de tous les tabs connus
+            const tabIds = [
+                'admin-photos-tab','admin-music-tab','admin-countdown-tab','admin-programmes-tab',
+                'admin-names-tab','admin-hero-tab','admin-design-tab','admin-privateMessages-tab'
+            ];
 
-            // Réinitialiser les boutons
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.classList.remove('active');
+            // Cacher tous les tabs de façon sûre
+            tabIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
             });
 
-            // Afficher le tab sélectionné et activer le bouton
-            const targetBtn = btn || document.querySelector(`.admin-tab-btn[data-tab="${tab}"]`);
+            // Réinitialiser les boutons
+            document.querySelectorAll('.admin-tab-btn').forEach(tb => {
+                try { tb.classList.remove('active'); } catch (e) {}
+            });
+
+            // Déterminer le bouton cible (accepte soit l'élément soit null)
+            const targetBtn = (btn && (btn.nodeType === 1)) ? btn : document.querySelector(`.admin-tab-btn[data-tab="${tab}"]`);
             if (targetBtn) {
-                targetBtn.classList.add('active');
+                try { targetBtn.classList.add('active'); } catch (e) {}
             }
 
-            if (tab === 'photos') {
-                document.getElementById('admin-photos-tab').style.display = 'block';
-            } else if (tab === 'music') {
-                document.getElementById('admin-music-tab').style.display = 'block';
-            } else if (tab === 'countdown') {
-                document.getElementById('admin-countdown-tab').style.display = 'block';
-            } else if (tab === 'programmes') {
-                document.getElementById('admin-programmes-tab').style.display = 'block';
-                loadAdminProgrammes(); // Charger les programmes quand on ouvre le tab
-            } else if (tab === 'names') {
-                document.getElementById('admin-names-tab').style.display = 'block';
-                loadAdminNames(); // Charger les noms quand on ouvre le tab
-            } else if (tab === 'hero') {
-                document.getElementById('admin-hero-tab').style.display = 'block';
-                loadAdminHero(); // Charger les paramètres hero
-            } else if (tab === 'design') {
-                document.getElementById('admin-design-tab').style.display = 'block';
-                loadAdminDesign(); // Charger les paramètres de design
-            } else if (tab === 'logout') {
-                adminLogout();
+            // Afficher le tab sélectionné et appeler le loader correspondant si nécessaire
+            switch (tab) {
+                case 'photos': {
+                    const el = document.getElementById('admin-photos-tab'); if (el) el.style.display = 'block'; break;
+                }
+                case 'music': {
+                    const el = document.getElementById('admin-music-tab'); if (el) el.style.display = 'block'; break;
+                }
+                case 'countdown': {
+                    const el = document.getElementById('admin-countdown-tab'); if (el) el.style.display = 'block'; break;
+                }
+                case 'programmes': {
+                    const el = document.getElementById('admin-programmes-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminProgrammes === 'function') try { loadAdminProgrammes(); } catch (e) {}
+                    break;
+                }
+                case 'names': {
+                    const el = document.getElementById('admin-names-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminNames === 'function') try { loadAdminNames(); } catch (e) {}
+                    break;
+                }
+                case 'hero': {
+                    const el = document.getElementById('admin-hero-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminHero === 'function') try { loadAdminHero(); } catch (e) {}
+                    break;
+                }
+                case 'design': {
+                    const el = document.getElementById('admin-design-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminDesign === 'function') try { loadAdminDesign(); } catch (e) {}
+                    break;
+                }
+                case 'privateMessages': {
+                    const el = document.getElementById('admin-privateMessages-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminPrivateMessages === 'function') try { loadAdminPrivateMessages(); } catch (e) {}
+                    break;
+                }
+                case 'logout': {
+                    try { adminLogout(); } catch (e) {}
+                    break;
+                }
+                default: {
+                    // If unknown, fallback to photos
+                    const el = document.getElementById('admin-photos-tab'); if (el) el.style.display = 'block';
+                }
             }
         }
 
@@ -3721,6 +4014,108 @@
                 container.appendChild(div);
             });
         }
+
+        function openPrivateMessageDialog() {
+            const guestNameValue = document.getElementById('guestName')?.value.trim();
+            const modal = document.getElementById('privateMessageModal');
+            if (!modal) return;
+            const privateName = document.getElementById('privateGuestName');
+            if (privateName && guestNameValue) {
+                privateName.value = guestNameValue;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closePrivateMessageDialog() {
+            const modal = document.getElementById('privateMessageModal');
+            if (!modal) return;
+            modal.style.display = 'none';
+            const privateMessage = document.getElementById('privateGuestMessage');
+            const feedback = document.getElementById('privateMessageModalFeedback');
+            if (privateMessage) privateMessage.value = '';
+            if (feedback) {
+                feedback.style.display = 'none';
+                feedback.textContent = '';
+            }
+        }
+
+        function savePrivateMessage() {
+            const name = document.getElementById('privateGuestName')?.value.trim();
+            const message = document.getElementById('privateGuestMessage')?.value.trim();
+            const feedback = document.getElementById('privateMessageModalFeedback');
+            if (!feedback) return;
+
+            if (!name || !message) {
+                feedback.textContent = '⚠️ Veuillez indiquer votre nom et votre message privé.';
+                feedback.style.background = '#fff3cd';
+                feedback.style.color = '#856404';
+                feedback.style.display = 'block';
+                return;
+            }
+
+            const privateMessageData = {
+                name,
+                message,
+                created_at: new Date().toISOString()
+            };
+
+            const stored = JSON.parse(localStorage.getItem('privateMessages') || '[]');
+            stored.unshift(privateMessageData);
+            localStorage.setItem('privateMessages', JSON.stringify(stored.slice(0, 50)));
+
+            feedback.textContent = '✅ Message privé envoyé au marié et visible dans l’admin.';
+            feedback.style.background = '#d4edda';
+            feedback.style.color = '#155724';
+            feedback.style.display = 'block';
+
+            setTimeout(() => {
+                closePrivateMessageDialog();
+            }, 900);
+        }
+
+        function loadAdminPrivateMessages() {
+            const container = document.getElementById('adminPrivateMessagesList');
+            if (!container) return;
+            const messages = JSON.parse(localStorage.getItem('privateMessages') || '[]');
+            if (!messages.length) {
+                container.innerHTML = '<p style="color:#555;">Aucun message privé pour le moment.</p>';
+                return;
+            }
+
+            container.innerHTML = messages.map((msg) => `
+                <div class="admin-card" style="padding: 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px;">
+                    <h4 style="margin: 0 0 10px; color: #111;">${escapeHtml(msg.name)}</h4>
+                    <p style="margin: 0 0 14px; color: #333; line-height: 1.6;">${escapeHtml(msg.message)}</p>
+                    <p style="margin: 0; font-size: 13px; color: #6b7280;">${new Date(msg.created_at).toLocaleString('fr-FR')}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- Initialisation: exposer fonctions et attacher écouteurs robustes ---
+        (function initPrivateMessageHelpers() {
+            try {
+                // Ensure functions are available on window for inline onclicks
+                window.openPrivateMessageDialog = window.openPrivateMessageDialog || openPrivateMessageDialog;
+                window.closePrivateMessageDialog = window.closePrivateMessageDialog || closePrivateMessageDialog;
+                window.savePrivateMessage = window.savePrivateMessage || savePrivateMessage;
+
+                // Attach fallback event listener to the open button if inline onclick fails
+                const openBtn = document.querySelector('button[onclick="openPrivateMessageDialog()"]');
+                if (openBtn && !openBtn.dataset.pmInit) {
+                    openBtn.addEventListener('click', (e) => { e.preventDefault(); openPrivateMessageDialog(); });
+                    openBtn.dataset.pmInit = '1';
+                }
+
+                // After saving a private message, refresh admin list and messages view
+                const originalSave = savePrivateMessage;
+                window.savePrivateMessage = function wrappedSavePrivateMessage() {
+                    const res = originalSave.apply(this, arguments);
+                    try { loadAdminPrivateMessages(); } catch (e) {}
+                    try { loadMessages(); } catch (e) {}
+                    return res;
+                };
+            } catch (e) { console.warn('initPrivateMessageHelpers error', e); }
+        })();
 
         function adminSaveMusic() {
             const title = document.getElementById('adminMusicTitle').value;
@@ -3936,8 +4331,81 @@
             localStorage.setItem('weddingProgrammes', JSON.stringify(programmes));
             adminShowMessage('✅ Programmes sauvegardés !', 'success');
             updateTimelineDisplay();
-            console.log('📅 PROGRAMMES MIS À JOUR:', programmes);
+                console.log('📅 PROGRAMMES MIS À JOUR:', programmes);
+
+                // Save programme background options if present
+                try {
+                    const bgColor = document.getElementById('adminProgrammeBgColorProg')?.value;
+                    const bgColorText = document.getElementById('adminProgrammeBgColorProgText')?.value;
+                    const bgUrl = document.getElementById('adminProgrammeBgUrlProg')?.value.trim();
+                    if (bgColor) localStorage.setItem('programmeBackgroundColor', bgColor);
+                    else if (bgColorText) localStorage.setItem('programmeBackgroundColor', bgColorText);
+                    if (bgUrl) localStorage.setItem('programmeBackgroundUrl', bgUrl);
+                } catch (e) { console.warn('Erreur sauvegarde bg programmes', e); }
+
+                // Apply background immediately
+                try { applyProgrammeBackground(); } catch (e) { /* ignore */ }
         }
+
+            function applyProgrammeBackground() {
+                try {
+                    const section = document.getElementById('programme');
+                    if (!section) return;
+                    const color = localStorage.getItem('programmeBackgroundColor') || '';
+                    const url = localStorage.getItem('programmeBackgroundUrl') || '';
+                    let style = '';
+                    if (url) {
+                        style = `background-image: linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url('${url}'); background-size: cover; background-position: center;`;
+                    } else if (color) {
+                        style = `background: ${color};`;
+                    } else {
+                        style = '';
+                    }
+                    section.style.cssText = section.style.cssText + ';' + style;
+                } catch (e) { console.warn('applyProgrammeBackground error', e); }
+            }
+
+            // File upload handling for programme background
+            document.addEventListener('DOMContentLoaded', () => {
+                const colorInput = document.getElementById('adminProgrammeBgColorProg');
+                const colorText = document.getElementById('adminProgrammeBgColorProgText');
+                const urlInput = document.getElementById('adminProgrammeBgUrlProg');
+                const fileInput = document.getElementById('adminProgrammeBgFileProg');
+                const preview = document.getElementById('adminProgrammeBgPreview');
+
+                if (colorInput && colorText) {
+                    colorInput.addEventListener('input', (e) => { colorText.value = e.target.value; });
+                    colorText.addEventListener('input', (e) => { try { colorInput.value = e.target.value; } catch (err) {} });
+                }
+
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        const f = e.target.files && e.target.files[0];
+                        if (!f) return;
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            const dataUrl = ev.target.result;
+                            localStorage.setItem('programmeBackgroundUrl', dataUrl);
+                            if (urlInput) urlInput.value = '';
+                            if (preview) preview.innerHTML = `<div style="width:120px;height:70px;background-image:url('${dataUrl}');background-size:cover;border-radius:8px;border:1px solid #e5e7eb;"></div>`;
+                            applyProgrammeBackground();
+                        };
+                        reader.readAsDataURL(f);
+                    });
+                }
+
+                // set initial preview and inputs from storage
+                try {
+                    const storedColor = localStorage.getItem('programmeBackgroundColor');
+                    const storedUrl = localStorage.getItem('programmeBackgroundUrl');
+                    if (colorInput && storedColor) { colorInput.value = storedColor; if (colorText) colorText.value = storedColor; }
+                    if (urlInput && storedUrl && !storedUrl.startsWith('data:')) urlInput.value = storedUrl;
+                    if (preview && storedUrl) {
+                        preview.innerHTML = `<div style="width:120px;height:70px;background-image:url('${storedUrl}');background-size:cover;border-radius:8px;border:1px solid #e5e7eb;"></div>`;
+                    }
+                    applyProgrammeBackground();
+                } catch (e) { /* ignore */ }
+            });
 
         function updateTimelineDisplay() {
             const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
@@ -4306,6 +4774,149 @@
                 closeAdminModal();
             }
         }
+    </script>
+    <script>
+        // SHARE / LOCK logic
+        (function(){
+            const API_SHARE = 'http://localhost:3000/api/share';
+
+            function getDeviceId() {
+                try {
+                    let id = localStorage.getItem('siteDeviceId');
+                    if (!id) {
+                        id = 'dev-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(4);
+                        localStorage.setItem('siteDeviceId', id);
+                    }
+                    return id;
+                } catch (e) {
+                    return 'unknown';
+                }
+            }
+
+            function lockSite() {
+                try {
+                    window._siteLocked = true;
+                    const overlay = document.getElementById('siteLockOverlay');
+                    if (overlay) overlay.style.display = 'flex';
+                    document.documentElement.style.overflow = 'hidden';
+                } catch (e) {
+                    console.warn('lockSite error', e);
+                }
+            }
+
+            function contactAdmin(){
+                window.location.href = 'tel:+243991048061';
+            }
+
+            async function fetchShareStatus() {
+                try {
+                    const resp = await fetch(API_SHARE, { method: 'GET', cache: 'no-store' });
+                    if (!resp.ok) return null;
+                    return await resp.json();
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            async function checkShareStatus() {
+                const data = await fetchShareStatus();
+                if (!data) return;
+                if (data.locked || (typeof data.shareCount === 'number' && data.shareCount >= 2)) {
+                    lockSite();
+                }
+            }
+
+            async function reportShare(deviceId) {
+                const resp = await fetch(API_SHARE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId, timestamp: new Date().toISOString() })
+                });
+                if (!resp.ok) throw new Error('share request failed');
+                return resp.json();
+            }
+
+            async function attemptShare() {
+                if (window._siteLocked) {
+                    alert('Ce site est verrouillé. Veuillez contacter l’administrateur.');
+                    return;
+                }
+
+                const already = localStorage.getItem('shareSent') === '1';
+                if (already) {
+                    alert('Ce lien a déjà été partagé depuis cet appareil. Impossible de le renvoyer.');
+                    return;
+                }
+
+                const shareData = {
+                    title: document.title,
+                    text: 'Visitez notre site de mariage',
+                    url: window.location.href
+                };
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share(shareData);
+                    }
+                } catch (e) {
+                    // user canceled or platform doesn't support it, continue to server check
+                }
+
+                const deviceId = getDeviceId();
+                try {
+                    const data = await reportShare(deviceId);
+                    if (data && (data.locked || data.shareCount >= 2 || data.allowed === false)) {
+                        lockSite();
+                        return;
+                    }
+                    if (data && data.allowed === true) {
+                        localStorage.setItem('shareSent', '1');
+                        alert('Lien partagé — merci !');
+                        return;
+                    }
+                    localStorage.setItem('shareSent', '1');
+                    alert('Lien partagé. Le verrouillage sera effectif si le site est partagé une seconde fois.');
+                } catch (e) {
+                    localStorage.setItem('shareSent', '1');
+                    alert('Lien partagé en mode hors-ligne. Le verrouillage multi-appareils sera activé dès que le serveur sera disponible.');
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const btn = document.getElementById('shareBtn');
+                if (btn) btn.addEventListener('click', attemptShare);
+                window.contactAdmin = contactAdmin;
+                checkShareStatus();
+            });
+
+            window.lockSite = lockSite;
+            window.attemptShare = attemptShare;
+        })();
+    </script>
+    <script>
+        // Enforce min date for admin date inputs (>= today)
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().slice(0,10);
+            function applyMin(el) {
+                try {
+                    if (!el) return;
+                    el.setAttribute('min', today);
+                    if (el.value && el.value < today) el.value = today;
+                } catch (e) { /* ignore */ }
+            }
+
+            // initial pass
+            document.querySelectorAll('#adminModal input[type="date"]').forEach(applyMin);
+
+            // observe dynamic additions inside admin modal
+            const adminModal = document.getElementById('adminModal');
+            if (adminModal && window.MutationObserver) {
+                const mo = new MutationObserver(() => {
+                    document.querySelectorAll('#adminModal input[type="date"]').forEach(applyMin);
+                });
+                mo.observe(adminModal, { childList: true, subtree: true });
+            }
+        });
     </script>
 </body>
 </html>
