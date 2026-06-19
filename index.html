@@ -701,6 +701,7 @@
             position: relative;
             padding: 120px 40px;
             overflow: hidden;
+            background-attachment: scroll;
         }
 
         #programme::before {
@@ -709,6 +710,13 @@
             inset: 0;
             background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6));
             pointer-events: none;
+            z-index: 1;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        #programme.custom-bg::before {
+            opacity: 0;
         }
 
         #programme h2,
@@ -927,21 +935,32 @@
         /* GALLERY */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-auto-rows: 1fr;
             gap: 35px;
             position: relative;
             z-index: 5;
+            justify-items: center;
+            width: min(100%, 1180px);
+            margin: 0 auto;
         }
 
         .gallery-item {
             position: relative;
             overflow: hidden;
-            border-radius: 20px;
-            aspect-ratio: 1;
+            border-radius: 24px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            min-height: 260px;
             cursor: pointer;
             animation: slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
-            border: 2px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
         .gallery-item:nth-child(1) { animation-delay: 0s; }
@@ -961,10 +980,12 @@
             filter: drop-shadow(0 15px 35px rgba(212, 175, 55, 0.4));
         }
 
-        .gallery-item img {
+        .gallery-item img,
+        .gallery-item video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center center;
             transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: block;
         }
@@ -995,6 +1016,134 @@
         .gallery-item:hover .gallery-overlay {
             opacity: 1;
             animation: fadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* INVITATION */
+        #invitation {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 215, 0.9));
+            color: #0f172a;
+            padding: 80px 0;
+        }
+
+        .invitation-grid {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .invitation-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            display: grid;
+            gap: 24px;
+            text-align: center;
+        }
+
+        .invitation-card-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .invitation-badge {
+            display: inline-flex;
+            padding: 10px 18px;
+            background: rgba(212, 175, 55, 0.15);
+            color: #6b4a00;
+            font-weight: 700;
+            border-radius: 999px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .invitation-card h3 {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 1.1;
+        }
+
+        .invitation-card p {
+            max-width: 720px;
+            margin: 0 auto;
+            color: #334155;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .invitation-qr {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 380px;
+            border-radius: 28px;
+            border: 2px dashed rgba(37, 99, 235, 0.32);
+            background: #ffffff;
+            padding: 28px;
+        }
+
+        .invitation-qr-placeholder {
+            width: 320px;
+            height: 320px;
+            border-radius: 20px;
+            border: 2px dashed rgba(99, 102, 241, 0.35);
+            display: grid;
+            place-items: center;
+            color: #475569;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            background: #f8fafc;
+        }
+
+        .invitation-qr img {
+            max-width: 360px;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+            background: white;
+            display: block;
+            margin: 0 auto;
+            padding: 8px;
+        }
+
+        .invitation-dresscode {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .invitation-dresscode-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.04);
+            padding: 10px 16px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            color: #0f172a;
+            font-size: 0.95rem;
+        }
+
+        .dresscode-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid rgba(15, 23, 42, 0.15);
+            flex-shrink: 0;
+        }
+
+        .invitation-note {
+            margin-top: 4px;
+            color: #475569;
+            font-size: 0.95rem;
         }
 
         /* GUESTBOOK */
@@ -2196,9 +2345,9 @@
                     <li><a href="#programme">Programme</a></li>
                     <li><a href="#location">Lieu</a></li>
                     <li><a href="#gallery">Galerie</a></li>
+                    <li><a href="#invitation">Mon invitation</a></li>
                     <li><a href="#guestbook">Livre d'Or</a></li>
                     <li><span id="adminNavButton" role="button" tabindex="0" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;">⚙️ CMS Admin</span></li>
-                    <li><button id="shareBtn" type="button" title="Partager le lien" style="background:none;border:none;padding:0;margin-left:6px;">🔗 Partager</button></li>
                 </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
@@ -2288,13 +2437,12 @@
         <h2>Le Lieu</h2>
         <div class="location-grid">
             <div class="location-info">
-                <h3>Afrique Centrale</h3>
-                <p>East Africa</p>
-                <p>Région du Cœur de l'Afrique</p>
+                <h3 id="locationTitle">Afrique Centrale</h3>
+                <p id="locationAddress">East Africa<br>Région du Cœur de l'Afrique</p>
                 <p style="margin-top: 20px; font-style: italic;">Un lieu magique idéal pour célébrer l'amour et partager de beaux moments ensemble.</p>
             </div>
             <div class="location-map">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3993366.779047847!2d19.54!3d3.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10d4abc25e7c2a01%3A0x300ed6542da920!2sAfrica%20Centrale!5e0!3m2!1sfr!2sfr!4v1234567890" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                <iframe id="locationIframe" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3993366.779047847!2d19.54!3d3.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10d4abc25e7c2a01%3A0x300ed6542da920!2sAfrica%20Centrale!5e0!3m2!1sfr!2sfr!4v1234567890" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
             </div>
         </div>
     </section>
@@ -2326,6 +2474,34 @@
             <div class="gallery-item">
                 <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23d4af37' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EPhoto 6%3C/text%3E%3C/svg%3E" alt="Photo 6">
                 <div class="gallery-overlay">Soirée</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INVITATION -->
+    <section id="invitation">
+        <h2>Mon invitation</h2>
+        <div class="invitation-grid">
+            <div class="invitation-card">
+                <div class="invitation-card-header">
+                    <span class="invitation-badge">Invitation</span>
+                    <h3>Votre QR code d'invitation</h3>
+                </div>
+                <p>Placez ici le QR code de votre invitation pour que vos invités puissent le scanner facilement.</p>
+                <div class="invitation-qr" id="invitationQrContainer">
+                    <div class="invitation-qr-placeholder">QR code ici</div>
+                </div>
+                <div class="invitation-dresscode" style="margin-top:18px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="dresscode-circle" id="invitationDresscodeMaleDot" style="background:#0f6ab4;"></span>
+                        <span id="invitationDresscodeMaleLabel" style="font-size:0.95rem; color:#333;">Homme : Tenue semi-formelle</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="dresscode-circle" id="invitationDresscodeFemaleDot" style="background:#dc2626;"></span>
+                        <span id="invitationDresscodeFemaleLabel" style="font-size:0.95rem; color:#333;">Femme : Robe élégante</span>
+                    </div>
+                </div>
+                <p class="invitation-note">VEILLEZ PRESENTEZ CE QR CODE AU PERSONNEL</p>
             </div>
         </div>
     </section>
@@ -2427,6 +2603,7 @@
                     <button onclick="switchAdminTab('programmes', this)" class="admin-tab-btn" data-tab="programmes">📅 Programmes</button>
                     <button onclick="switchAdminTab('names', this)" class="admin-tab-btn" data-tab="names">👥 Noms</button>
                     <button onclick="switchAdminTab('hero', this)" class="admin-tab-btn" data-tab="hero">🏠 Accueil</button>
+                    <button onclick="switchAdminTab('invitation', this)" class="admin-tab-btn" data-tab="invitation">✉️ Mon invitation</button>
                     <button onclick="switchAdminTab('design', this)" class="admin-tab-btn" data-tab="design">🎨 Design</button>
                     <button onclick="switchAdminTab('privateMessages', this)" class="admin-tab-btn" data-tab="privateMessages">📩 Messages Privés</button>
                     <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
@@ -2444,7 +2621,6 @@
                     </div>
                     <div id="adminPhotoPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 20px;"></div>
                 </div>
-
                 <!-- Music Tab -->
                 <div id="admin-music-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">🎵 Gérer la Musique</h3>
@@ -2480,24 +2656,80 @@
                 <!-- Programmes Tab -->
                 <div id="admin-programmes-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📅 Gérer le Déroulement</h3>
-                    <!-- Background customization for Programmes -->
-                    <div class="admin-card" style="margin-bottom:14px;">
-                        <h4 style="color: #d4af37; margin-bottom: 10px;">🖼️ Arrière-plan (Programme)</h4>
-                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center;">
-                            <label style="min-width:140px;">🎨 Couleur de fond</label>
-                            <input type="color" id="adminProgrammeBgColorProg" value="#ffffff" style="width:64px; height:44px; border-radius:8px; border:2px solid #eaeaea;">
-                            <input type="text" id="adminProgrammeBgColorProgText" class="admin-input" style="flex:1; font-family: monospace;" placeholder="#ffffff">
+                    
+                    <!-- Background customization for Programmes - IMPROVED -->
+                    <div class="admin-card" style="margin-bottom:20px; background: linear-gradient(135deg, rgba(94,114,228,0.08) 0%, rgba(111,90,224,0.04) 100%); border: 2px solid rgba(94,114,228,0.2);">
+                        <h4 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">🖼️ Personnaliser l'Arrière-plan</h4>
+                        
+                        <!-- Background upload section -->
+                        <div style="background: white; padding: 20px; border-radius: 12px; border: 2px dashed #5e72e4; margin-bottom: 15px; transition: all 0.3s ease;" id="bgUploadZone">
+                            <div style="text-align: center; padding: 30px 20px;">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">📤</div>
+                                <p style="color: #666; margin: 10px 0; font-size: 0.95rem;">Glissez votre image ici ou cliquez pour sélectionner</p>
+                                <input type="file" id="adminProgrammeBgFileProg" class="admin-input" style="padding:12px; cursor:pointer; display:none; border: none;" />
+                                <button type="button" onclick="document.getElementById('adminProgrammeBgFileProg').click()" class="admin-btn-primary" style="padding: 10px 24px; font-size: 14px;">Sélectionner une image</button>
+                            </div>
                         </div>
-                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; margin-top:10px;">
-                            <label style="min-width:140px;">🖼️ Image (URL)</label>
-                            <input type="url" id="adminProgrammeBgUrlProg" placeholder="https://..." class="admin-input" style="flex:1; padding:10px;">
+                        <!-- Preview section -->
+                        <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                            <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600;">👁️ Aperçu du Background</label>
+                            <div id="adminProgrammeBgPreview" style="width: 100%; height: 200px; background-color: #f5f5f5; border-radius: 8px; border: 1px solid #ddd; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; overflow: hidden; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999; font-size: 1rem;">Aucune image sélectionnée</div>
+                            </div>
                         </div>
-                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; margin-top:10px;">
-                            <label style="min-width:140px;">⬆️ Télécharger</label>
-                            <input type="file" id="adminProgrammeBgFileProg" accept="image/*" class="admin-input" style="padding:8px;">
+
+                        <!-- Opacity slider -->
+                        <div class="admin-input-group">
+                            <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">✨ Opacité du Background</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="range" id="adminProgrammeBgOpacity" min="0" max="100" value="60" class="admin-input" style="flex: 1; padding: 0; height: 6px; cursor: pointer;">
+                                <span id="adminProgrammeBgOpacityValue" style="min-width: 40px; text-align: center; font-weight: 600; color: #5e72e4;">60%</span>
+                            </div>
                         </div>
-                        <div id="adminProgrammeBgPreview" style="margin-top:12px; display:flex; gap:12px; align-items:center;"></div>
+
+                        <!-- Background position -->
+                        <div class="admin-input-group">
+                            <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">📍 Position du Background</label>
+                            <select id="adminProgrammeBgPosition" class="admin-input" style="padding: 10px;">
+                                <option value="center">Centré</option>
+                                <option value="top">Haut</option>
+                                <option value="bottom">Bas</option>
+                                <option value="left">Gauche</option>
+                                <option value="right">Droite</option>
+                                <option value="top left">Haut-Gauche</option>
+                                <option value="top right">Haut-Droite</option>
+                                <option value="bottom left">Bas-Gauche</option>
+                                <option value="bottom right">Bas-Droite</option>
+                            </select>
+                        </div>
+
+                        <!-- Background size -->
+                        <div class="admin-input-group">
+                            <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">📐 Taille du Background</label>
+                            <select id="adminProgrammeBgSize" class="admin-input" style="padding: 10px;">
+                                <option value="cover">Couvrir (Cover)</option>
+                                <option value="contain">Contenir (Contain)</option>
+                                <option value="100% auto">Largeur complète</option>
+                                <option value="auto 100%">Hauteur complète</option>
+                            </select>
+                        </div>
+
+                        <!-- Color fallback -->
+                        <div class="admin-input-group">
+                            <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">🎨 Couleur de Fond (Fallback)</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="color" id="adminProgrammeBgColorProg" value="#ffffff" style="width:64px; height:50px; border-radius:8px; border:2px solid #e0e0e0; cursor: pointer;">
+                                <input type="text" id="adminProgrammeBgColorProgText" class="admin-input" style="flex:1; font-family: monospace; padding: 10px;" placeholder="#ffffff">
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="button" onclick="adminResetProgrammeBackground()" class="admin-btn-danger" style="flex: 1; padding: 12px; font-size: 14px;">🔄 Réinitialiser</button>
+                            <button type="button" onclick="adminApplyProgrammeBackground()" class="admin-btn-primary" style="flex: 1; padding: 12px; font-size: 14px;">✅ Appliquer l'aperçu</button>
+                        </div>
                     </div>
+
                     <div id="adminProgrammesContainer" style="display: grid; gap: 15px;">
                         <!-- Les 4 items seront générés dynamiquement avec admin-card -->
                     </div>
@@ -2522,7 +2754,6 @@
                         <button onclick="adminSaveNames()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Noms</button>
                     </div>
                 </div>
-
                 <!-- Accueil Tab -->
                 <div id="admin-hero-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">🏠 Personnaliser l'Accueil</h3>
@@ -2534,6 +2765,13 @@
                         <div class="admin-input-group">
                             <label>📱 URL du Code QR</label>
                             <input type="url" id="adminQrCodeUrl" placeholder="https://example.com/qr-code.png" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>⬆️ Importer une photo QR/code</label>
+                            <input type="file" id="adminQrCodeFile" accept="image/*" class="admin-input">
+                            <div style="margin-top:8px;">
+                                <img id="adminQrPreview" src="" alt="Aperçu QR" style="display:none; width:120px; height:120px; object-fit:contain; border-radius:8px; border:1px solid #e5e7eb; box-shadow:0 6px 18px rgba(0,0,0,0.08);" />
+                            </div>
                         </div>
                                 <div class="admin-input-group">
                                     <label>🖼️ Image de fond Accueil (URL)</label>
@@ -2552,6 +2790,75 @@
                             <input type="url" id="adminProgrammeBgUrl" placeholder="https://example.com/programme-bg.jpg" class="admin-input">
                         </div>
                         <button onclick="adminSaveHero()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Accueil</button>
+                    </div>
+                </div>
+
+                <div id="admin-invitation-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">✉️ Mon invitation</h3>
+                    <div class="admin-card">
+                        <div class="admin-input-group">
+                            <label>📛 Nom de l'invitation</label>
+                            <input type="text" id="adminInvitationName" placeholder="Ex: Invitation VIP" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>👔 Dress Code Homme</label>
+                            <input type="text" id="adminDressCodeMale" placeholder="Ex: Tenue semi-formelle, chemise blanche" class="admin-input">
+                        </div>
+                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:200px;">
+                                <label>🎨 Couleur Homme</label>
+                                <input type="color" id="adminDressCodeMaleColor" value="#0f6ab4" style="width:100%; height:50px; border-radius: 14px; border: 2px solid #e5e7eb; cursor:pointer;">
+                            </div>
+                            <div style="flex:2; min-width:200px;">
+                                <label>Code Hex Homme</label>
+                                <input type="text" id="adminDressCodeMaleColorText" class="admin-input" value="#0f6ab4" placeholder="#0f6ab4" style="width:100%;">
+                            </div>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>👗 Dress Code Femme</label>
+                            <input type="text" id="adminDressCodeFemale" placeholder="Ex: Robe élégante, couleurs claires" class="admin-input">
+                        </div>
+                        <div class="admin-input-group" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:200px;">
+                                <label>🎨 Couleur Femme</label>
+                                <input type="color" id="adminDressCodeFemaleColor" value="#dc2626" style="width:100%; height:50px; border-radius: 14px; border: 2px solid #e5e7eb; cursor:pointer;">
+                            </div>
+                            <div style="flex:2; min-width:200px;">
+                                <label>Code Hex Femme</label>
+                                <input type="text" id="adminDressCodeFemaleColorText" class="admin-input" value="#dc2626" placeholder="#dc2626" style="width:100%;">
+                            </div>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>✍️ Message personnalisé</label>
+                            <textarea id="adminInvitationMessage" placeholder="Saisissez un message d'invitation facultatif" class="admin-input" style="min-height:90px;"></textarea>
+                        </div>
+                        <div class="admin-input-group">
+                            <label>⬆️ Importer un QR Code local</label>
+                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input">
+                            <div style="margin-top:12px; text-align:center;">
+                                <img id="adminInvitationQrPreview" src="" alt="Aperçu QR invitation" style="display:none; max-width:160px; max-height:160px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
+                            </div>
+                        </div>
+                        <button onclick="adminSaveInvitation()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Invitation</button>
+                        <button onclick="adminDownloadInvitation()" class="admin-btn-primary" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 12px;">⬇️ Télécharger l'invitation</button>
+                    </div>
+                    <div class="admin-card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+                        <h4 style="margin-bottom:12px; color:#5e72e4;">Prévisualisation</h4>
+                        <div id="adminInvitationPreview" style="padding: 18px; border-radius: 12px; background: white; color: #111;">
+                            <p style="font-weight: 700; margin-bottom: 12px; font-size: 1rem;">Invitation</p>
+                            <p id="adminInvitationPreviewName" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 10px;">Invitation VIP</p>
+                            <p id="adminInvitationPreviewMessage" style="margin-bottom: 10px; color: #4b5563;">Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.</p>
+                            <div class="invitation-dresscode" style="justify-content:center;">
+                                <div class="invitation-dresscode-item">
+                                    <span class="dresscode-circle" id="adminInvitationPreviewMaleDot" style="background:#0f6ab4;"></span>
+                                    <span id="adminInvitationPreviewMale" style="margin:0;">Homme : Tenue semi-formelle</span>
+                                </div>
+                                <div class="invitation-dresscode-item">
+                                    <span class="dresscode-circle" id="adminInvitationPreviewFemaleDot" style="background:#dc2626;"></span>
+                                    <span id="adminInvitationPreviewFemale" style="margin:0;">Femme : Robe élégante</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -3261,6 +3568,8 @@
                     section.style.animation = `slideInUp 0.8s ease-out forwards`;
                 }, index * 100);
             });
+            // Initialize programme background
+            setTimeout(() => { applyProgrammeBackground(); }, 100);
         });
 
         // ========================================
@@ -3338,16 +3647,16 @@
                 }
             }
 
-            const programmeBgUrl = localStorage.getItem('programmeBackgroundUrl');
-            if (programmeBgUrl) {
-                const programme = document.getElementById('programme');
-                if (programme) {
-                    programme.style.background = `linear-gradient(180deg, rgba(255,255,255,0.60) 0%, rgba(0,0,0,0.35) 100%), url('${programmeBgUrl}') center/cover no-repeat`;
-                }
-            }
+            // Charger le fond du Programme depuis storage
+            applyProgrammeBackground();
 
             // Charger les invités HERO
             updateHeroGuest();
+
+            // Charger les invitations enregistrées
+            if (typeof updateInvitationSection === 'function') {
+                try { updateInvitationSection(); } catch (e) { console.warn('Erreur updateInvitationSection', e); }
+            }
 
             // Charger les INFOS GÉNÉRALES
             const generalInfo = JSON.parse(localStorage.getItem('generalInfo') || '{}');
@@ -3407,6 +3716,9 @@
                 const messageInput = document.querySelector('#guest-message');
                 if (messageInput) messageInput.placeholder = sectionTexts.formMessagePlaceholder;
             }
+
+            // Mettre à jour la section Lieu si elle est enregistrée
+            updateLocationSection();
 
             // Charger la GALERIE PHOTOS & VIDÉOS
             const photos = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
@@ -3821,9 +4133,8 @@
             // Liste de tous les tabs connus
             const tabIds = [
                 'admin-photos-tab','admin-music-tab','admin-countdown-tab','admin-programmes-tab',
-                'admin-names-tab','admin-hero-tab','admin-design-tab','admin-privateMessages-tab'
+                'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-privateMessages-tab'
             ];
-
             // Cacher tous les tabs de façon sûre
             tabIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -3865,6 +4176,11 @@
                 case 'hero': {
                     const el = document.getElementById('admin-hero-tab'); if (el) el.style.display = 'block';
                     if (typeof loadAdminHero === 'function') try { loadAdminHero(); } catch (e) {}
+                    break;
+                }
+                case 'invitation': {
+                    const el = document.getElementById('admin-invitation-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminInvitation === 'function') try { loadAdminInvitation(); } catch (e) {}
                     break;
                 }
                 case 'design': {
@@ -4214,27 +4530,27 @@
                 };
 
                 div.innerHTML = `
-                    <div style="display: grid; grid-template-columns: 90px 1.5fr 2fr auto; gap: 12px; align-items: flex-end;">
+                    <div style="display: grid; grid-template-columns: 120px 1.5fr 2fr auto; gap: 12px; align-items: flex-end;">
                         <div>
                             <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">⏰ Heure</label>
-                            <input type="time" id="prog${idx}-heure" value="${prog.heure}" 
-                                style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; cursor: pointer; background: white; color: #000;"
+                            <input type="text" id="prog${idx}-heure" value="${prog.heure}" placeholder="09:30" 
+                                style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; cursor: text; background: white; color: #000;"
                                 onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
-                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';">
                         </div>
                         <div>
                             <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">📝 Titre</label>
                             <input type="text" id="prog${idx}-titre" value="${prog.titre}" 
                                 style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; background: white; color: #000;"
                                 onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
-                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';">
                         </div>
                         <div>
                             <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">📄 Description</label>
                             <input type="text" id="prog${idx}-desc" value="${prog.description}" 
                                 style="width: 100%; padding: 11px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all 0.3s ease; background: white; color: #000;"
                                 onfocus="this.style.borderColor='#5e72e4'; this.style.boxShadow='0 0 8px rgba(94, 114, 228, 0.3)';"
-                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';'">
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';">
                         </div>
                         <button onclick="deleteProgram(${idx})" 
                             style="background: #f97316; color: white; border: none; padding: 11px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); font-size: 1.1rem;"
@@ -4333,78 +4649,238 @@
             updateTimelineDisplay();
                 console.log('📅 PROGRAMMES MIS À JOUR:', programmes);
 
-                // Save programme background options if present
+                // Save programme background options
                 try {
-                    const bgColor = document.getElementById('adminProgrammeBgColorProg')?.value;
-                    const bgColorText = document.getElementById('adminProgrammeBgColorProgText')?.value;
-                    const bgUrl = document.getElementById('adminProgrammeBgUrlProg')?.value.trim();
-                    if (bgColor) localStorage.setItem('programmeBackgroundColor', bgColor);
-                    else if (bgColorText) localStorage.setItem('programmeBackgroundColor', bgColorText);
-                    if (bgUrl) localStorage.setItem('programmeBackgroundUrl', bgUrl);
+                    const bgData = {
+                        bgColor: document.getElementById('adminProgrammeBgColorProg')?.value || '#ffffff',
+                        bgOpacity: document.getElementById('adminProgrammeBgOpacity')?.value || 60,
+                        bgPosition: document.getElementById('adminProgrammeBgPosition')?.value || 'center',
+                        bgSize: document.getElementById('adminProgrammeBgSize')?.value || 'cover',
+                        bgUrl: localStorage.getItem('programmeBackgroundUrl') || ''
+                    };
+                    localStorage.setItem('programmeBackgroundSettings', JSON.stringify(bgData));
+                    console.log('🎨 BACKGROUND SETTINGS SAVED:', bgData);
                 } catch (e) { console.warn('Erreur sauvegarde bg programmes', e); }
 
                 // Apply background immediately
                 try { applyProgrammeBackground(); } catch (e) { /* ignore */ }
         }
 
-            function applyProgrammeBackground() {
-                try {
-                    const section = document.getElementById('programme');
-                    if (!section) return;
-                    const color = localStorage.getItem('programmeBackgroundColor') || '';
-                    const url = localStorage.getItem('programmeBackgroundUrl') || '';
-                    let style = '';
-                    if (url) {
-                        style = `background-image: linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url('${url}'); background-size: cover; background-position: center;`;
-                    } else if (color) {
-                        style = `background: ${color};`;
-                    } else {
-                        style = '';
-                    }
-                    section.style.cssText = section.style.cssText + ';' + style;
-                } catch (e) { console.warn('applyProgrammeBackground error', e); }
-            }
+        function applyProgrammeBackground() {
+            try {
+                const section = document.getElementById('programme');
+                if (!section) return;
+                
+                const bgSettings = JSON.parse(localStorage.getItem('programmeBackgroundSettings') || '{}');
+                const bgUrl = bgSettings.bgUrl || '';
+                const bgColor = bgSettings.bgColor || '#ffffff';
+                const bgOpacity = (bgSettings.bgOpacity || 60) / 100;
+                const bgPosition = bgSettings.bgPosition || 'center';
+                const bgSize = bgSettings.bgSize || 'cover';
+                
+                if (bgUrl) {
+                    // Create gradient overlay with opacity
+                    const overlayColor = `rgba(255, 255, 255, ${bgOpacity})`;
+                    section.style.background = `linear-gradient(${overlayColor}, ${overlayColor}), url('${bgUrl}')`;
+                    section.style.backgroundSize = bgSize;
+                    section.style.backgroundPosition = bgPosition;
+                    section.style.backgroundRepeat = 'no-repeat';
+                    section.style.backgroundAttachment = 'fixed';
+                    section.style.backgroundColor = bgColor;
+                    section.classList.add('custom-bg');
+                    console.log('✅ Custom background applied');
+                } else if (bgColor && bgColor !== '#ffffff') {
+                    section.style.background = bgColor;
+                    section.style.backgroundAttachment = 'scroll';
+                    section.classList.add('custom-bg');
+                    console.log('✅ Custom color applied');
+                } else {
+                    // Reset to default
+                    section.style.background = '';
+                    section.style.backgroundAttachment = 'scroll';
+                    section.classList.remove('custom-bg');
+                    console.log('✅ Background reset to default');
+                }
+            } catch (e) { console.warn('applyProgrammeBackground error', e); }
+        }
 
-            // File upload handling for programme background
+        function adminApplyProgrammeBackground() {
+            try {
+                // Update preview
+                const previewEl = document.getElementById('adminProgrammeBgPreview');
+                const bgUrl = localStorage.getItem('programmeBackgroundUrl') || '';
+                const bgColor = document.getElementById('adminProgrammeBgColorProg')?.value || '#ffffff';
+                const bgOpacity = (document.getElementById('adminProgrammeBgOpacity')?.value || 60) / 100;
+                const bgPosition = document.getElementById('adminProgrammeBgPosition')?.value || 'center';
+                const bgSize = document.getElementById('adminProgrammeBgSize')?.value || 'cover';
+                
+                if (bgUrl) {
+                    const overlayColor = `rgba(255, 255, 255, ${bgOpacity})`;
+                    previewEl.style.background = `linear-gradient(${overlayColor}, ${overlayColor}), url('${bgUrl}')`;
+                    previewEl.style.backgroundSize = bgSize;
+                    previewEl.style.backgroundPosition = bgPosition;
+                    previewEl.style.backgroundRepeat = 'no-repeat';
+                    previewEl.innerText = '';
+                } else if (bgColor && bgColor !== '#ffffff') {
+                    previewEl.style.background = bgColor;
+                    previewEl.innerText = '';
+                } else {
+                    previewEl.style.background = '#f5f5f5';
+                    previewEl.innerText = 'Aucune image sélectionnée';
+                }
+                
+                // Apply to actual section immediately
+                applyProgrammeBackground();
+                adminShowMessage('✅ Aperçu et background appliqués !', 'success');
+            } catch (e) { console.warn('Error applying background preview', e); }
+        }
+
+        function adminResetProgrammeBackground() {
+            if (confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser le background ?')) {
+                localStorage.removeItem('programmeBackgroundUrl');
+                localStorage.removeItem('programmeBackgroundSettings');
+                document.getElementById('adminProgrammeBgFileProg').value = '';
+                document.getElementById('adminProgrammeBgOpacity').value = 60;
+                document.getElementById('adminProgrammeBgOpacityValue').textContent = '60%';
+                document.getElementById('adminProgrammeBgPosition').value = 'center';
+                document.getElementById('adminProgrammeBgSize').value = 'cover';
+                document.getElementById('adminProgrammeBgColorProg').value = '#ffffff';
+                document.getElementById('adminProgrammeBgColorProgText').value = '#ffffff';
+                
+                const previewEl = document.getElementById('adminProgrammeBgPreview');
+                previewEl.style.backgroundImage = '';
+                previewEl.style.background = '#f5f5f5';
+                previewEl.innerText = 'Aucune image sélectionnée';
+                
+                applyProgrammeBackground();
+                adminShowMessage('✅ Background réinitialisé !', 'success');
+            }
+        }
+
+            // File upload handling for programme background - IMPROVED
             document.addEventListener('DOMContentLoaded', () => {
                 const colorInput = document.getElementById('adminProgrammeBgColorProg');
                 const colorText = document.getElementById('adminProgrammeBgColorProgText');
-                const urlInput = document.getElementById('adminProgrammeBgUrlProg');
                 const fileInput = document.getElementById('adminProgrammeBgFileProg');
                 const preview = document.getElementById('adminProgrammeBgPreview');
+                const opacitySlider = document.getElementById('adminProgrammeBgOpacity');
+                const opacityValue = document.getElementById('adminProgrammeBgOpacityValue');
+                const bgUploadZone = document.getElementById('bgUploadZone');
 
                 if (colorInput && colorText) {
                     colorInput.addEventListener('input', (e) => { colorText.value = e.target.value; });
                     colorText.addEventListener('input', (e) => { try { colorInput.value = e.target.value; } catch (err) {} });
                 }
 
+                // Opacity slider update
+                if (opacitySlider) {
+                    opacitySlider.addEventListener('input', (e) => {
+                        opacityValue.textContent = e.target.value + '%';
+                    });
+                }
+
+                // Drag and drop
+                if (bgUploadZone && fileInput) {
+                    bgUploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        bgUploadZone.style.background = 'rgba(94, 114, 228, 0.05)';
+                        bgUploadZone.style.borderColor = '#5e72e4';
+                    });
+
+                    bgUploadZone.addEventListener('dragleave', () => {
+                        bgUploadZone.style.background = 'white';
+                        bgUploadZone.style.borderColor = '#5e72e4';
+                    });
+
+                    bgUploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        bgUploadZone.style.background = 'white';
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            fileInput.files = files;
+                            const event = new Event('change', { bubbles: true });
+                            fileInput.dispatchEvent(event);
+                        }
+                    });
+                }
+
+                // File input change handler
                 if (fileInput) {
                     fileInput.addEventListener('change', (e) => {
                         const f = e.target.files && e.target.files[0];
                         if (!f) return;
+
+                        // Validate file size (max 30MB)
+                        if (f.size > 30 * 1024 * 1024) {
+                            adminShowMessage('❌ Le fichier est trop volumineux (max 30 MB)', 'error');
+                            fileInput.value = '';
+                            return;
+                        }
+
                         const reader = new FileReader();
                         reader.onload = function(ev) {
                             const dataUrl = ev.target.result;
                             localStorage.setItem('programmeBackgroundUrl', dataUrl);
-                            if (urlInput) urlInput.value = '';
-                            if (preview) preview.innerHTML = `<div style="width:120px;height:70px;background-image:url('${dataUrl}');background-size:cover;border-radius:8px;border:1px solid #e5e7eb;"></div>`;
-                            applyProgrammeBackground();
+                            
+                            // Update preview
+                            const bgOpacity = (document.getElementById('adminProgrammeBgOpacity')?.value || 60) / 100;
+                            const bgPosition = document.getElementById('adminProgrammeBgPosition')?.value || 'center';
+                            const bgSize = document.getElementById('adminProgrammeBgSize')?.value || 'cover';
+                            const overlayColor = `rgba(255, 255, 255, ${bgOpacity})`;
+                            
+                            preview.style.background = `linear-gradient(${overlayColor}, ${overlayColor}), url('${dataUrl}')`;
+                            preview.style.backgroundSize = bgSize;
+                            preview.style.backgroundPosition = bgPosition;
+                            preview.style.backgroundRepeat = 'no-repeat';
+                            preview.innerText = '';
+                            
+                            adminShowMessage('✅ Image téléchargée ! Cliquez sur "Appliquer l\'aperçu" pour confirmer', 'success');
+                        };
+                        reader.onerror = function() {
+                            adminShowMessage('❌ Erreur lors de la lecture du fichier', 'error');
                         };
                         reader.readAsDataURL(f);
                     });
                 }
 
-                // set initial preview and inputs from storage
+                // Set initial preview and inputs from storage
                 try {
-                    const storedColor = localStorage.getItem('programmeBackgroundColor');
+                    const bgSettings = JSON.parse(localStorage.getItem('programmeBackgroundSettings') || '{}');
                     const storedUrl = localStorage.getItem('programmeBackgroundUrl');
-                    if (colorInput && storedColor) { colorInput.value = storedColor; if (colorText) colorText.value = storedColor; }
-                    if (urlInput && storedUrl && !storedUrl.startsWith('data:')) urlInput.value = storedUrl;
-                    if (preview && storedUrl) {
-                        preview.innerHTML = `<div style="width:120px;height:70px;background-image:url('${storedUrl}');background-size:cover;border-radius:8px;border:1px solid #e5e7eb;"></div>`;
+                    
+                    if (colorInput && bgSettings.bgColor) { 
+                        colorInput.value = bgSettings.bgColor; 
+                        if (colorText) colorText.value = bgSettings.bgColor; 
                     }
+                    
+                    if (opacitySlider && bgSettings.bgOpacity) {
+                        opacitySlider.value = bgSettings.bgOpacity;
+                        if (opacityValue) opacityValue.textContent = bgSettings.bgOpacity + '%';
+                    }
+
+                    if (bgSettings.bgPosition && document.getElementById('adminProgrammeBgPosition')) {
+                        document.getElementById('adminProgrammeBgPosition').value = bgSettings.bgPosition;
+                    }
+
+                    if (bgSettings.bgSize && document.getElementById('adminProgrammeBgSize')) {
+                        document.getElementById('adminProgrammeBgSize').value = bgSettings.bgSize;
+                    }
+
+                    if (storedUrl) {
+                        const bgOpacity = (bgSettings.bgOpacity || 60) / 100;
+                        const bgPosition = bgSettings.bgPosition || 'center';
+                        const bgSize = bgSettings.bgSize || 'cover';
+                        const overlayColor = `rgba(255, 255, 255, ${bgOpacity})`;
+                        
+                        preview.style.background = `linear-gradient(${overlayColor}, ${overlayColor}), url('${storedUrl}')`;
+                        preview.style.backgroundSize = bgSize;
+                        preview.style.backgroundPosition = bgPosition;
+                        preview.style.backgroundRepeat = 'no-repeat';
+                        preview.innerText = '';
+                    }
+                    
                     applyProgrammeBackground();
-                } catch (e) { /* ignore */ }
+                } catch (e) { console.warn('Error loading background settings:', e); }
             });
 
         function updateTimelineDisplay() {
@@ -4439,15 +4915,332 @@
             updateCoupleNamePreview();
         }
 
-        function updateCoupleNamePreview() {
-            const name1 = document.getElementById('adminName1').value || 'Nom1';
-            const name2 = document.getElementById('adminName2').value || 'Nom2';
-            document.getElementById('coupleNamePreview').textContent = `${name1} & ${name2}`;
+        function loadAdminInvitation() {
+            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+                invitationName: 'Invitation VIP',
+                dressCodeMale: 'Tenue semi-formelle',
+                dressCodeFemale: 'Robe élégante',
+                dressCodeMaleColor: '#0f6ab4',
+                dressCodeFemaleColor: '#dc2626',
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
+                invitationQr: ''
+            }));
+
+            const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
+
+            document.getElementById('adminInvitationName').value = invitation.invitationName;
+            document.getElementById('adminDressCodeMale').value = invitation.dressCodeMale;
+            document.getElementById('adminDressCodeFemale').value = invitation.dressCodeFemale;
+            document.getElementById('adminDressCodeMaleColor').value = invitation.dressCodeMaleColor;
+            document.getElementById('adminDressCodeMaleColorText').value = invitation.dressCodeMaleColor;
+            document.getElementById('adminDressCodeFemaleColor').value = invitation.dressCodeFemaleColor;
+            document.getElementById('adminDressCodeFemaleColorText').value = invitation.dressCodeFemaleColor;
+            document.getElementById('adminInvitationMessage').value = invitation.invitationMessage;
+            if (invitation.invitationQr && invitationQrPreview) {
+                invitationQrPreview.src = invitation.invitationQr;
+                invitationQrPreview.style.display = 'block';
+            }
+            updateInvitationPreview();
+            syncDressCodeColors();
+        }
+
+        function updateInvitationPreview() {
+            const name = document.getElementById('adminInvitationName').value.trim() || 'Invitation VIP';
+            const maleCode = document.getElementById('adminDressCodeMale').value.trim() || 'Tenue semi-formelle';
+            const femaleCode = document.getElementById('adminDressCodeFemale').value.trim() || 'Robe élégante';
+            const message = document.getElementById('adminInvitationMessage').value.trim() || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.';
+
+            document.getElementById('adminInvitationPreviewName').textContent = name;
+            document.getElementById('adminInvitationPreviewMale').textContent = `Homme : ${maleCode}`;
+            document.getElementById('adminInvitationPreviewFemale').textContent = `Femme : ${femaleCode}`;
+            document.getElementById('adminInvitationPreviewMessage').textContent = message;
+            syncDressCodeColors();
+        }
+
+        function syncDressCodeColors() {
+            const maleColorInput = document.getElementById('adminDressCodeMaleColor');
+            const maleColorText = document.getElementById('adminDressCodeMaleColorText');
+            const femaleColorInput = document.getElementById('adminDressCodeFemaleColor');
+            const femaleColorText = document.getElementById('adminDressCodeFemaleColorText');
+            const maleDot = document.getElementById('adminInvitationPreviewMaleDot');
+            const femaleDot = document.getElementById('adminInvitationPreviewFemaleDot');
+
+            if (maleColorInput && maleColorText) {
+                maleColorText.value = maleColorInput.value;
+            }
+            if (femaleColorInput && femaleColorText) {
+                femaleColorText.value = femaleColorInput.value;
+            }
+            if (maleDot && maleColorInput) {
+                maleDot.style.background = maleColorInput.value;
+            }
+            if (femaleDot && femaleColorInput) {
+                femaleDot.style.background = femaleColorInput.value;
+            }
+
+            if (maleColorText && maleColorInput) {
+                const hex = maleColorText.value.trim();
+                if (/^#([0-9A-Fa-f]{6})$/.test(hex)) {
+                    maleColorInput.value = hex;
+                    if (maleDot) maleDot.style.background = hex;
+                }
+            }
+            if (femaleColorText && femaleColorInput) {
+                const hex = femaleColorText.value.trim();
+                if (/^#([0-9A-Fa-f]{6})$/.test(hex)) {
+                    femaleColorInput.value = hex;
+                    if (femaleDot) femaleDot.style.background = hex;
+                }
+            }
+        }
+
+        function adminSaveInvitation() {
+            const invitationName = document.getElementById('adminInvitationName').value.trim();
+            const dressCodeMale = document.getElementById('adminDressCodeMale').value.trim();
+            const dressCodeFemale = document.getElementById('adminDressCodeFemale').value.trim();
+            const invitationMessage = document.getElementById('adminInvitationMessage').value.trim();
+
+            if (!invitationName || !dressCodeMale || !dressCodeFemale) {
+                adminShowMessage('Remplissez le nom et les deux dress codes.', 'error');
+                return;
+            }
+
+            const invitationQr = document.getElementById('adminInvitationQrPreview')?.src || '';
+            const invitationData = {
+                invitationName,
+                dressCodeMale,
+                dressCodeFemale,
+                dressCodeMaleColor: document.getElementById('adminDressCodeMaleColor').value.trim() || '#0f6ab4',
+                dressCodeFemaleColor: document.getElementById('adminDressCodeFemaleColor').value.trim() || '#dc2626',
+                invitationMessage: invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
+                invitationQr
+            };
+            localStorage.setItem('weddingInvitation', JSON.stringify(invitationData));
+            adminShowMessage('✅ Invitation sauvegardée !', 'success');
+            updateInvitationPreview();
+            updateInvitationSection();
+            console.log('✉️ INVITATION MIS À JOUR:', invitationData);
+        }
+
+        function adminDownloadInvitation() {
+            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+                invitationName: 'Invitation VIP',
+                dressCodeMale: 'Tenue semi-formelle',
+                dressCodeFemale: 'Robe élégante',
+                dressCodeMaleColor: '#0f6ab4',
+                dressCodeFemaleColor: '#dc2626',
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
+                invitationQr: ''
+            }));
+
+            const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${invitation.invitationName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #111; }
+    .container { max-width: 760px; margin: 40px auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+    .header { color: #5e72e4; text-transform: uppercase; font-size: 1rem; letter-spacing: 1px; margin-bottom: 16px; }
+    .title { font-size: 2rem; margin: 0 0 18px; }
+    .message { margin: 0 0 22px; line-height: 1.6; color: #334155; }
+    .dress-code { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { background: #f8fafc; border-radius: 14px; padding: 18px; border: 1px solid #e2e8f0; }
+    .card h3 { margin: 0 0 10px; font-size: 1rem; color: #0f172a; }
+    .card p { margin: 0; color: #475569; }
+    .qr-box { margin-top: 24px; display: grid; place-items: center; }
+    .qr-box img { max-width: 260px; width: 100%; height: auto; border-radius: 18px; border: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Invitation</div>
+    <h1 class="title">${invitation.invitationName}</h1>
+    <p class="message">${invitation.invitationMessage}</p>
+    <div class="dress-code">
+      <div class="card">
+        <h3>Dress Code Homme</h3>
+        <p>${invitation.dressCodeMale}</p>
+      </div>
+      <div class="card">
+        <h3>Dress Code Femme</h3>
+        <p>${invitation.dressCodeFemale}</p>
+      </div>
+    </div>
+    ${invitation.invitationQr ? `<div class="qr-box"><img src="${invitation.invitationQr}" alt="QR Code invitation" /></div>` : ''}
+  </div>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${invitation.invitationName.replace(/[^a-zA-Z0-9-_]/g, '-') || 'invitation'}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            adminShowMessage('✅ Téléchargement de l\'invitation lancé.', 'success');
+        }
+
+        function updateInvitationSection() {
+            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+                invitationName: 'Invitation VIP',
+                dressCodeMale: 'Tenue semi-formelle',
+                dressCodeFemale: 'Robe élégante',
+                dressCodeMaleColor: '#0f6ab4',
+                dressCodeFemaleColor: '#dc2626',
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
+                invitationQr: ''
+            }));
+
+            const card = document.querySelector('#invitation .invitation-card');
+            if (!card) return;
+            const title = card.querySelector('h3');
+            const text = card.querySelector('p');
+            const note = card.querySelector('.invitation-note');
+            if (title) title.textContent = invitation.invitationName;
+            if (text) text.textContent = invitation.invitationMessage;
+            if (note) note.textContent = 'Vous pouvez remplacer ce bloc par votre image de QR code ou un code généré dynamiquement.';
+
+            const maleDot = document.getElementById('invitationDresscodeMaleDot');
+            const femaleDot = document.getElementById('invitationDresscodeFemaleDot');
+            const maleLabel = document.getElementById('invitationDresscodeMaleLabel');
+            const femaleLabel = document.getElementById('invitationDresscodeFemaleLabel');
+            if (maleDot) maleDot.style.background = invitation.dressCodeMaleColor || '#0f6ab4';
+            if (femaleDot) femaleDot.style.background = invitation.dressCodeFemaleColor || '#dc2626';
+            if (maleLabel) maleLabel.textContent = `Homme : ${invitation.dressCodeMale}`;
+            if (femaleLabel) femaleLabel.textContent = `Femme : ${invitation.dressCodeFemale}`;
+
+            const qrCont = document.getElementById('invitationQrContainer');
+            if (!qrCont) return;
+
+            // Clear existing content
+            qrCont.innerHTML = '';
+
+            if (invitation.invitationQr) {
+                const img = document.createElement('img');
+                img.alt = "QR Code d'invitation";
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                img.style.display = 'block';
+                img.style.margin = '0 auto';
+                img.style.borderRadius = '14px';
+                img.style.border = '1px solid #e5e7eb';
+                img.style.background = 'white';
+                img.style.padding = '6px';
+                img.src = invitation.invitationQr;
+
+                // show loader/placeholder until image loads
+                const placeholder = document.createElement('div');
+                placeholder.className = 'invitation-qr-placeholder';
+                placeholder.textContent = 'Chargement...';
+                qrCont.appendChild(placeholder);
+
+                img.onload = () => {
+                    qrCont.innerHTML = '';
+                    qrCont.appendChild(img);
+                };
+                img.onerror = () => {
+                    qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
+                };
+            } else {
+                qrCont.innerHTML = '<div class="invitation-qr-placeholder">QR code ici</div>';
+            }
+        }
+
+        function updateLocationSection() {
+            const locationData = JSON.parse(localStorage.getItem('locationData') || '{}');
+            const title = locationData.title || 'Afrique Centrale';
+            const address = locationData.address || 'East Africa<br>Région du Cœur de l\'Afrique';
+            const mapUrl = locationData.mapUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3993366.779047847!2d19.54!3d3.0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10d4abc25e7c2a01%3A0x300ed6542da920!2sAfrica%20Centrale!5e0!3m2!1sfr!2sfr!4v1234567890';
+            const titleEl = document.getElementById('locationTitle');
+            const addressEl = document.getElementById('locationAddress');
+            const iframeEl = document.getElementById('locationIframe');
+            if (titleEl) titleEl.textContent = title;
+            if (addressEl) addressEl.innerHTML = address;
+            if (iframeEl) iframeEl.src = mapUrl;
         }
 
         // Ajouter les event listeners pour la mise à jour en direct
         document.getElementById('adminName1').addEventListener('input', updateCoupleNamePreview);
         document.getElementById('adminName2').addEventListener('input', updateCoupleNamePreview);
+        ['adminInvitationName','adminDressCodeMale','adminDressCodeFemale','adminInvitationMessage'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateInvitationPreview);
+        });
+        ['adminDressCodeMaleColor','adminDressCodeMaleColorText','adminDressCodeFemaleColor','adminDressCodeFemaleColorText'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    syncDressCodeColors();
+                    try {
+                        const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+                        stored.dressCodeMaleColor = document.getElementById('adminDressCodeMaleColor')?.value.trim() || stored.dressCodeMaleColor || '#0f6ab4';
+                        stored.dressCodeFemaleColor = document.getElementById('adminDressCodeFemaleColor')?.value.trim() || stored.dressCodeFemaleColor || '#dc2626';
+                        localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                        if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                    } catch (err) { console.warn('Erreur sauvegarde couleur invitation', err); }
+                });
+            }
+        });
+        const invitationQrFile = document.getElementById('adminInvitationQrFile');
+        const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
+        if (invitationQrFile) {
+            invitationQrFile.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) {
+                    if (invitationQrPreview) invitationQrPreview.style.display = 'none';
+                    try {
+                        const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+                        delete stored.invitationQr;
+                        localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                        if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                    } catch (err) { }
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if (invitationQrPreview) {
+                        invitationQrPreview.src = ev.target.result;
+                        invitationQrPreview.style.display = 'block';
+                    }
+                    try {
+                        const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+                        stored.invitationQr = ev.target.result;
+                        localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                        if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                    } catch (err) { console.warn('Erreur sauvegarde QR', err); }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        try {
+            const qrFile = document.getElementById('adminQrCodeFile');
+            const qrUrlInput = document.getElementById('adminQrCodeUrl');
+            const qrPreview = document.getElementById('adminQrPreview');
+            if (qrFile) {
+                qrFile.addEventListener('change', (e) => {
+                    const f = e.target.files && e.target.files[0];
+                    if (!f) {
+                        if (qrPreview) qrPreview.style.display = 'none';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        if (qrPreview) {
+                            qrPreview.src = ev.target.result;
+                            qrPreview.style.display = 'block';
+                        }
+                        // clear manual URL to prefer uploaded image
+                        if (qrUrlInput) qrUrlInput.value = '';
+                    };
+                    reader.readAsDataURL(f);
+                });
+            }
+        } catch (e) { /* ignore */ }
 
         function adminSaveNames() {
             const name1 = document.getElementById('adminName1').value.trim();
@@ -4501,59 +5294,160 @@
             document.getElementById('adminHeroBgUrl').value = heroData.heroBgUrl || '';
             document.getElementById('adminProgrammeBgUrl').value = heroData.programmeBgUrl || '';
             document.getElementById('adminHeroMessage').value = heroData.heroMessage || '';
+
+            // QR preview in admin
+            try {
+                const preview = document.getElementById('adminQrPreview');
+                if (preview) {
+                    if (heroData.qrCodeUrl) {
+                        preview.src = heroData.qrCodeUrl;
+                        preview.style.display = 'block';
+                    } else {
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+                }
+            } catch (e) { /* ignore */ }
         }
 
         function adminSaveHero() {
             const guestName = document.getElementById('adminGuestName').value.trim();
             const qrCodeUrl = document.getElementById('adminQrCodeUrl').value.trim();
+            const qrCodeFileInput = document.getElementById('adminQrCodeFile');
             const heroBgUrl = document.getElementById('adminHeroBgUrl').value.trim();
             const programmeBgUrl = document.getElementById('adminProgrammeBgUrl').value.trim();
             const heroMessage = document.getElementById('adminHeroMessage').value.trim();
             const heroFileInput = document.getElementById('adminHeroBgFile');
 
-            // Helper to persist and update
-            const persist = (finalHeroBgUrl) => {
-                const heroData = { guestName, qrCodeUrl, heroBgUrl: finalHeroBgUrl || heroBgUrl, programmeBgUrl, heroMessage };
-                localStorage.setItem('heroGuest', JSON.stringify(heroData));
+            // utility: compress a dataURL image to a smaller jpeg dataURL
+            function compressDataUrl(dataUrl, maxWidth = 900, quality = 0.8) {
+                return new Promise((resolve) => {
+                    if (!dataUrl || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const ratio = Math.min(1, maxWidth / img.width);
+                            const w = Math.round(img.width * ratio);
+                            const h = Math.round(img.height * ratio);
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const compressed = canvas.toDataURL('image/jpeg', quality);
+                            resolve(compressed);
+                        } catch (e) {
+                            resolve(dataUrl);
+                        }
+                    };
+                    img.onerror = () => resolve(dataUrl);
+                    img.src = dataUrl;
+                });
+            }
 
-                if (finalHeroBgUrl) {
-                    localStorage.setItem('heroBackgroundUrl', finalHeroBgUrl);
-                } else if (heroBgUrl) {
-                    localStorage.setItem('heroBackgroundUrl', heroBgUrl);
-                } else {
-                    localStorage.removeItem('heroBackgroundUrl');
+            // Helper to persist and update (with quota handling)
+            const persist = async (finalHeroBgUrl, finalQrCodeUrl) => {
+                // try to compress large data URLs before saving
+                let heroBgToSave = finalHeroBgUrl || heroBgUrl || '';
+                let qrToSave = finalQrCodeUrl || qrCodeUrl || '';
+
+                try {
+                    if (heroBgToSave && heroBgToSave.startsWith('data:image')) {
+                        heroBgToSave = await compressDataUrl(heroBgToSave, 1200, 0.8);
+                    }
+                    if (qrToSave && qrToSave.startsWith('data:image')) {
+                        qrToSave = await compressDataUrl(qrToSave, 600, 0.8);
+                    }
+                } catch (e) { /* ignore compression errors */ }
+
+                const currentHeroBgUrl = localStorage.getItem('heroBackgroundUrl') || '';
+                const currentProgrammeBgUrl = localStorage.getItem('programmeBackgroundUrl') || '';
+                const heroValueToSave = heroBgToSave || heroBgUrl || currentHeroBgUrl;
+                const programmeValueToSave = programmeBgUrl || currentProgrammeBgUrl;
+                const heroData = {
+                    guestName,
+                    qrCodeUrl: qrToSave || qrCodeUrl,
+                    heroBgUrl: heroValueToSave,
+                    programmeBgUrl: programmeValueToSave,
+                    heroMessage
+                };
+
+                try {
+                    localStorage.setItem('heroGuest', JSON.stringify(heroData));
+
+                    if (heroValueToSave) {
+                        localStorage.setItem('heroBackgroundUrl', heroValueToSave);
+                    }
+
+                    if (programmeValueToSave) {
+                        localStorage.setItem('programmeBackgroundUrl', programmeValueToSave);
+                    }
+
+                    adminShowMessage('✅ Accueil sauvegardé !', 'success');
+                    console.log('🏠 HERO GUEST MIS À JOUR:', heroData);
+                } catch (e) {
+                    // Fallback: localStorage quota exceeded — keep in sessionStorage so the page updates for this session
+                    try { sessionStorage.setItem('heroGuestTemp', JSON.stringify(heroData)); } catch (err) { /* ignore */ }
+                    adminShowMessage('✅ Accueil sauvegardé pour cette session (localStorage plein).', 'success');
+                    console.warn('localStorage quota exceeded, saved hero to sessionStorage instead.');
                 }
 
-                if (programmeBgUrl) {
-                    localStorage.setItem('programmeBackgroundUrl', programmeBgUrl);
-                } else {
-                    localStorage.removeItem('programmeBackgroundUrl');
-                }
-
-                adminShowMessage('✅ Accueil sauvegardé !', 'success');
-                updateHeroGuest();
-                updateHeroBackgrounds();
-                console.log('🏠 HERO GUEST MIS À JOUR:', heroData);
+                // Ensure UI updates immediately even if persistent save failed
+                try { updateHeroGuest(); } catch (e) {}
+                try { updateHeroBackgrounds(); } catch (e) {}
             };
 
-            // If a file is uploaded, read it as data URL and save
-            if (heroFileInput && heroFileInput.files && heroFileInput.files.length > 0) {
-                const file = heroFileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const dataUrl = e.target.result;
-                    persist(dataUrl);
-                    heroFileInput.value = '';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                persist();
-            }
+            // Read uploaded files (if any) as data URLs
+            const finalQrCodePromise = new Promise((resolve) => {
+                if (qrCodeFileInput && qrCodeFileInput.files && qrCodeFileInput.files.length > 0) {
+                    const file = qrCodeFileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => resolve(qrCodeUrl || '');
+                    reader.readAsDataURL(file);
+                } else {
+                    resolve(qrCodeUrl || '');
+                }
+            });
+
+            const finalHeroBgPromise = new Promise((resolve) => {
+                if (heroFileInput && heroFileInput.files && heroFileInput.files.length > 0) {
+                    const file = heroFileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => resolve(heroBgUrl || '');
+                    reader.readAsDataURL(file);
+                } else {
+                    resolve(heroBgUrl || '');
+                }
+            });
+
+            Promise.all([finalHeroBgPromise, finalQrCodePromise]).then(([finalHeroBgUrl, finalQrCodeUrl]) => {
+                persist(finalHeroBgUrl, finalQrCodeUrl).finally(() => {
+                    if (heroFileInput) heroFileInput.value = '';
+                    if (qrCodeFileInput) qrCodeFileInput.value = '';
+                });
+            }).catch(() => {
+                persist('', '');
+            });
         }
 
         function updateHeroBackgrounds() {
-            const heroBgUrl = localStorage.getItem('heroBackgroundUrl');
-            const programmeBgUrl = localStorage.getItem('programmeBackgroundUrl');
+            // Prefer localStorage but fall back to sessionStorage (temp save) when present
+            let heroBgUrl = localStorage.getItem('heroBackgroundUrl');
+            let programmeBgUrl = localStorage.getItem('programmeBackgroundUrl');
+            if ((!heroBgUrl || heroBgUrl === 'null') && sessionStorage.getItem('heroGuestTemp')) {
+                try {
+                    const tmp = JSON.parse(sessionStorage.getItem('heroGuestTemp'));
+                    if (tmp && tmp.heroBgUrl) heroBgUrl = tmp.heroBgUrl;
+                } catch (e) { /* ignore */ }
+            }
+            if ((!programmeBgUrl || programmeBgUrl === 'null') && sessionStorage.getItem('heroGuestTemp')) {
+                try {
+                    const tmp = JSON.parse(sessionStorage.getItem('heroGuestTemp'));
+                    if (tmp && tmp.programmeBgUrl) programmeBgUrl = tmp.programmeBgUrl;
+                } catch (e) { /* ignore */ }
+            }
             const hero = document.querySelector('.hero');
             const programme = document.getElementById('programme');
 
@@ -4571,29 +5465,43 @@
         }
 
         function updateHeroGuest() {
-            const heroData = JSON.parse(localStorage.getItem('heroGuest') || JSON.stringify({guestName: '', qrCodeUrl: ''}));
+            // Read saved hero data; prefer localStorage but fall back to sessionStorage temporary save
+            let heroData = null;
+            try { heroData = JSON.parse(localStorage.getItem('heroGuest') || 'null'); } catch (e) { heroData = null; }
+            if ((!heroData || Object.keys(heroData).length === 0) && sessionStorage.getItem('heroGuestTemp')) {
+                try { heroData = JSON.parse(sessionStorage.getItem('heroGuestTemp')); } catch (e) { heroData = null; }
+            }
+            heroData = heroData || { guestName: '', qrCodeUrl: '' };
             
             const heroSubtitle = document.querySelector('.hero-content .subtitle');
             if (heroSubtitle) {
                 // Reset content
-                heroSubtitle.innerHTML = '';
-                if (heroData.guestName) {
-                    heroSubtitle.textContent = `Bienvenue ${heroData.guestName} à notre mariage !`;
-                } else {
-                    heroSubtitle.textContent = 'Nous nous marions !';
-                }
+                heroSubtitle.textContent = heroData.guestName ? `Bienvenue ${heroData.guestName} à notre mariage !` : 'Nous nous marions !';
+            }
 
-                // Ajouter le QR code si présent
+            const heroQrBadge = document.getElementById('heroQrBadge');
+            if (heroQrBadge) {
+                heroQrBadge.innerHTML = '';
+                // Ensure we show a placeholder if no QR provided
                 if (heroData.qrCodeUrl) {
+                    const link = document.createElement('a');
+                    link.href = heroData.qrCodeUrl;
+                    // If it's a data URL, enable download
+                    if (heroData.qrCodeUrl.startsWith('data:')) {
+                        link.setAttribute('download', 'qr-code.png');
+                    } else {
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    }
+                    link.title = 'Ouvrir le QR';
                     const qrImg = document.createElement('img');
                     qrImg.src = heroData.qrCodeUrl;
                     qrImg.alt = 'QR Code';
-                    qrImg.style.width = '60px';
-                    qrImg.style.height = '60px';
-                    qrImg.style.marginLeft = '20px';
-                    qrImg.style.borderRadius = '8px';
-                    qrImg.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                    heroSubtitle.appendChild(qrImg);
+                    link.appendChild(qrImg);
+                    heroQrBadge.appendChild(link);
+                } else {
+                    // small SVG placeholder to keep the badge visible
+                    heroQrBadge.innerHTML = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><rect width='100' height='100' rx='12' fill='rgba(0,0,0,0.02)'/><text x='50%' y='50%' font-size='10' fill='#666' text-anchor='middle' dominant-baseline='middle'>QR</text></svg>`;
                 }
             }
 
