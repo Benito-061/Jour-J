@@ -188,13 +188,38 @@
             position: fixed;
             top: 0;
             width: 100%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 230, 210, 0.95) 100%);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 64px rgba(0, 0, 0, 0.08);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 248, 225, 0.36));
+            backdrop-filter: blur(24px) saturate(1.45);
+            -webkit-backdrop-filter: blur(24px) saturate(1.45);
+            box-shadow: 0 10px 42px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.62);
             z-index: 1000;
             padding: 12px 40px;
             animation: slideInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+            overflow: hidden;
+        }
+
+        nav::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(110deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.08) 34%, rgba(212, 175, 55, 0.18) 68%, rgba(255, 255, 255, 0.38)),
+                radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.58), transparent 34%);
+            opacity: 0.68;
+            mix-blend-mode: screen;
+        }
+
+        nav::after {
+            content: '';
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 0;
+            height: 1px;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.62), transparent);
         }
 
         @keyframes slideInDown {
@@ -214,6 +239,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            z-index: 1;
         }
 
         .logo {
@@ -1031,24 +1058,30 @@
         #invitation {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 215, 0.9));
             color: #0f172a;
-            padding: 80px 0;
+            padding: clamp(56px, 8vw, 88px) 0;
+            overflow: hidden;
         }
 
         .invitation-grid {
-            max-width: 980px;
+            width: min(100%, 980px);
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 clamp(14px, 4vw, 28px);
         }
 
         .invitation-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            border-radius: 28px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
-            padding: 40px;
+            width: 100%;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.58);
+            border-radius: clamp(18px, 4vw, 28px);
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.68);
+            padding: clamp(20px, 5vw, 40px);
             display: grid;
-            gap: 24px;
+            gap: clamp(16px, 3vw, 24px);
             text-align: center;
+            backdrop-filter: blur(18px) saturate(1.25);
+            -webkit-backdrop-filter: blur(18px) saturate(1.25);
+            overflow: hidden;
         }
 
         .invitation-card-header {
@@ -1072,33 +1105,42 @@
 
         .invitation-card h3 {
             margin: 0;
-            font-size: 2rem;
+            font-size: clamp(1.35rem, 4.2vw, 2rem);
             line-height: 1.1;
+            overflow-wrap: anywhere;
         }
 
         .invitation-card p {
             max-width: 720px;
             margin: 0 auto;
             color: #334155;
-            font-size: 1rem;
+            font-size: clamp(0.95rem, 2.4vw, 1rem);
             line-height: 1.8;
+            overflow-wrap: anywhere;
         }
 
         .invitation-qr {
-            display: flex;
+            width: min(100%, 460px);
+            display: grid;
+            place-items: center;
             align-items: center;
             justify-content: center;
-            min-height: 380px;
-            border-radius: 28px;
-            border: 2px dashed rgba(37, 99, 235, 0.32);
-            background: #ffffff;
-            padding: 28px;
+            min-height: auto;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            border-radius: clamp(18px, 4vw, 28px);
+            border: 1px solid rgba(212, 175, 55, 0.22);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.78));
+            padding: clamp(14px, 4vw, 28px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65), 0 18px 44px rgba(15, 23, 42, 0.08);
         }
 
         .invitation-qr-placeholder {
-            width: 320px;
-            height: 320px;
-            border-radius: 20px;
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1 / 1;
+            min-height: 0;
+            border-radius: clamp(14px, 3vw, 20px);
             border: 2px dashed rgba(99, 102, 241, 0.35);
             display: grid;
             place-items: center;
@@ -1106,12 +1148,14 @@
             font-weight: 700;
             letter-spacing: 0.02em;
             background: #f8fafc;
+            text-align: center;
+            padding: 16px;
         }
 
         .invitation-qr img {
-            max-width: 360px;
+            max-width: 100%;
             width: 100%;
-            height: auto;
+            height: 100%;
             object-fit: contain;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
@@ -1119,6 +1163,7 @@
             display: block;
             margin: 0 auto;
             padding: 8px;
+            aspect-ratio: 1 / 1;
         }
 
         .invitation-dresscode {
@@ -1139,6 +1184,8 @@
             border: 1px solid rgba(15, 23, 42, 0.06);
             color: #0f172a;
             font-size: 0.95rem;
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
 
         .dresscode-circle {
@@ -2175,8 +2222,8 @@
             }
 
             nav {
-                background: rgba(10, 10, 10, 0.92);
-                border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+                background: linear-gradient(135deg, rgba(12, 12, 12, 0.72), rgba(62, 52, 24, 0.42));
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
             }
 
             .nav-links a {
@@ -2356,7 +2403,8 @@
                 padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
                 border-top: 1px solid rgba(212, 175, 55, 0.24);
                 border-bottom: 0;
-                box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.14);
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(248, 241, 215, 0.38));
+                box-shadow: 0 -12px 36px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.72);
                 animation: none;
             }
 
@@ -2419,8 +2467,11 @@
                 justify-content: center;
                 gap: 4px;
                 color: var(--dark) !important;
-                background: rgba(255, 255, 255, 0.46) !important;
-                border: 1px solid rgba(212, 175, 55, 0.12) !important;
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.46) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 6px 16px rgba(15, 23, 42, 0.08);
+                backdrop-filter: blur(14px) saturate(1.35);
+                -webkit-backdrop-filter: blur(14px) saturate(1.35);
                 font-size: 11px !important;
                 line-height: 1.15;
                 letter-spacing: 0;
@@ -2466,6 +2517,29 @@
                 min-height: 100svh;
             }
 
+            #invitation {
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            .invitation-card {
+                text-align: center;
+            }
+
+            .invitation-qr {
+                width: min(100%, 420px);
+            }
+
+            .invitation-dresscode {
+                align-items: stretch;
+            }
+
+            .invitation-dresscode-item {
+                flex: 1 1 220px;
+                justify-content: center;
+                text-align: left;
+            }
+
             section {
                 scroll-margin-bottom: 100px;
             }
@@ -2497,6 +2571,43 @@
             .nav-links a .nav-icon,
             #adminNavButton .nav-icon {
                 font-size: 18px;
+            }
+
+            .invitation-grid {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .invitation-card {
+                border-radius: 18px;
+                padding: 18px 14px;
+            }
+
+            .invitation-qr {
+                width: 100%;
+                padding: 12px;
+                border-radius: 16px;
+            }
+
+            .invitation-qr-placeholder {
+                max-width: 100%;
+                font-size: 0.95rem;
+            }
+
+            .invitation-dresscode {
+                gap: 10px;
+            }
+
+            .invitation-dresscode-item {
+                flex-basis: 100%;
+                justify-content: flex-start;
+                border-radius: 12px;
+                padding: 10px 12px;
+            }
+
+            .invitation-note {
+                font-size: 0.82rem;
+                line-height: 1.5;
             }
         }
     </style>
@@ -2662,17 +2773,17 @@
                 <div class="invitation-qr" id="invitationQrContainer">
                     <div class="invitation-qr-placeholder">QR code ici</div>
                 </div>
-                <div class="invitation-dresscode" style="margin-top:18px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:10px;">
+                <div class="invitation-dresscode">
+                    <div class="invitation-dresscode-item">
                         <span class="dresscode-circle" id="invitationDresscodeMaleDot" style="background:#0f6ab4;"></span>
-                        <span id="invitationDresscodeMaleLabel" style="font-size:0.95rem; color:#333;">Homme : Tenue semi-formelle</span>
+                        <span id="invitationDresscodeMaleLabel">Homme : Tenue semi-formelle</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="invitation-dresscode-item">
                         <span class="dresscode-circle" id="invitationDresscodeFemaleDot" style="background:#dc2626;"></span>
-                        <span id="invitationDresscodeFemaleLabel" style="font-size:0.95rem; color:#333;">Femme : Robe élégante</span>
+                        <span id="invitationDresscodeFemaleLabel">Femme : Robe élégante</span>
                     </div>
                 </div>
-                <p class="invitation-note">VEILLEZ PRESENTEZ CE QR CODE AU PERSONNEL</p>
+                <p class="invitation-note">VEILLEZ PRESENTER CE QR CODE AU PERSONNEL</p>
             </div>
         </div>
     </section>
@@ -5319,7 +5430,7 @@
             const note = card.querySelector('.invitation-note');
             if (title) title.textContent = invitation.invitationName;
             if (text) text.textContent = invitation.invitationMessage;
-            if (note) note.textContent = 'Vous pouvez remplacer ce bloc par votre image de QR code ou un code généré dynamiquement.';
+            if (note) note.textContent = 'VEILLEZ PRESENTER CE QR CODE AU PERSONNEL';
 
             const maleDot = document.getElementById('invitationDresscodeMaleDot');
             const femaleDot = document.getElementById('invitationDresscodeFemaleDot');
