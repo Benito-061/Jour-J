@@ -309,6 +309,11 @@
             padding: 8px 0;
         }
 
+        .nav-links a .nav-icon,
+        #adminNavButton .nav-icon {
+            display: none;
+        }
+
         .nav-links a::before {
             content: '';
             position: absolute;
@@ -337,6 +342,10 @@
             color: var(--primary);
             transform: translateY(-3px);
             letter-spacing: 1px;
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
         }
 
         .nav-links a:hover::before {
@@ -2328,6 +2337,168 @@
                 box-shadow: 0 10px 32px rgba(212, 175, 55, 0.6);
             }
         }
+        /* BARRE DE NAVIGATION BASSE POUR TABLETTE ET TELEPHONE */
+        @media (max-width: 1024px) {
+            html {
+                scroll-padding-bottom: 96px;
+            }
+
+            body {
+                padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+            }
+
+            nav {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+                border-top: 1px solid rgba(212, 175, 55, 0.24);
+                border-bottom: 0;
+                box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.14);
+                animation: none;
+            }
+
+            .nav-container {
+                max-width: none;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .nav-container > div:first-child,
+            .nav-toggle-btn {
+                display: none !important;
+            }
+
+            .nav-container > div:last-child {
+                width: 100%;
+                gap: 0 !important;
+            }
+
+            .nav-links,
+            .nav-links.collapsed {
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: minmax(74px, 1fr);
+                gap: 4px;
+                width: 100%;
+                max-height: none !important;
+                opacity: 1 !important;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 0;
+                pointer-events: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .nav-links::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-links::before,
+            .nav-links a::before,
+            .nav-links a::after {
+                display: none;
+            }
+
+            .nav-links li {
+                min-width: 0;
+            }
+
+            .nav-links a,
+            #adminNavButton {
+                min-height: 58px;
+                width: 100%;
+                padding: 7px 6px !important;
+                border-radius: 8px;
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                color: var(--dark) !important;
+                background: rgba(255, 255, 255, 0.46) !important;
+                border: 1px solid rgba(212, 175, 55, 0.12) !important;
+                font-size: 11px !important;
+                line-height: 1.15;
+                letter-spacing: 0;
+                text-align: center;
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .nav-links a:hover,
+            #adminNavButton:hover {
+                color: var(--primary) !important;
+                transform: none;
+                background: rgba(212, 175, 55, 0.12) !important;
+            }
+
+            .nav-links a.active {
+                color: var(--primary) !important;
+                background: rgba(212, 175, 55, 0.18) !important;
+                border-color: rgba(212, 175, 55, 0.34) !important;
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+            }
+
+            .nav-links a.active .nav-icon {
+                transform: translateY(-1px);
+            }
+
+            .nav-links a .nav-icon,
+            #adminNavButton .nav-icon {
+                display: block;
+                font-family: Arial, sans-serif;
+                font-size: 20px;
+                line-height: 1;
+                color: var(--primary);
+            }
+
+            .nav-label {
+                display: block;
+                max-width: 100%;
+            }
+
+            .hero {
+                margin-top: 0;
+                min-height: 100svh;
+            }
+
+            section {
+                scroll-margin-bottom: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+            }
+
+            nav {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            .nav-links,
+            .nav-links.collapsed {
+                grid-auto-columns: minmax(62px, 1fr);
+                gap: 3px;
+            }
+
+            .nav-links a,
+            #adminNavButton {
+                min-height: 54px;
+                padding: 6px 4px !important;
+                font-size: 9px !important;
+            }
+
+            .nav-links a .nav-icon,
+            #adminNavButton .nav-icon {
+                font-size: 18px;
+            }
+        }
     </style>
 
 </head>
@@ -2340,14 +2511,14 @@
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <ul class="nav-links" id="mainNavLinks">
-                    <li><a href="#hero">Accueil</a></li>
-                    <li><a href="#countdown">Compte à rebours</a></li>
-                    <li><a href="#programme">Programme</a></li>
-                    <li><a href="#location">Lieu</a></li>
-                    <li><a href="#gallery">Galerie</a></li>
-                    <li><a href="#invitation">Mon invitation</a></li>
-                    <li><a href="#guestbook">Livre d'Or</a></li>
-                    <li><span id="adminNavButton" role="button" tabindex="0" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;">⚙️ CMS Admin</span></li>
+                    <li><a href="#hero"><span class="nav-icon" aria-hidden="true">&#8962;</span><span class="nav-label">Accueil</span></a></li>
+                    <li><a href="#countdown"><span class="nav-icon" aria-hidden="true">&#9201;</span><span class="nav-label">Compte à rebours</span></a></li>
+                    <li><a href="#programme"><span class="nav-icon" aria-hidden="true">&#9638;</span><span class="nav-label">Programme</span></a></li>
+                    <li><a href="#location"><span class="nav-icon" aria-hidden="true">&#9673;</span><span class="nav-label">Lieu</span></a></li>
+                    <li><a href="#gallery"><span class="nav-icon" aria-hidden="true">&#9635;</span><span class="nav-label">Galerie</span></a></li>
+                    <li><a href="#invitation"><span class="nav-icon" aria-hidden="true">&#9993;</span><span class="nav-label">Invitation</span></a></li>
+                    <li><a href="#guestbook"><span class="nav-icon" aria-hidden="true">&#10084;</span><span class="nav-label">Livre d'Or</span></a></li>
+                    <li><span id="adminNavButton" role="button" tabindex="0" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;"><span class="nav-icon" aria-hidden="true">&#9881;</span><span class="nav-label">Admin</span></span></li>
                 </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
@@ -3450,6 +3621,27 @@
         // ========================================
         // SMOOTH SCROLL & ACTIVE NAVIGATION
         // ========================================
+        const mainNavAnchors = Array.from(document.querySelectorAll('#mainNavLinks a[href^="#"]'));
+
+        function setActiveNavLink(hash) {
+            if (!hash) return;
+            mainNavAnchors.forEach(link => {
+                const isActive = link.getAttribute('href') === hash;
+                link.classList.toggle('active', isActive);
+                if (isActive) {
+                    link.setAttribute('aria-current', 'page');
+                    const navList = document.getElementById('mainNavLinks');
+                    if (navList && window.matchMedia('(max-width: 1024px)').matches) {
+                        try {
+                            link.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        } catch (e) { /* ignore */ }
+                    }
+                } else {
+                    link.removeAttribute('aria-current');
+                }
+            });
+        }
+
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', (e) => {
                 const href = a.getAttribute('href');
@@ -3458,10 +3650,34 @@
                 }
                 const target = document.querySelector(href);
                 if (target) {
+                    setActiveNavLink(href);
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
+
+        const navSections = mainNavAnchors
+            .map(link => document.querySelector(link.getAttribute('href')))
+            .filter(Boolean);
+
+        if ('IntersectionObserver' in window && navSections.length) {
+            const activeNavObserver = new IntersectionObserver((entries) => {
+                const visibleEntry = entries
+                    .filter(entry => entry.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+                if (visibleEntry && visibleEntry.target.id) {
+                    setActiveNavLink('#' + visibleEntry.target.id);
+                }
+            }, {
+                root: null,
+                threshold: [0.35, 0.55, 0.75],
+                rootMargin: '-20% 0px -35% 0px'
+            });
+
+            navSections.forEach(section => activeNavObserver.observe(section));
+        }
+
+        setActiveNavLink(window.location.hash || '#hero');
 
         // Navbar toggle for main page
         function toggleNavbarLinks() {
