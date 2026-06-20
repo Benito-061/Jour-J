@@ -6076,7 +6076,9 @@
     <script>
         // SHARE / LOCK logic
         (function(){
-            const API_SHARE = 'http://localhost:3000/api/share';
+            const API_SHARE = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+                ? `${window.location.origin}/api/share`
+                : 'http://localhost:3000/api/share';
             const MAX_SHARE_DEPTH = 1;
             const SHARE_DEPTH_PARAM = 'shareDepth';
             const SHARE_LOCK_PARAM = 'lockedAccess';
@@ -6129,7 +6131,6 @@
             function lockSite() {
                 try {
                     window._siteLocked = true;
-                    try { localStorage.setItem('siteHardLocked', '1'); } catch (e) { /* ignore */ }
                     const overlay = document.getElementById('siteLockOverlay');
                     if (overlay) {
                         overlay.style.display = 'flex';
@@ -6148,11 +6149,13 @@
 
             async function fetchShareStatus() {
                 try {
-                    const resp = await fetch(API_SHARE, { method: 'GET', cache: 'no-store' });
+                    const url = new URL(API_SHARE);
+                    url.searchParams.set('deviceId', getDeviceId());
+                    const resp = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
                     if (!resp.ok) return null;
                     return await resp.json();
                 } catch (e) {
-                    return null;
+                    return { allowed: false, locked: true, reason: 'server-unavailable' };
                 }
             }
 
@@ -6162,16 +6165,8 @@
                     return;
                 }
 
-                try {
-                    if (localStorage.getItem('siteHardLocked') === '1') {
-                        lockSite();
-                        return;
-                    }
-                } catch (e) { /* ignore */ }
-
                 const data = await fetchShareStatus();
-                if (!data) return;
-                if (data.locked || (typeof data.shareCount === 'number' && data.shareCount >= 2)) {
+                if (!data || data.locked || data.allowed === false || (typeof data.shareCount === 'number' && data.shareCount >= 2)) {
                     lockSite();
                 }
             }
