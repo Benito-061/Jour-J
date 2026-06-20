@@ -297,13 +297,15 @@
             position: fixed;
             inset: 0;
             z-index: 20000;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.92);
             color: #fff;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 24px;
             font-size: 1.1rem;
+            pointer-events: all;
+            user-select: none;
         }
         #siteLockOverlay .box {
             max-width: 720px;
@@ -6075,6 +6077,9 @@
         // SHARE / LOCK logic
         (function(){
             const API_SHARE = 'http://localhost:3000/api/share';
+            const MAX_SHARE_DEPTH = 1;
+            const SHARE_DEPTH_PARAM = 'shareDepth';
+            const SHARE_LOCK_PARAM = 'lockedAccess';
 
             function getDeviceId() {
                 try {
@@ -6089,12 +6094,49 @@
                 }
             }
 
+            function getCurrentShareDepth() {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const depth = parseInt(params.get(SHARE_DEPTH_PARAM) || '0', 10);
+                    return Number.isFinite(depth) && depth > 0 ? depth : 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
+
+            function buildProtectedShareUrl() {
+                const url = new URL(window.location.href);
+                const nextDepth = getCurrentShareDepth() + 1;
+                url.searchParams.set(SHARE_DEPTH_PARAM, String(nextDepth));
+                url.searchParams.set('sourceDevice', getDeviceId());
+                if (nextDepth > MAX_SHARE_DEPTH) {
+                    url.searchParams.set(SHARE_LOCK_PARAM, '1');
+                } else {
+                    url.searchParams.delete(SHARE_LOCK_PARAM);
+                }
+                return url.toString();
+            }
+
+            function shouldLockFromShareLink() {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    return params.get(SHARE_LOCK_PARAM) === '1' || getCurrentShareDepth() > MAX_SHARE_DEPTH;
+                } catch (e) {
+                    return false;
+                }
+            }
+
             function lockSite() {
                 try {
                     window._siteLocked = true;
+                    try { localStorage.setItem('siteHardLocked', '1'); } catch (e) { /* ignore */ }
                     const overlay = document.getElementById('siteLockOverlay');
-                    if (overlay) overlay.style.display = 'flex';
+                    if (overlay) {
+                        overlay.style.display = 'flex';
+                        overlay.setAttribute('aria-hidden', 'false');
+                    }
                     document.documentElement.style.overflow = 'hidden';
+                    document.body.style.overflow = 'hidden';
                 } catch (e) {
                     console.warn('lockSite error', e);
                 }
@@ -6115,6 +6157,18 @@
             }
 
             async function checkShareStatus() {
+                if (shouldLockFromShareLink()) {
+                    lockSite();
+                    return;
+                }
+
+                try {
+                    if (localStorage.getItem('siteHardLocked') === '1') {
+                        lockSite();
+                        return;
+                    }
+                } catch (e) { /* ignore */ }
+
                 const data = await fetchShareStatus();
                 if (!data) return;
                 if (data.locked || (typeof data.shareCount === 'number' && data.shareCount >= 2)) {
@@ -6122,11 +6176,11 @@
                 }
             }
 
-            async function reportShare(deviceId) {
+            async function reportShare(deviceId, shareDepth) {
                 const resp = await fetch(API_SHARE, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceId, timestamp: new Date().toISOString() })
+                    body: JSON.stringify({ deviceId, shareDepth, timestamp: new Date().toISOString() })
                 });
                 if (!resp.ok) throw new Error('share request failed');
                 return resp.json();
@@ -6144,10 +6198,17 @@
                     return;
                 }
 
+                if (getCurrentShareDepth() >= MAX_SHARE_DEPTH) {
+                    lockSite();
+                    alert('Acces bloque : ce site ne peut pas etre partage une deuxieme fois.');
+                    return;
+                }
+
+                const protectedUrl = buildProtectedShareUrl();
                 const shareData = {
                     title: document.title,
                     text: 'Visitez notre site de mariage',
-                    url: window.location.href
+                    url: protectedUrl
                 };
 
                 try {
@@ -6159,8 +6220,9 @@
                 }
 
                 const deviceId = getDeviceId();
+                const nextDepth = getCurrentShareDepth() + 1;
                 try {
-                    const data = await reportShare(deviceId);
+                    const data = await reportShare(deviceId, nextDepth);
                     if (data && (data.locked || data.shareCount >= 2 || data.allowed === false)) {
                         lockSite();
                         return;
@@ -6182,6 +6244,10 @@
                 const btn = document.getElementById('shareBtn');
                 if (btn) btn.addEventListener('click', attemptShare);
                 window.contactAdmin = contactAdmin;
+                if (shouldLockFromShareLink()) {
+                    lockSite();
+                    return;
+                }
                 checkShareStatus();
             });
 
