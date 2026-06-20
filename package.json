@@ -1,0 +1,13 @@
+{
+  "name": "jour-j",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site vitrine protege avec verrouillage par appareil.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
