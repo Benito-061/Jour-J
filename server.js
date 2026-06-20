@@ -41,13 +41,14 @@ function writeState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(cleanState(state), null, 2));
 }
 
-function json(res, status, body) {
+function json(res, status, body, extraHeaders = {}) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Secret, X-Reset-Token',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    ...extraHeaders
   });
   res.end(JSON.stringify(body));
 }
@@ -84,6 +85,55 @@ function isAdminRequest(req, url, body = {}) {
   const adminSecret = process.env.ADMIN_SECRET || '';
   const requestSecret = getAdminSecretFromRequest(req, url, body);
   return safeEqual(adminSecret, requestSecret);
+}
+
+function parseCookies(req) {
+  return String(req.headers.cookie || '')
+    .split(';')
+    .map(cookie => cookie.trim())
+    .filter(Boolean)
+    .reduce((cookies, cookie) => {
+      const separatorIndex = cookie.indexOf('=');
+      if (separatorIndex === -1) return cookies;
+
+      const key = cookie.slice(0, separatorIndex);
+      const value = cookie.slice(separatorIndex + 1);
+      cookies[key] = decodeURIComponent(value);
+      return cookies;
+    }, {});
+}
+
+function isValidDeviceId(deviceId) {
+  return typeof deviceId === 'string' && /^[A-Za-z0-9._:-]{8,128}$/.test(deviceId);
+}
+
+function createDeviceId() {
+  return `device_${crypto.randomBytes(24).toString('hex')}`;
+}
+
+function cookieHeader(req, deviceId) {
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+  const secure = forwardedProto === 'https' ? '; Secure' : '';
+  return `siteDeviceId=${encodeURIComponent(deviceId)}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${secure}`;
+}
+
+function resolveClientDevice(req, providedDeviceId) {
+  if (isValidDeviceId(providedDeviceId)) {
+    return { deviceId: providedDeviceId, headers: {} };
+  }
+
+  const cookies = parseCookies(req);
+  if (isValidDeviceId(cookies.siteDeviceId)) {
+    return { deviceId: cookies.siteDeviceId, headers: {} };
+  }
+
+  const deviceId = createDeviceId();
+  return {
+    deviceId,
+    headers: {
+      'Set-Cookie': cookieHeader(req, deviceId)
+    }
+  };
 }
 
 function getBody(req) {
@@ -124,31 +174,23 @@ function adminAccess() {
   };
 }
 
-function clientAccess(deviceId) {
+function clientAccess(req, providedDeviceId) {
+  const resolvedDevice = resolveClientDevice(req, providedDeviceId);
+  const deviceId = resolvedDevice.deviceId;
   const state = readState();
   const now = new Date().toISOString();
 
   if (state.locked) {
     return {
-      allowed: false,
-      locked: true,
-      mode: 'client',
-      reason: 'locked',
-      ownerDeviceId: state.ownerDeviceId,
-      shareCount: state.shareCount
-    };
-  }
-
-  if (!deviceId || typeof deviceId !== 'string') {
-    state.locked = true;
-    writeState(state);
-    return {
-      allowed: false,
-      locked: true,
-      mode: 'client',
-      reason: 'missing-device',
-      ownerDeviceId: state.ownerDeviceId,
-      shareCount: state.shareCount
+      body: {
+        allowed: false,
+        locked: true,
+        mode: 'client',
+        reason: 'locked',
+        ownerDeviceId: state.ownerDeviceId,
+        shareCount: state.shareCount
+      },
+      headers: resolvedDevice.headers
     };
   }
 
@@ -157,11 +199,14 @@ function clientAccess(deviceId) {
     state.devices[deviceId] = { firstSeen: now, lastSeen: now };
     writeState(state);
     return {
-      allowed: true,
-      locked: false,
-      mode: 'client',
-      ownerDeviceId: deviceId,
-      shareCount: state.shareCount
+      body: {
+        allowed: true,
+        locked: false,
+        mode: 'client',
+        ownerDeviceId: deviceId,
+        shareCount: state.shareCount
+      },
+      headers: resolvedDevice.headers
     };
   }
 
@@ -170,11 +215,14 @@ function clientAccess(deviceId) {
     state.devices[deviceId].lastSeen = now;
     writeState(state);
     return {
-      allowed: true,
-      locked: false,
-      mode: 'client',
-      ownerDeviceId: state.ownerDeviceId,
-      shareCount: state.shareCount
+      body: {
+        allowed: true,
+        locked: false,
+        mode: 'client',
+        ownerDeviceId: state.ownerDeviceId,
+        shareCount: state.shareCount
+      },
+      headers: resolvedDevice.headers
     };
   }
 
@@ -185,12 +233,15 @@ function clientAccess(deviceId) {
   writeState(state);
 
   return {
-    allowed: false,
-    locked: true,
-    mode: 'client',
-    reason: 'new-device',
-    ownerDeviceId: state.ownerDeviceId,
-    shareCount: state.shareCount
+    body: {
+      allowed: false,
+      locked: true,
+      mode: 'client',
+      reason: 'new-device',
+      ownerDeviceId: state.ownerDeviceId,
+      shareCount: state.shareCount
+    },
+    headers: resolvedDevice.headers
   };
 }
 
@@ -245,7 +296,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    json(res, 200, clientAccess(url.searchParams.get('deviceId') || ''));
+    const result = clientAccess(req, url.searchParams.get('deviceId') || '');
+    json(res, 200, result.body, result.headers);
     return;
   }
 
@@ -258,7 +310,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      json(res, 200, clientAccess(body.deviceId || ''));
+      const result = clientAccess(req, body.deviceId || '');
+      json(res, 200, result.body, result.headers);
     } catch (e) {
       json(res, 400, { allowed: false, locked: true, mode: 'client', error: 'bad-request' });
     }
