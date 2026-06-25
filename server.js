@@ -6,7 +6,9 @@ const crypto = require('crypto');
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
+const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
 const MAX_BODY_SIZE = 1024 * 1024;
+const MAX_SITE_DATA_BODY_SIZE = 20 * 1024 * 1024;
 
 const DEFAULT_STATE = {
   ownerDeviceId: '',
@@ -39,6 +41,20 @@ function readState() {
 function writeState(state) {
   ensureStateDir();
   fs.writeFileSync(STATE_FILE, JSON.stringify(cleanState(state), null, 2));
+}
+
+function readSiteData() {
+  try {
+    const data = JSON.parse(fs.readFileSync(SITE_DATA_FILE, 'utf8'));
+    return data && typeof data === 'object' ? data : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeSiteData(data) {
+  ensureStateDir();
+  fs.writeFileSync(SITE_DATA_FILE, JSON.stringify(data && typeof data === 'object' ? data : {}, null, 2));
 }
 
 function json(res, status, body, extraHeaders = {}) {
@@ -136,13 +152,13 @@ function resolveClientDevice(req, providedDeviceId) {
   };
 }
 
-function getBody(req) {
+function getBody(req, maxSize = MAX_BODY_SIZE) {
   return new Promise((resolve, reject) => {
     let body = '';
 
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > MAX_BODY_SIZE) {
+      if (body.length > maxSize) {
         reject(new Error('body too large'));
         req.destroy();
       }
@@ -314,6 +330,31 @@ const server = http.createServer(async (req, res) => {
       json(res, 200, result.body, result.headers);
     } catch (e) {
       json(res, 400, { allowed: false, locked: true, mode: 'client', error: 'bad-request' });
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/site-data' && req.method === 'GET') {
+    json(res, 200, {
+      ok: true,
+      data: readSiteData()
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/site-data' && req.method === 'POST') {
+    try {
+      const body = await getBody(req, MAX_SITE_DATA_BODY_SIZE);
+
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+
+      writeSiteData(body.data || {});
+      json(res, 200, { ok: true });
+    } catch (e) {
+      json(res, 400, { ok: false, error: 'bad-request' });
     }
     return;
   }

@@ -4313,24 +4313,186 @@
         }
         
         // Démarrer dès que possible
+        // Admin link + server sync
+        const CMS_STORAGE_KEYS = [
+            'siteTheme',
+            'siteDesign',
+            'heroContent',
+            'heroBackgroundUrl',
+            'programmeBackgroundUrl',
+            'programmeBackgroundSettings',
+            'generalInfo',
+            'timelineContent',
+            'sectionTexts',
+            'weddingPhotos',
+            'weddingVideos',
+            'weddingMusic',
+            'weddingCountdown',
+            'weddingProgrammes',
+            'weddingCouple',
+            'weddingInvitation',
+            'heroGuest',
+            'locationData'
+        ];
+
+        function getAdminSecretFromPage() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const fromUrl = params.get('adminSecret') || params.get('admin_secret') || '';
+                if (fromUrl) {
+                    sessionStorage.setItem('siteAdminSecret', fromUrl);
+                    return fromUrl;
+                }
+                return sessionStorage.getItem('siteAdminSecret') || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function isAdminLinkMode() {
+            return Boolean(getAdminSecretFromPage());
+        }
+
+        function buildAdminShortcutUrl() {
+            const secret = getAdminSecretFromPage();
+            const url = new URL(window.location.origin + window.location.pathname);
+            if (secret) url.searchParams.set('adminSecret', secret);
+            return url.toString();
+        }
+
+        async function loadRemoteSiteData() {
+            try {
+                const response = await fetch('/api/site-data', { method: 'GET', cache: 'no-store' });
+                if (!response.ok) return;
+                const payload = await response.json();
+                const data = payload && payload.data && typeof payload.data === 'object' ? payload.data : {};
+
+                window.__cmsSyncInProgress = true;
+                CMS_STORAGE_KEYS.forEach((key) => {
+                    if (Object.prototype.hasOwnProperty.call(data, key)) {
+                        if (data[key] === null || typeof data[key] === 'undefined') {
+                            localStorage.removeItem(key);
+                        } else {
+                            localStorage.setItem(key, String(data[key]));
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('Chargement des donnees admin impossible', e);
+            } finally {
+                window.__cmsSyncInProgress = false;
+            }
+        }
+
+        let publishSiteDataTimer = null;
+        let latestSiteDataJson = '';
+        function publishSiteDataSoon() {
+            if (!isAdminLinkMode() || window.__cmsSyncInProgress) return;
+            clearTimeout(publishSiteDataTimer);
+            publishSiteDataTimer = setTimeout(publishSiteData, 600);
+        }
+
+        function collectSiteDataForPublish() {
+            const data = {};
+            CMS_STORAGE_KEYS.forEach((key) => {
+                const value = localStorage.getItem(key);
+                if (value !== null) data[key] = value;
+            });
+            return data;
+        }
+
+        async function publishSiteData() {
+            const adminSecret = getAdminSecretFromPage();
+            if (!adminSecret) return;
+
+            const data = collectSiteDataForPublish();
+            const nextSiteDataJson = JSON.stringify(data);
+            if (nextSiteDataJson === latestSiteDataJson) return;
+
+            try {
+                const response = await fetch('/api/site-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminSecret, data })
+                });
+                if (response.ok) latestSiteDataJson = nextSiteDataJson;
+            } catch (e) {
+                console.warn('Sauvegarde admin serveur impossible', e);
+            }
+        }
+
+        function publishSiteDataBeforeUnload() {
+            const adminSecret = getAdminSecretFromPage();
+            if (!adminSecret || window.__cmsSyncInProgress) return;
+
+            const data = collectSiteDataForPublish();
+            const nextSiteDataJson = JSON.stringify(data);
+            if (nextSiteDataJson === latestSiteDataJson) return;
+
+            const payload = JSON.stringify({ adminSecret, data });
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('/api/site-data', new Blob([payload], { type: 'application/json' }));
+            }
+        }
+
+        (function watchCmsStorageChanges() {
+            const originalSetItem = localStorage.setItem.bind(localStorage);
+            const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+
+            localStorage.setItem = function patchedSetItem(key, value) {
+                originalSetItem(key, value);
+                if (CMS_STORAGE_KEYS.includes(key)) publishSiteDataSoon();
+            };
+
+            localStorage.removeItem = function patchedRemoveItem(key) {
+                originalRemoveItem(key);
+                if (CMS_STORAGE_KEYS.includes(key)) publishSiteDataSoon();
+            };
+        })();
+
+        let siteRemoteStartPromise = null;
+        async function startSiteWithRemoteData() {
+            if (siteRemoteStartPromise) return siteRemoteStartPromise;
+
+            siteRemoteStartPromise = (async () => {
+            await loadRemoteSiteData();
+            latestSiteDataJson = JSON.stringify(collectSiteDataForPublish());
+            loadAllCMSData();
+            startMonitoring();
+
+            if (isAdminLinkMode()) {
+                adminLoggedIn = true;
+                window.adminShortcutUrl = buildAdminShortcutUrl();
+                setTimeout(() => {
+                    try {
+                        openAdminModal();
+                        publishSiteDataSoon();
+                    } catch (e) {
+                        console.warn('Ouverture admin automatique impossible', e);
+                    }
+                }, 300);
+            }
+            })();
+
+            return siteRemoteStartPromise;
+        }
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 console.log('📄 DOM CHARGÉ - Démarrage du monitoring');
-                loadAllCMSData();
-                startMonitoring();
+                startSiteWithRemoteData();
             });
         } else {
             console.log('📄 DOM DÉJÀ CHARGÉ - Démarrage immédiat du monitoring');
-            loadAllCMSData();
-            startMonitoring();
+            startSiteWithRemoteData();
         }
         
         // Aussi au window load
         window.addEventListener('load', () => {
             console.log('🎬 PAGE COMPLÈTEMENT CHARGÉE');
-            loadAllCMSData();
-            startMonitoring();
+            startSiteWithRemoteData();
         });
+        window.addEventListener('pagehide', publishSiteDataBeforeUnload);
 
         // ========================================
         // PARALLAX EFFECT ON SCROLL
@@ -6107,6 +6269,10 @@
             }
 
             function buildProtectedShareUrl() {
+                if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
+                    return typeof buildAdminShortcutUrl === 'function' ? buildAdminShortcutUrl() : window.location.href;
+                }
+
                 const url = new URL(window.location.href);
                 const nextDepth = getCurrentShareDepth() + 1;
                 url.searchParams.set(SHARE_DEPTH_PARAM, String(nextDepth));
@@ -6120,6 +6286,10 @@
             }
 
             function shouldLockFromShareLink() {
+                if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
+                    return false;
+                }
+
                 try {
                     const params = new URLSearchParams(window.location.search);
                     return params.get(SHARE_LOCK_PARAM) === '1' || getCurrentShareDepth() > MAX_SHARE_DEPTH;
@@ -6150,7 +6320,11 @@
             async function fetchShareStatus() {
                 try {
                     const url = new URL(API_SHARE);
-                    url.searchParams.set('deviceId', getDeviceId());
+                    if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
+                        url.searchParams.set('adminSecret', getAdminSecretFromPage());
+                    } else {
+                        url.searchParams.set('deviceId', getDeviceId());
+                    }
                     const resp = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
                     if (!resp.ok) return null;
                     return await resp.json();
@@ -6160,6 +6334,14 @@
             }
 
             async function checkShareStatus() {
+                if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
+                    const data = await fetchShareStatus();
+                    if (!data || data.allowed === false || data.mode !== 'admin') {
+                        lockSite();
+                    }
+                    return;
+                }
+
                 if (shouldLockFromShareLink()) {
                     lockSite();
                     return;
@@ -6187,13 +6369,14 @@
                     return;
                 }
 
+                const adminSharing = typeof isAdminLinkMode === 'function' && isAdminLinkMode();
                 const already = localStorage.getItem('shareSent') === '1';
-                if (already) {
+                if (!adminSharing && already) {
                     alert('Ce lien a déjà été partagé depuis cet appareil. Impossible de le renvoyer.');
                     return;
                 }
 
-                if (getCurrentShareDepth() >= MAX_SHARE_DEPTH) {
+                if (!adminSharing && getCurrentShareDepth() >= MAX_SHARE_DEPTH) {
                     lockSite();
                     alert('Acces bloque : ce site ne peut pas etre partage une deuxieme fois.');
                     return;
@@ -6212,6 +6395,11 @@
                     }
                 } catch (e) {
                     // user canceled or platform doesn't support it, continue to server check
+                }
+
+                if (adminSharing) {
+                    alert('Lien admin pret. Vous pouvez le partager sur vos appareils admin.');
+                    return;
                 }
 
                 const deviceId = getDeviceId();
