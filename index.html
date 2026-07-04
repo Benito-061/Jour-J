@@ -4430,11 +4430,11 @@
 
         async function publishSiteData() {
             const adminSecret = getAdminSecretFromPage();
-            if (!adminSecret) return;
+            if (!adminSecret) return false;
 
             const data = collectSiteDataForPublish();
             const nextSiteDataJson = JSON.stringify(data);
-            if (nextSiteDataJson === latestSiteDataJson) return;
+            if (nextSiteDataJson === latestSiteDataJson) return true;
 
             try {
                 const response = await fetch('/api/site-data', {
@@ -4442,10 +4442,20 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ adminSecret, data })
                 });
-                if (response.ok) latestSiteDataJson = nextSiteDataJson;
+                if (response.ok) {
+                    latestSiteDataJson = nextSiteDataJson;
+                    return true;
+                }
             } catch (e) {
                 console.warn('Sauvegarde admin serveur impossible', e);
             }
+            return false;
+        }
+
+        async function publishSiteDataNow() {
+            if (!isAdminLinkMode() || window.__cmsSyncInProgress) return false;
+            clearTimeout(publishSiteDataTimer);
+            return publishSiteData();
         }
 
         function publishSiteDataBeforeUnload() {
@@ -4827,6 +4837,11 @@
         }
 
         async function postGuestAction(payload) {
+            if (typeof publishSiteDataNow === 'function') {
+                const saved = await publishSiteDataNow();
+                if (!saved) throw new Error('site-data-not-published');
+            }
+
             const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
             const response = await fetch('/api/guests', {
                 method: 'POST',
@@ -4854,7 +4869,10 @@
                 adminClearGuestForm();
                 adminShowMessage(id ? 'Invité modifié.' : 'Lien invité généré.', 'success');
             } catch (e) {
-                adminShowMessage('Impossible de sauvegarder cet invité.', 'error');
+                const text = e && e.message === 'site-data-not-published'
+                    ? 'Impossible de sauvegarder le modèle central avant de générer le lien.'
+                    : 'Impossible de sauvegarder cet invité.';
+                adminShowMessage(text, 'error');
             }
         }
 
@@ -4874,16 +4892,30 @@
             const guest = findAdminGuest(id);
             if (!guest) return;
             try {
+                if (typeof publishSiteDataNow === 'function') {
+                    const saved = await publishSiteDataNow();
+                    if (!saved) throw new Error('site-data-not-published');
+                }
                 await navigator.clipboard.writeText(guest.url);
-                adminShowMessage('Lien copié.', 'success');
+                adminShowMessage('Modèle sauvegardé, lien copié.', 'success');
             } catch (e) {
+                adminShowMessage('Impossible de sauvegarder le modèle avant copie.', 'error');
                 prompt('Copiez ce lien :', guest.url);
             }
         }
 
-        function adminOpenGuestLink(id) {
+        async function adminOpenGuestLink(id) {
             const guest = findAdminGuest(id);
-            if (guest && guest.url) window.open(guest.url, '_blank', 'noopener');
+            if (!guest || !guest.url) return;
+            try {
+                if (typeof publishSiteDataNow === 'function') {
+                    const saved = await publishSiteDataNow();
+                    if (!saved) throw new Error('site-data-not-published');
+                }
+                window.open(guest.url, '_blank', 'noopener');
+            } catch (e) {
+                adminShowMessage('Impossible de sauvegarder le modèle avant ouverture.', 'error');
+            }
         }
 
         async function adminRegenerateGuestLink(id) {
