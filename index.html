@@ -2889,6 +2889,7 @@
                     <button onclick="switchAdminTab('hero', this)" class="admin-tab-btn" data-tab="hero">🏠 Accueil</button>
                     <button onclick="switchAdminTab('invitation', this)" class="admin-tab-btn" data-tab="invitation">✉️ Mon invitation</button>
                     <button onclick="switchAdminTab('design', this)" class="admin-tab-btn" data-tab="design">🎨 Design</button>
+                    <button onclick="switchAdminTab('invites', this)" class="admin-tab-btn" data-tab="invites">🔗 Liens invités</button>
                     <button onclick="switchAdminTab('privateMessages', this)" class="admin-tab-btn" data-tab="privateMessages">📩 Messages Privés</button>
                     <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
                 </div>
@@ -3256,6 +3257,32 @@
                 <div id="admin-privateMessages-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📩 Messages Privés</h3>
                     <div id="adminPrivateMessagesList" style="display: grid; gap: 16px;"></div>
+                </div>
+
+                <div id="admin-invites-tab" style="display: none;">
+                    <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">🔗 Générer un lien</h3>
+                    <div class="admin-card">
+                        <input type="hidden" id="adminGuestId">
+                        <div class="admin-input-group">
+                            <label>Nom complet</label>
+                            <input type="text" id="adminInviteFullName" placeholder="Ex: Jean Dupont" class="admin-input">
+                        </div>
+                        <div class="admin-input-group">
+                            <label>Numéro de téléphone</label>
+                            <input type="tel" id="adminInvitePhone" placeholder="Ex: +243 000 000 000" class="admin-input">
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" onclick="adminSaveGuest()" class="admin-btn-success" style="flex:1; min-width:180px;">Générer / sauvegarder</button>
+                            <button type="button" onclick="adminClearGuestForm()" class="admin-btn-primary" style="flex:1; min-width:140px;">Nouveau</button>
+                        </div>
+                    </div>
+                    <div class="admin-card" style="margin-top:16px;">
+                        <div class="admin-input-group">
+                            <label>Rechercher un invité</label>
+                            <input type="search" id="adminGuestSearch" placeholder="Nom ou téléphone" class="admin-input" oninput="renderAdminGuests()">
+                        </div>
+                        <div id="adminGuestsTable" style="overflow-x:auto;"></div>
+                    </div>
                 </div>
 
                 <div id="adminMessage" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; text-align: center; transition: all 0.3s ease;"></div>
@@ -4624,7 +4651,7 @@
             // Liste de tous les tabs connus
             const tabIds = [
                 'admin-photos-tab','admin-music-tab','admin-countdown-tab','admin-programmes-tab',
-                'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-privateMessages-tab'
+                'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-invites-tab','admin-privateMessages-tab'
             ];
             // Cacher tous les tabs de façon sûre
             tabIds.forEach(id => {
@@ -4679,6 +4706,11 @@
                     if (typeof loadAdminDesign === 'function') try { loadAdminDesign(); } catch (e) {}
                     break;
                 }
+                case 'invites': {
+                    const el = document.getElementById('admin-invites-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminGuests === 'function') try { loadAdminGuests(); } catch (e) {}
+                    break;
+                }
                 case 'privateMessages': {
                     const el = document.getElementById('admin-privateMessages-tab'); if (el) el.style.display = 'block';
                     if (typeof loadAdminPrivateMessages === 'function') try { loadAdminPrivateMessages(); } catch (e) {}
@@ -4702,6 +4734,187 @@
             msgDiv.classList.add(type);
             msgDiv.style.display = 'block';
             setTimeout(() => msgDiv.style.display = 'none', 4000);
+        }
+
+        let adminGuestsCache = [];
+
+        function escapeAdminText(value) {
+            return String(value || '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function adminGuestApiUrl() {
+            const url = new URL('/api/guests', window.location.origin);
+            const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
+            if (secret) url.searchParams.set('adminSecret', secret);
+            return url.toString();
+        }
+
+        async function loadAdminGuests() {
+            try {
+                const response = await fetch(adminGuestApiUrl(), { method: 'GET', cache: 'no-store' });
+                const data = await response.json();
+                adminGuestsCache = data && Array.isArray(data.guests) ? data.guests : [];
+                renderAdminGuests();
+            } catch (e) {
+                adminShowMessage('Impossible de charger les invités.', 'error');
+            }
+        }
+
+        function renderAdminGuests() {
+            const container = document.getElementById('adminGuestsTable');
+            if (!container) return;
+            const search = (document.getElementById('adminGuestSearch')?.value || '').trim().toLowerCase();
+            const guests = adminGuestsCache.filter((guest) => {
+                const haystack = `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase();
+                return !search || haystack.includes(search);
+            });
+
+            if (!guests.length) {
+                container.innerHTML = '<div style="padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">Aucun invité pour le moment.</div>';
+                return;
+            }
+
+            const rows = guests.map((guest) => `
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb; font-weight:700;">${escapeAdminText(guest.fullName)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${escapeAdminText(guest.phone || '-')}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb; max-width:280px; word-break:break-all;">${escapeAdminText(guest.url)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${guest.active ? 'Actif' : 'Inactif'}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">${guest.createdAt ? new Date(guest.createdAt).toLocaleDateString('fr-FR') : '-'}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5e7eb;">
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button type="button" class="admin-btn-primary" onclick="adminCopyGuestLink('${guest.id}')">Copier</button>
+                            <button type="button" class="admin-btn-primary" onclick="adminOpenGuestLink('${guest.id}')">Ouvrir</button>
+                            <button type="button" class="admin-btn-success" onclick="adminEditGuest('${guest.id}')">Modifier</button>
+                            <button type="button" class="admin-btn-primary" onclick="adminRegenerateGuestLink('${guest.id}')">Régénérer</button>
+                            <button type="button" class="admin-btn-primary" onclick="adminToggleGuest('${guest.id}')">${guest.active ? 'Désactiver' : 'Activer'}</button>
+                            <button type="button" class="admin-btn-primary" onclick="adminDeleteGuest('${guest.id}')" style="background:#e74c3c;color:white;">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table style="width:100%; min-width:980px; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
+                    <thead>
+                        <tr style="background:#f3f4f6;">
+                            <th style="padding:10px; text-align:left;">Nom</th>
+                            <th style="padding:10px; text-align:left;">Téléphone</th>
+                            <th style="padding:10px; text-align:left;">Lien généré</th>
+                            <th style="padding:10px; text-align:left;">Statut</th>
+                            <th style="padding:10px; text-align:left;">Créé le</th>
+                            <th style="padding:10px; text-align:left;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function adminClearGuestForm() {
+            const id = document.getElementById('adminGuestId');
+            const fullName = document.getElementById('adminInviteFullName');
+            const phone = document.getElementById('adminInvitePhone');
+            if (id) id.value = '';
+            if (fullName) fullName.value = '';
+            if (phone) phone.value = '';
+        }
+
+        async function postGuestAction(payload) {
+            const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
+            const response = await fetch('/api/guests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminSecret: secret, ...payload })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || 'guest-action-failed');
+            adminGuestsCache = Array.isArray(data.guests) ? data.guests : adminGuestsCache;
+            renderAdminGuests();
+            return data;
+        }
+
+        async function adminSaveGuest() {
+            const id = document.getElementById('adminGuestId')?.value || '';
+            const fullName = document.getElementById('adminInviteFullName')?.value.trim() || '';
+            const phone = document.getElementById('adminInvitePhone')?.value.trim() || '';
+            if (!fullName) {
+                adminShowMessage('Ajoutez le nom complet de l’invité.', 'error');
+                return;
+            }
+
+            try {
+                await postGuestAction({ action: id ? 'update' : 'create', id, fullName, phone });
+                adminClearGuestForm();
+                adminShowMessage(id ? 'Invité modifié.' : 'Lien invité généré.', 'success');
+            } catch (e) {
+                adminShowMessage('Impossible de sauvegarder cet invité.', 'error');
+            }
+        }
+
+        function findAdminGuest(id) {
+            return adminGuestsCache.find((guest) => guest.id === id);
+        }
+
+        function adminEditGuest(id) {
+            const guest = findAdminGuest(id);
+            if (!guest) return;
+            document.getElementById('adminGuestId').value = guest.id;
+            document.getElementById('adminInviteFullName').value = guest.fullName || '';
+            document.getElementById('adminInvitePhone').value = guest.phone || '';
+        }
+
+        async function adminCopyGuestLink(id) {
+            const guest = findAdminGuest(id);
+            if (!guest) return;
+            try {
+                await navigator.clipboard.writeText(guest.url);
+                adminShowMessage('Lien copié.', 'success');
+            } catch (e) {
+                prompt('Copiez ce lien :', guest.url);
+            }
+        }
+
+        function adminOpenGuestLink(id) {
+            const guest = findAdminGuest(id);
+            if (guest && guest.url) window.open(guest.url, '_blank', 'noopener');
+        }
+
+        async function adminRegenerateGuestLink(id) {
+            if (!confirm('Régénérer ce lien ? L’ancien lien ne fonctionnera plus.')) return;
+            try {
+                await postGuestAction({ action: 'regenerate', id });
+                adminShowMessage('Nouveau lien généré.', 'success');
+            } catch (e) {
+                adminShowMessage('Impossible de régénérer ce lien.', 'error');
+            }
+        }
+
+        async function adminToggleGuest(id) {
+            const guest = findAdminGuest(id);
+            if (!guest) return;
+            try {
+                await postGuestAction({ action: 'toggle', id, active: !guest.active });
+                adminShowMessage(!guest.active ? 'Invité activé.' : 'Invité désactivé.', 'success');
+            } catch (e) {
+                adminShowMessage('Impossible de changer le statut.', 'error');
+            }
+        }
+
+        async function adminDeleteGuest(id) {
+            if (!confirm('Supprimer cet invité et son lien ?')) return;
+            try {
+                await postGuestAction({ action: 'delete', id });
+                adminShowMessage('Invité supprimé.', 'success');
+            } catch (e) {
+                adminShowMessage('Impossible de supprimer cet invité.', 'error');
+            }
         }
 
         function toggleAdminTabs() {
@@ -5644,7 +5857,13 @@
             const text = card.querySelector('p');
             const note = card.querySelector('.invitation-note');
             if (title) title.textContent = invitation.invitationName;
-            if (text) text.textContent = invitation.invitationMessage;
+            const inviteeName = window.currentInvitationGuest && window.currentInvitationGuest.fullName;
+            const baseMessage = invitation.invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.';
+            if (text) {
+                text.textContent = inviteeName
+                    ? `Nous avons le plaisir d'inviter ${inviteeName}. ${baseMessage}`
+                    : baseMessage;
+            }
             if (note) note.textContent = 'VEILLEZ PRESENTER CE QR CODE AU PERSONNEL';
 
             const maleDot = document.getElementById('invitationDresscodeMaleDot');
@@ -6028,7 +6247,10 @@
             const heroSubtitle = document.querySelector('.hero-content .subtitle');
             if (heroSubtitle) {
                 // Reset content
-                heroSubtitle.textContent = heroData.guestName ? `Bienvenue ${heroData.guestName} à notre mariage !` : 'Nous nous marions !';
+                const inviteeName = window.currentInvitationGuest && window.currentInvitationGuest.fullName;
+                heroSubtitle.textContent = inviteeName
+                    ? `Bienvenue ${inviteeName} à notre mariage !`
+                    : (heroData.guestName ? `Bienvenue ${heroData.guestName} à notre mariage !` : 'Nous nous marions !');
             }
 
             const heroQrBadge = document.getElementById('heroQrBadge');
@@ -6241,9 +6463,6 @@
             const API_SHARE = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
                 ? `${window.location.origin}/api/share`
                 : 'http://localhost:3000/api/share';
-            const MAX_SHARE_DEPTH = 1;
-            const SHARE_DEPTH_PARAM = 'shareDepth';
-            const SHARE_LOCK_PARAM = 'lockedAccess';
 
             function getDeviceId() {
                 try {
@@ -6258,13 +6477,15 @@
                 }
             }
 
-            function getCurrentShareDepth() {
+            function getInviteTokenFromUrl() {
                 try {
                     const params = new URLSearchParams(window.location.search);
-                    const depth = parseInt(params.get(SHARE_DEPTH_PARAM) || '0', 10);
-                    return Number.isFinite(depth) && depth > 0 ? depth : 0;
+                    const fromQuery = params.get('invite') || params.get('token') || '';
+                    if (fromQuery) return fromQuery;
+                    const match = window.location.pathname.match(/^\/(?:invite|invitation)\/([A-Za-z0-9_-]{8,64})$/);
+                    return match ? match[1] : '';
                 } catch (e) {
-                    return 0;
+                    return '';
                 }
             }
 
@@ -6272,30 +6493,12 @@
                 if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
                     return typeof buildAdminShortcutUrl === 'function' ? buildAdminShortcutUrl() : window.location.href;
                 }
-
-                const url = new URL(window.location.href);
-                const nextDepth = getCurrentShareDepth() + 1;
-                url.searchParams.set(SHARE_DEPTH_PARAM, String(nextDepth));
-                url.searchParams.set('sourceDevice', getDeviceId());
-                if (nextDepth > MAX_SHARE_DEPTH) {
-                    url.searchParams.set(SHARE_LOCK_PARAM, '1');
-                } else {
-                    url.searchParams.delete(SHARE_LOCK_PARAM);
-                }
-                return url.toString();
+                return window.location.href;
             }
 
             function shouldLockFromShareLink() {
-                if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
-                    return false;
-                }
-
-                try {
-                    const params = new URLSearchParams(window.location.search);
-                    return params.get(SHARE_LOCK_PARAM) === '1' || getCurrentShareDepth() > MAX_SHARE_DEPTH;
-                } catch (e) {
-                    return false;
-                }
+                if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) return false;
+                return !getInviteTokenFromUrl();
             }
 
             function lockSite() {
@@ -6313,6 +6516,19 @@
                 }
             }
 
+            function unlockSite() {
+                try {
+                    window._siteLocked = false;
+                    const overlay = document.getElementById('siteLockOverlay');
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                        overlay.setAttribute('aria-hidden', 'true');
+                    }
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                } catch (e) {}
+            }
+
             function contactAdmin(){
                 window.location.href = 'tel:+243991048061';
             }
@@ -6323,7 +6539,9 @@
                     if (typeof isAdminLinkMode === 'function' && isAdminLinkMode()) {
                         url.searchParams.set('adminSecret', getAdminSecretFromPage());
                     } else {
+                        const inviteToken = getInviteTokenFromUrl();
                         url.searchParams.set('deviceId', getDeviceId());
+                        if (inviteToken) url.searchParams.set('invite', inviteToken);
                     }
                     const resp = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
                     if (!resp.ok) return null;
@@ -6338,6 +6556,8 @@
                     const data = await fetchShareStatus();
                     if (!data || data.allowed === false || data.mode !== 'admin') {
                         lockSite();
+                    } else {
+                        unlockSite();
                     }
                     return;
                 }
@@ -6348,16 +6568,24 @@
                 }
 
                 const data = await fetchShareStatus();
-                if (!data || data.locked || data.allowed === false || (typeof data.shareCount === 'number' && data.shareCount >= 2)) {
+                if (!data || data.locked || data.allowed === false) {
                     lockSite();
+                    return;
+                }
+
+                unlockSite();
+                if (data.guest) {
+                    window.currentInvitationGuest = data.guest;
+                    try { updateInvitationSection(); } catch (e) {}
+                    try { updateHeroGuest(); } catch (e) {}
                 }
             }
 
-            async function reportShare(deviceId, shareDepth) {
+            async function reportShare(deviceId) {
                 const resp = await fetch(API_SHARE, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceId, shareDepth, timestamp: new Date().toISOString() })
+                    body: JSON.stringify({ deviceId, invite: getInviteTokenFromUrl(), timestamp: new Date().toISOString() })
                 });
                 if (!resp.ok) throw new Error('share request failed');
                 return resp.json();
@@ -6370,15 +6598,9 @@
                 }
 
                 const adminSharing = typeof isAdminLinkMode === 'function' && isAdminLinkMode();
-                const already = localStorage.getItem('shareSent') === '1';
-                if (!adminSharing && already) {
-                    alert('Ce lien a déjà été partagé depuis cet appareil. Impossible de le renvoyer.');
-                    return;
-                }
-
-                if (!adminSharing && getCurrentShareDepth() >= MAX_SHARE_DEPTH) {
+                if (!adminSharing && !getInviteTokenFromUrl()) {
                     lockSite();
-                    alert('Acces bloque : ce site ne peut pas etre partage une deuxieme fois.');
+                    alert('Ce lien n’est pas une invitation valide.');
                     return;
                 }
 
@@ -6398,28 +6620,19 @@
                 }
 
                 if (adminSharing) {
-                    alert('Lien admin pret. Vous pouvez le partager sur vos appareils admin.');
+                    alert('Lien admin prêt. Gardez-le privé.');
                     return;
                 }
 
-                const deviceId = getDeviceId();
-                const nextDepth = getCurrentShareDepth() + 1;
                 try {
-                    const data = await reportShare(deviceId, nextDepth);
-                    if (data && (data.locked || data.shareCount >= 2 || data.allowed === false)) {
+                    const data = await reportShare(getDeviceId());
+                    if (data && (data.locked || data.allowed === false)) {
                         lockSite();
                         return;
                     }
-                    if (data && data.allowed === true) {
-                        localStorage.setItem('shareSent', '1');
-                        alert('Lien partagé — merci !');
-                        return;
-                    }
-                    localStorage.setItem('shareSent', '1');
-                    alert('Lien partagé. Le verrouillage sera effectif si le site est partagé une seconde fois.');
+                    alert('Lien partagé. Si ce lien est ouvert sur un autre appareil, il sera bloqué.');
                 } catch (e) {
-                    localStorage.setItem('shareSent', '1');
-                    alert('Lien partagé en mode hors-ligne. Le verrouillage multi-appareils sera activé dès que le serveur sera disponible.');
+                    alert('Impossible de vérifier ce lien pour le moment.');
                 }
             }
 
@@ -6427,15 +6640,13 @@
                 const btn = document.getElementById('shareBtn');
                 if (btn) btn.addEventListener('click', attemptShare);
                 window.contactAdmin = contactAdmin;
-                if (shouldLockFromShareLink()) {
-                    lockSite();
-                    return;
-                }
                 checkShareStatus();
             });
 
             window.lockSite = lockSite;
+            window.unlockSite = unlockSite;
             window.attemptShare = attemptShare;
+            window.getInviteTokenFromUrl = getInviteTokenFromUrl;
         })();
     </script>
     <script>

@@ -14,7 +14,8 @@ const DEFAULT_STATE = {
   ownerDeviceId: '',
   locked: false,
   shareCount: 0,
-  devices: {}
+  devices: {},
+  guests: {}
 };
 
 function ensureStateDir() {
@@ -26,7 +27,8 @@ function cleanState(state) {
     ownerDeviceId: typeof state.ownerDeviceId === 'string' ? state.ownerDeviceId : '',
     locked: Boolean(state.locked),
     shareCount: Number.isFinite(state.shareCount) ? state.shareCount : 0,
-    devices: state.devices && typeof state.devices === 'object' ? state.devices : {}
+    devices: state.devices && typeof state.devices === 'object' ? state.devices : {},
+    guests: state.guests && typeof state.guests === 'object' ? state.guests : {}
   };
 }
 
@@ -127,6 +129,62 @@ function createDeviceId() {
   return `device_${crypto.randomBytes(24).toString('hex')}`;
 }
 
+function createInviteCode() {
+  return crypto.randomBytes(12).toString('base64url');
+}
+
+function isValidInviteCode(code) {
+  return typeof code === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(code);
+}
+
+function createGuestId() {
+  return `guest_${crypto.randomUUID()}`;
+}
+
+function cleanGuestInput(body = {}) {
+  return {
+    fullName: String(body.fullName || body.name || '').trim().slice(0, 160),
+    phone: String(body.phone || body.telephone || '').trim().slice(0, 60)
+  };
+}
+
+function findGuestByToken(state, token) {
+  return Object.values(state.guests || {}).find(guest => guest && guest.token === token) || null;
+}
+
+function publicOrigin(req) {
+  const host = String(req.headers.host || '');
+  const proto = req.headers['x-forwarded-proto'] || (/^(localhost|127\.0\.0\.1)(:|$)/.test(host) ? 'http' : 'https');
+  return `${proto}://${req.headers.host}`;
+}
+
+function guestLink(req, guest) {
+  return `${publicOrigin(req)}/invite/${encodeURIComponent(guest.token)}`;
+}
+
+function publicGuest(guest, req) {
+  return {
+    id: guest.id,
+    fullName: guest.fullName,
+    phone: guest.phone || '',
+    token: guest.token,
+    url: guestLink(req, guest),
+    active: guest.active !== false,
+    createdAt: guest.createdAt || '',
+    updatedAt: guest.updatedAt || '',
+    tokenCreatedAt: guest.tokenCreatedAt || '',
+    firstUsedAt: guest.firstUsedAt || '',
+    lastSeen: guest.lastSeen || '',
+    blockedAttempts: guest.blockedAttempts || 0
+  };
+}
+
+function guestList(state, req) {
+  return Object.values(state.guests || {})
+    .map(guest => publicGuest(guest, req))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+
 function cookieHeader(req, deviceId) {
   const forwardedProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
   const secure = forwardedProto === 'https' ? '; Secure' : '';
@@ -187,6 +245,57 @@ function adminAccess() {
     locked: false,
     mode: 'admin',
     admin: true
+  };
+}
+
+function inviteAccess(req, providedDeviceId, inviteCode) {
+  const resolvedDevice = resolveClientDevice(req, providedDeviceId);
+  const deviceId = resolvedDevice.deviceId;
+  const state = readState();
+  const now = new Date().toISOString();
+  const guest = findGuestByToken(state, inviteCode);
+
+  if (!guest) {
+    return {
+      body: { allowed: false, locked: true, mode: 'invite', reason: 'unknown-invite' },
+      headers: resolvedDevice.headers
+    };
+  }
+
+  if (guest.active === false) {
+    return {
+      body: { allowed: false, locked: true, mode: 'invite', reason: 'inactive-invite' },
+      headers: resolvedDevice.headers
+    };
+  }
+
+  if (!guest.deviceId) {
+    guest.deviceId = deviceId;
+    guest.firstUsedAt = now;
+    guest.lastSeen = now;
+    guest.blockedAttempts = guest.blockedAttempts || 0;
+    writeState(state);
+    return {
+      body: { allowed: true, locked: false, mode: 'invite', inviteCode, guest: publicGuest(guest, req) },
+      headers: resolvedDevice.headers
+    };
+  }
+
+  if (guest.deviceId === deviceId) {
+    guest.lastSeen = now;
+    writeState(state);
+    return {
+      body: { allowed: true, locked: false, mode: 'invite', inviteCode, guest: publicGuest(guest, req) },
+      headers: resolvedDevice.headers
+    };
+  }
+
+  guest.blockedAttempts = (guest.blockedAttempts || 0) + 1;
+  guest.lastBlockedAt = now;
+  writeState(state);
+  return {
+    body: { allowed: false, locked: true, mode: 'invite', reason: 'already-used' },
+    headers: resolvedDevice.headers
   };
 }
 
@@ -263,7 +372,10 @@ function clientAccess(req, providedDeviceId) {
 
 function serveFile(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+  let pathname = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+  if (/^\/(?:invite|invitation)\/[A-Za-z0-9_-]{8,64}$/.test(pathname)) {
+    pathname = '/index.html';
+  }
   const filePath = path.resolve(ROOT, `.${pathname}`);
 
   if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
@@ -312,6 +424,13 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const inviteCode = url.searchParams.get('invite') || '';
+    if (isValidInviteCode(inviteCode)) {
+      const result = inviteAccess(req, url.searchParams.get('deviceId') || '', inviteCode);
+      json(res, 200, result.body, result.headers);
+      return;
+    }
+
     const result = clientAccess(req, url.searchParams.get('deviceId') || '');
     json(res, 200, result.body, result.headers);
     return;
@@ -323,6 +442,12 @@ const server = http.createServer(async (req, res) => {
 
       if (isAdminRequest(req, url, body)) {
         json(res, 200, adminAccess());
+        return;
+      }
+
+      if (isValidInviteCode(body.invite || '')) {
+        const result = inviteAccess(req, body.deviceId || '', body.invite);
+        json(res, 200, result.body, result.headers);
         return;
       }
 
@@ -359,6 +484,115 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (url.pathname === '/api/guest' && req.method === 'GET') {
+    const token = url.searchParams.get('token') || '';
+    if (!isValidInviteCode(token)) {
+      json(res, 404, { ok: false, error: 'unknown-invite' });
+      return;
+    }
+
+    const result = inviteAccess(req, url.searchParams.get('deviceId') || '', token);
+    json(res, result.body.allowed ? 200 : 403, result.body, result.headers);
+    return;
+  }
+
+  if (url.pathname === '/api/guests' && req.method === 'GET') {
+    if (!isAdminRequest(req, url)) {
+      json(res, 403, { ok: false, error: 'forbidden' });
+      return;
+    }
+
+    const state = readState();
+    json(res, 200, { ok: true, guests: guestList(state, req) });
+    return;
+  }
+
+  if (url.pathname === '/api/guests' && req.method === 'POST') {
+    try {
+      const body = await getBody(req);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+
+      const action = String(body.action || 'create');
+      const state = readState();
+      const now = new Date().toISOString();
+
+      if (action === 'create') {
+        const input = cleanGuestInput(body);
+        if (!input.fullName) {
+          json(res, 400, { ok: false, error: 'missing-full-name' });
+          return;
+        }
+
+        const id = createGuestId();
+        let token = createInviteCode();
+        while (findGuestByToken(state, token)) token = createInviteCode();
+        state.guests[id] = {
+          id,
+          fullName: input.fullName,
+          phone: input.phone,
+          token,
+          active: true,
+          createdAt: now,
+          updatedAt: now,
+          tokenCreatedAt: now,
+          deviceId: '',
+          firstUsedAt: '',
+          lastSeen: '',
+          blockedAttempts: 0
+        };
+        writeState(state);
+        json(res, 200, { ok: true, guest: publicGuest(state.guests[id], req), guests: guestList(state, req) });
+        return;
+      }
+
+      const id = String(body.id || '');
+      const guest = state.guests[id];
+      if (!guest) {
+        json(res, 404, { ok: false, error: 'unknown-guest' });
+        return;
+      }
+
+      if (action === 'update') {
+        const input = cleanGuestInput(body);
+        if (!input.fullName) {
+          json(res, 400, { ok: false, error: 'missing-full-name' });
+          return;
+        }
+        guest.fullName = input.fullName;
+        guest.phone = input.phone;
+        guest.active = body.active === false ? false : true;
+        guest.updatedAt = now;
+      } else if (action === 'delete') {
+        delete state.guests[id];
+      } else if (action === 'regenerate') {
+        let token = createInviteCode();
+        while (findGuestByToken(state, token)) token = createInviteCode();
+        guest.token = token;
+        guest.tokenCreatedAt = now;
+        guest.updatedAt = now;
+        guest.deviceId = '';
+        guest.firstUsedAt = '';
+        guest.lastSeen = '';
+        guest.blockedAttempts = 0;
+      } else if (action === 'toggle') {
+        guest.active = body.active !== false;
+        guest.updatedAt = now;
+      } else {
+        json(res, 400, { ok: false, error: 'unknown-action' });
+        return;
+      }
+
+      writeState(state);
+      json(res, 200, { ok: true, guests: guestList(state, req) });
+    } catch (e) {
+      json(res, 400, { ok: false, error: 'bad-request' });
+    }
+    return;
+  }
+
   if (url.pathname === '/api/reset-lock' && req.method === 'POST') {
     const resetToken = process.env.RESET_LOCK_TOKEN || '';
     if (!resetToken || !safeEqual(req.headers['x-reset-token'] || '', resetToken)) {
@@ -366,7 +600,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    writeState({ ...DEFAULT_STATE, devices: {} });
+    writeState({ ...DEFAULT_STATE, devices: {}, guests: {} });
     json(res, 200, { ok: true });
     return;
   }
