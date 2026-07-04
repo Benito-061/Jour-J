@@ -2631,7 +2631,7 @@
                     <li><a href="#gallery"><span class="nav-icon" aria-hidden="true">&#9635;</span><span class="nav-label">Galerie</span></a></li>
                     <li><a href="#invitation"><span class="nav-icon" aria-hidden="true">&#9993;</span><span class="nav-label">Invitation</span></a></li>
                     <li><a href="#guestbook"><span class="nav-icon" aria-hidden="true">&#10084;</span><span class="nav-label">Livre d'Or</span></a></li>
-                    <li><span id="adminNavButton" role="button" tabindex="0" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;"><span class="nav-icon" aria-hidden="true">&#9881;</span><span class="nav-label">Admin</span></span></li>
+                    <li id="adminNavItem" style="display:none;"><span id="adminNavButton" role="button" tabindex="-1" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;"><span class="nav-icon" aria-hidden="true">&#9881;</span><span class="nav-label">Admin</span></span></li>
                 </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
@@ -3844,12 +3844,18 @@
 
         // Admin nav button behavior
         (function attachAdminNavButton() {
+            const adminItem = document.getElementById('adminNavItem');
             const adminBtn = document.getElementById('adminNavButton');
             if (!adminBtn) return;
+
+            const adminVisible = typeof isAdminLinkMode === 'function' && isAdminLinkMode();
+            if (adminItem) adminItem.style.display = adminVisible ? '' : 'none';
+            adminBtn.tabIndex = adminVisible ? 0 : -1;
 
             adminBtn.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (!(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) return;
                 if (typeof openAdminModal === 'function') {
                     openAdminModal();
                 }
@@ -3858,6 +3864,7 @@
             adminBtn.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
+                    if (!(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) return;
                     if (typeof openAdminModal === 'function') {
                         openAdminModal();
                     }
@@ -4561,6 +4568,9 @@
         let adminLoggedIn = false;
 
         function openAdminModal() {
+            if (!(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) {
+                return;
+            }
             console.log('🔓 Ouverture du modal admin');
             document.getElementById('adminModal').style.display = 'block';
 
@@ -5676,6 +5686,10 @@
                 invitationQrPreview.src = invitation.invitationQr;
                 invitationQrPreview.dataset.qrSrc = invitation.invitationQr;
                 invitationQrPreview.style.display = 'block';
+            } else if (invitationQrPreview) {
+                invitationQrPreview.removeAttribute('src');
+                delete invitationQrPreview.dataset.qrSrc;
+                invitationQrPreview.style.display = 'none';
             }
             updateInvitationPreview();
             syncDressCodeColors();
@@ -5737,10 +5751,15 @@
             const previewData = preview?.dataset?.qrSrc || '';
             const previewSrc = preview?.getAttribute('src') || '';
 
-            if (previewData.startsWith('data:image/')) return previewData;
-            if (previewSrc.startsWith('data:image/')) return previewSrc;
-            if (stored.invitationQr && String(stored.invitationQr).startsWith('data:image/')) return stored.invitationQr;
+            if (isInvitationQrSource(previewData)) return previewData;
+            if (isInvitationQrSource(previewSrc)) return previewSrc;
+            if (isInvitationQrSource(stored.invitationQr)) return stored.invitationQr;
             return '';
+        }
+
+        function isInvitationQrSource(value) {
+            const src = String(value || '').trim();
+            return src.startsWith('data:image/') || src.startsWith('https://') || src.startsWith('http://');
         }
 
         function fileToInvitationQrDataUrl(file) {
@@ -5806,6 +5825,7 @@
             adminShowMessage('✅ Invitation sauvegardée !', 'success');
             updateInvitationPreview();
             updateInvitationSection();
+            if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
             console.log('✉️ INVITATION MIS À JOUR:', invitationData);
         }
 
@@ -5907,45 +5927,35 @@
             if (maleLabel) maleLabel.textContent = `Homme : ${invitation.dressCodeMale}`;
             if (femaleLabel) femaleLabel.textContent = `Femme : ${invitation.dressCodeFemale}`;
 
+            renderInvitationQrSource(invitation.invitationQr);
+        }
+
+        function renderInvitationQrSource(qrSource) {
             const qrCont = document.getElementById('invitationQrContainer');
             if (!qrCont) return;
 
-            // Clear existing content
             qrCont.innerHTML = '';
-
-            if (invitation.invitationQr) {
-                const img = document.createElement('img');
-                img.alt = "QR Code d'invitation";
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.style.display = 'block';
-                img.style.margin = '0 auto';
-                img.style.borderRadius = '14px';
-                img.style.border = '1px solid #e5e7eb';
-                img.style.background = 'white';
-                img.style.padding = '6px';
-
-                // show loader/placeholder until image loads
-                const placeholder = document.createElement('div');
-                placeholder.className = 'invitation-qr-placeholder';
-                placeholder.textContent = 'Chargement...';
-                qrCont.appendChild(placeholder);
-
-                img.onload = () => {
-                    qrCont.innerHTML = '';
-                    qrCont.appendChild(img);
-                };
-                img.onerror = () => {
-                    qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
-                };
-                img.src = invitation.invitationQr;
-                if (img.complete && img.naturalWidth > 0) {
-                    qrCont.innerHTML = '';
-                    qrCont.appendChild(img);
-                }
-            } else {
+            if (!isInvitationQrSource(qrSource)) {
                 qrCont.innerHTML = '<div class="invitation-qr-placeholder">QR code ici</div>';
+                return;
             }
+
+            const img = document.createElement('img');
+            img.alt = "QR Code d'invitation";
+            img.src = qrSource;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.style.display = 'block';
+            img.style.margin = '0 auto';
+            img.style.borderRadius = '14px';
+            img.style.border = '1px solid #e5e7eb';
+            img.style.background = 'white';
+            img.style.padding = '6px';
+            img.onerror = () => {
+                qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
+            };
+            qrCont.appendChild(img);
         }
 
         function updateLocationSection() {
@@ -5998,7 +6008,9 @@
                         const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
                         delete stored.invitationQr;
                         localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                        renderInvitationQrSource('');
                         if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                        if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
                     } catch (err) { }
                     return;
                 }
@@ -6012,8 +6024,10 @@
                     const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
                     stored.invitationQr = imageData;
                     localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                    renderInvitationQrSource(imageData);
                     if (typeof updateInvitationSection === 'function') updateInvitationSection();
-                    adminShowMessage('Image chargee. Cliquez sur Sauvegarder Invitation pour confirmer.', 'success');
+                    if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
+                    adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
                 } catch (err) {
                     console.warn('Erreur sauvegarde QR', err);
                     adminShowMessage('Impossible de charger cette image. Essayez une image plus legere.', 'error');
