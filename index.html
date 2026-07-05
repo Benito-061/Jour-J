@@ -5663,7 +5663,7 @@
         }
 
         function loadAdminInvitation() {
-            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+            const invitation = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || localStorage.getItem('weddingInvitation') || JSON.stringify({
                 invitationName: 'Invitation VIP',
                 dressCodeMale: 'Tenue semi-formelle',
                 dressCodeFemale: 'Robe élégante',
@@ -5749,12 +5749,14 @@
         function readInvitationQrFromPreview() {
             const preview = document.getElementById('adminInvitationQrPreview');
             const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+            const tempStored = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
             const previewData = preview?.dataset?.qrSrc || '';
             const previewSrc = preview?.getAttribute('src') || '';
 
             if (isInvitationQrSource(previewData)) return previewData;
             if (isInvitationQrSource(previewSrc)) return previewSrc;
             if (isInvitationQrSource(stored.invitationQr)) return stored.invitationQr;
+            if (isInvitationQrSource(tempStored.invitationQr)) return tempStored.invitationQr;
             return '';
         }
 
@@ -5765,7 +5767,11 @@
 
         function fileToInvitationQrDataUrl(file) {
             return new Promise((resolve, reject) => {
-                if (!file || !file.type || !file.type.startsWith('image/')) {
+                const looksLikeImage = file && (
+                    (file.type && file.type.startsWith('image/')) ||
+                    /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name || '')
+                );
+                if (!looksLikeImage) {
                     reject(new Error('Fichier image invalide'));
                     return;
                 }
@@ -5774,14 +5780,9 @@
                 reader.onerror = () => reject(new Error('Impossible de lire l image'));
                 reader.onload = () => {
                     const originalDataUrl = reader.result;
-                    if (file.size <= 1.4 * 1024 * 1024) {
-                        resolve(originalDataUrl);
-                        return;
-                    }
-
                     const img = new Image();
                     img.onload = () => {
-                        const maxSize = 1200;
+                        const maxSize = 900;
                         const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
                         const width = Math.max(1, Math.round(img.width * scale));
                         const height = Math.max(1, Math.round(img.height * scale));
@@ -5792,7 +5793,11 @@
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/webp', 0.92));
+                        try {
+                            resolve(canvas.toDataURL('image/webp', 0.82));
+                        } catch (e) {
+                            resolve(originalDataUrl);
+                        }
                     };
                     img.onerror = () => resolve(originalDataUrl);
                     img.src = originalDataUrl;
@@ -5832,7 +5837,7 @@
         }
 
         function adminDownloadInvitation() {
-            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+            const invitation = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || localStorage.getItem('weddingInvitation') || JSON.stringify({
                 invitationName: 'Invitation VIP',
                 dressCodeMale: 'Tenue semi-formelle',
                 dressCodeFemale: 'Robe élégante',
@@ -5895,7 +5900,7 @@
         }
 
         function updateInvitationSection() {
-            const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({
+            const invitation = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || localStorage.getItem('weddingInvitation') || JSON.stringify({
                 invitationName: 'Invitation VIP',
                 dressCodeMale: 'Tenue semi-formelle',
                 dressCodeFemale: 'Robe élégante',
@@ -6050,7 +6055,12 @@
                 }
                 const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
                 stored.invitationQr = imageData;
-                localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                try {
+                    localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                } catch (storageErr) {
+                    sessionStorage.setItem('weddingInvitationTemp', JSON.stringify(stored));
+                    console.warn('QR sauvegardé pour cette session seulement', storageErr);
+                }
                 forceDisplayImportedInvitationQr(imageData);
                 if (typeof updateInvitationSection === 'function') updateInvitationSection();
                 forceDisplayImportedInvitationQr(imageData);
