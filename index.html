@@ -2773,7 +2773,8 @@
                 </div>
                 <p>Placez ici le QR code de votre invitation pour que vos invités puissent le scanner facilement.</p>
                 <div class="invitation-qr" id="invitationQrContainer">
-                    <div class="invitation-qr-placeholder">QR code ici</div>
+                    <img id="invitationQrImage" alt="QR Code d'invitation" style="display:none;" />
+                    <div class="invitation-qr-placeholder" id="invitationQrPlaceholder">QR code ici</div>
                 </div>
                 <div class="invitation-dresscode">
                     <div class="invitation-dresscode-item">
@@ -5934,15 +5935,31 @@
         function renderInvitationQrSource(qrSource) {
             const qrCont = document.getElementById('invitationQrContainer');
             if (!qrCont) return;
+            let img = document.getElementById('invitationQrImage');
+            let placeholder = document.getElementById('invitationQrPlaceholder');
 
-            qrCont.innerHTML = '';
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'invitationQrImage';
+                img.alt = "QR Code d'invitation";
+                qrCont.appendChild(img);
+            }
+            if (!placeholder) {
+                placeholder = document.createElement('div');
+                placeholder.id = 'invitationQrPlaceholder';
+                placeholder.className = 'invitation-qr-placeholder';
+                placeholder.textContent = 'QR code ici';
+                qrCont.appendChild(placeholder);
+            }
+
             if (!isInvitationQrSource(qrSource)) {
-                qrCont.innerHTML = '<div class="invitation-qr-placeholder">QR code ici</div>';
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                placeholder.style.display = 'grid';
+                placeholder.textContent = 'QR code ici';
                 return;
             }
 
-            const img = document.createElement('img');
-            img.alt = "QR Code d'invitation";
             img.src = qrSource;
             img.style.width = '100%';
             img.style.height = '100%';
@@ -5954,32 +5971,19 @@
             img.style.background = 'white';
             img.style.padding = '6px';
             img.onerror = () => {
-                qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
+                img.style.display = 'none';
+                placeholder.style.display = 'grid';
+                placeholder.textContent = 'Image invalide';
             };
-            qrCont.appendChild(img);
+            placeholder.style.display = 'none';
         }
 
         function forceDisplayImportedInvitationQr(qrSource) {
-            const qrCont = document.getElementById('invitationQrContainer');
-            if (!qrCont || !isInvitationQrSource(qrSource)) return;
-
-            qrCont.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = qrSource;
-            img.alt = "QR Code d'invitation";
-            img.style.setProperty('display', 'block', 'important');
-            img.style.setProperty('width', '100%', 'important');
-            img.style.setProperty('height', '100%', 'important');
-            img.style.setProperty('max-width', '100%', 'important');
-            img.style.setProperty('max-height', '100%', 'important');
-            img.style.setProperty('object-fit', 'contain', 'important');
-            img.style.setProperty('background', '#fff', 'important');
-            img.style.setProperty('border-radius', '14px', 'important');
-            img.style.setProperty('padding', '6px', 'important');
-            img.onerror = () => {
-                qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
-            };
-            qrCont.appendChild(img);
+            renderInvitationQrSource(qrSource);
+            const img = document.getElementById('invitationQrImage');
+            if (img && isInvitationQrSource(qrSource)) {
+                img.style.setProperty('display', 'block', 'important');
+            }
         }
 
         function updateLocationSection() {
