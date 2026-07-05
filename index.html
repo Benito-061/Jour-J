@@ -5767,12 +5767,8 @@
 
         function fileToInvitationQrDataUrl(file) {
             return new Promise((resolve, reject) => {
-                const looksLikeImage = file && (
-                    (file.type && file.type.startsWith('image/')) ||
-                    /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name || '')
-                );
-                if (!looksLikeImage) {
-                    reject(new Error('Fichier image invalide'));
+                if (!file) {
+                    reject(new Error('Aucun fichier selectionne'));
                     return;
                 }
 
@@ -6046,34 +6042,53 @@
                 return;
             }
 
+            let imageData = '';
             try {
-                const imageData = await fileToInvitationQrDataUrl(file);
-                if (invitationQrPreview) {
-                    invitationQrPreview.src = imageData;
-                    invitationQrPreview.dataset.qrSrc = imageData;
-                    invitationQrPreview.style.display = 'block';
-                }
-                const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
-                stored.invitationQr = imageData;
+                imageData = await fileToInvitationQrDataUrl(file);
+            } catch (err) {
+                console.warn('Erreur lecture QR', err);
+                adminShowMessage('Impossible de lire cette image. Essayez un fichier JPG, PNG ou WEBP.', 'error');
+                return;
+            }
+
+            if (invitationQrPreview) {
+                invitationQrPreview.src = imageData;
+                invitationQrPreview.dataset.qrSrc = imageData;
+                invitationQrPreview.style.display = 'block';
+            }
+            forceDisplayImportedInvitationQr(imageData);
+
+            const stored = JSON.parse(localStorage.getItem('weddingInvitation') || sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
+            stored.invitationQr = imageData;
+            let savedLocally = true;
+            try {
+                localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                sessionStorage.removeItem('weddingInvitationTemp');
+            } catch (storageErr) {
+                savedLocally = false;
                 try {
-                    localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                } catch (storageErr) {
                     sessionStorage.setItem('weddingInvitationTemp', JSON.stringify(stored));
-                    console.warn('QR sauvegardé pour cette session seulement', storageErr);
+                } catch (sessionErr) {
+                    console.warn('QR affiché mais trop lourd pour le stockage du navigateur', sessionErr);
                 }
-                forceDisplayImportedInvitationQr(imageData);
-                if (typeof updateInvitationSection === 'function') updateInvitationSection();
-                forceDisplayImportedInvitationQr(imageData);
-                if (typeof publishSiteDataNow === 'function') {
+            }
+
+            if (typeof updateInvitationSection === 'function') updateInvitationSection();
+            forceDisplayImportedInvitationQr(imageData);
+
+            try {
+                if (savedLocally && typeof publishSiteDataNow === 'function') {
                     await publishSiteDataNow();
-                } else if (typeof publishSiteDataSoon === 'function') {
+                } else if (savedLocally && typeof publishSiteDataSoon === 'function') {
                     publishSiteDataSoon();
                 }
-                adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
-            } catch (err) {
-                console.warn('Erreur sauvegarde QR', err);
-                adminShowMessage('Impossible de charger cette image. Essayez une image plus legere.', 'error');
+            } catch (publishErr) {
+                console.warn('QR affiché mais non synchronisé serveur', publishErr);
             }
+
+            adminShowMessage(savedLocally
+                ? 'QR code chargé et affiché dans l’invitation.'
+                : 'QR code affiché. Image trop grande pour être gardée après rechargement.', 'success');
         }
 
         if (invitationQrFile) {
@@ -6114,7 +6129,7 @@
                     adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
                 } catch (err) {
                     console.warn('Erreur sauvegarde QR', err);
-                    adminShowMessage('Impossible de charger cette image. Essayez une image plus legere.', 'error');
+                    adminShowMessage('Impossible de lire cette image. Utilisez de préférence JPG, PNG ou WEBP.', 'error');
                 }
             });
         }
