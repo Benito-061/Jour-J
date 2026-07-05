@@ -3120,7 +3120,7 @@
                         </div>
                         <div class="admin-input-group">
                             <label>⬆️ Importer un QR Code local</label>
-                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input">
+                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input" onchange="handleAdminInvitationQrFile(this.files && this.files[0])">
                             <div style="margin-top:12px; text-align:center;">
                                 <img id="adminInvitationQrPreview" src="" alt="Aperçu QR invitation" style="display:none; max-width:160px; max-height:160px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
                             </div>
@@ -6023,8 +6023,53 @@
         });
         const invitationQrFile = document.getElementById('adminInvitationQrFile');
         const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
+        async function handleAdminInvitationQrFile(file) {
+            if (!file) {
+                if (invitationQrPreview) {
+                    invitationQrPreview.removeAttribute('src');
+                    delete invitationQrPreview.dataset.qrSrc;
+                    invitationQrPreview.style.display = 'none';
+                }
+                try {
+                    const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+                    delete stored.invitationQr;
+                    localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                    renderInvitationQrSource('');
+                    if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                    if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
+                } catch (err) { }
+                return;
+            }
+
+            try {
+                const imageData = await fileToInvitationQrDataUrl(file);
+                if (invitationQrPreview) {
+                    invitationQrPreview.src = imageData;
+                    invitationQrPreview.dataset.qrSrc = imageData;
+                    invitationQrPreview.style.display = 'block';
+                }
+                const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
+                stored.invitationQr = imageData;
+                localStorage.setItem('weddingInvitation', JSON.stringify(stored));
+                forceDisplayImportedInvitationQr(imageData);
+                if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                forceDisplayImportedInvitationQr(imageData);
+                if (typeof publishSiteDataNow === 'function') {
+                    await publishSiteDataNow();
+                } else if (typeof publishSiteDataSoon === 'function') {
+                    publishSiteDataSoon();
+                }
+                adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
+            } catch (err) {
+                console.warn('Erreur sauvegarde QR', err);
+                adminShowMessage('Impossible de charger cette image. Essayez une image plus legere.', 'error');
+            }
+        }
+
         if (invitationQrFile) {
             invitationQrFile.addEventListener('change', async (e) => {
+                await handleAdminInvitationQrFile(e.target.files && e.target.files[0]);
+                return;
                 const file = e.target.files && e.target.files[0];
                 if (!file) {
                     if (invitationQrPreview) {
