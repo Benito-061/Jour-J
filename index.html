@@ -5825,6 +5825,7 @@
             adminShowMessage('✅ Invitation sauvegardée !', 'success');
             updateInvitationPreview();
             updateInvitationSection();
+            if (invitationQr) forceDisplayImportedInvitationQr(invitationQr);
             if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
             console.log('✉️ INVITATION MIS À JOUR:', invitationData);
         }
@@ -5958,6 +5959,29 @@
             qrCont.appendChild(img);
         }
 
+        function forceDisplayImportedInvitationQr(qrSource) {
+            const qrCont = document.getElementById('invitationQrContainer');
+            if (!qrCont || !isInvitationQrSource(qrSource)) return;
+
+            qrCont.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = qrSource;
+            img.alt = "QR Code d'invitation";
+            img.style.setProperty('display', 'block', 'important');
+            img.style.setProperty('width', '100%', 'important');
+            img.style.setProperty('height', '100%', 'important');
+            img.style.setProperty('max-width', '100%', 'important');
+            img.style.setProperty('max-height', '100%', 'important');
+            img.style.setProperty('object-fit', 'contain', 'important');
+            img.style.setProperty('background', '#fff', 'important');
+            img.style.setProperty('border-radius', '14px', 'important');
+            img.style.setProperty('padding', '6px', 'important');
+            img.onerror = () => {
+                qrCont.innerHTML = '<div class="invitation-qr-placeholder">Image invalide</div>';
+            };
+            qrCont.appendChild(img);
+        }
+
         function updateLocationSection() {
             const locationData = JSON.parse(localStorage.getItem('locationData') || '{}');
             const title = locationData.title || 'Afrique Centrale';
@@ -6024,8 +6048,9 @@
                     const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
                     stored.invitationQr = imageData;
                     localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                    renderInvitationQrSource(imageData);
+                    forceDisplayImportedInvitationQr(imageData);
                     if (typeof updateInvitationSection === 'function') updateInvitationSection();
+                    forceDisplayImportedInvitationQr(imageData);
                     if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
                     adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
                 } catch (err) {
