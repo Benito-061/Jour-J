@@ -5762,7 +5762,7 @@
 
         function isInvitationQrSource(value) {
             const src = String(value || '').trim();
-            return src.startsWith('data:image/') || src.startsWith('https://') || src.startsWith('http://');
+            return src.startsWith('data:image/') || src.startsWith('/uploads/') || src.startsWith('https://') || src.startsWith('http://');
         }
 
         function fileToInvitationQrDataUrl(file) {
@@ -5800,6 +5800,22 @@
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        async function uploadInvitationQrToServer(imageData) {
+            const adminSecret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
+            if (!adminSecret) return '';
+
+            const response = await fetch('/api/upload-invitation-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminSecret, imageData })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok || !data.url) {
+                throw new Error(data.error || 'upload-failed');
+            }
+            return data.url;
         }
 
         function adminSaveInvitation() {
@@ -6059,7 +6075,15 @@
             forceDisplayImportedInvitationQr(imageData);
 
             const stored = JSON.parse(localStorage.getItem('weddingInvitation') || sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
-            stored.invitationQr = imageData;
+            let qrSource = imageData;
+            try {
+                const uploadedUrl = await uploadInvitationQrToServer(imageData);
+                if (uploadedUrl) qrSource = uploadedUrl;
+            } catch (uploadErr) {
+                console.warn('Upload QR impossible, affichage local temporaire', uploadErr);
+            }
+
+            stored.invitationQr = qrSource;
             let savedLocally = true;
             try {
                 localStorage.setItem('weddingInvitation', JSON.stringify(stored));
@@ -6074,7 +6098,7 @@
             }
 
             if (typeof updateInvitationSection === 'function') updateInvitationSection();
-            forceDisplayImportedInvitationQr(imageData);
+            forceDisplayImportedInvitationQr(qrSource);
 
             try {
                 if (savedLocally && typeof publishSiteDataNow === 'function') {

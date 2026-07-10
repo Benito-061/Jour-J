@@ -7,8 +7,10 @@ const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
+const UPLOAD_DIR = path.join(ROOT, 'work', 'uploads');
 const MAX_BODY_SIZE = 1024 * 1024;
 const MAX_SITE_DATA_BODY_SIZE = 20 * 1024 * 1024;
+const MAX_UPLOAD_BODY_SIZE = 12 * 1024 * 1024;
 
 const DEFAULT_STATE = {
   ownerDeviceId: '',
@@ -57,6 +59,10 @@ function readSiteData() {
 function writeSiteData(data) {
   ensureStateDir();
   fs.writeFileSync(SITE_DATA_FILE, JSON.stringify(data && typeof data === 'object' ? data : {}, null, 2));
+}
+
+function ensureUploadDir() {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
 function json(res, status, body, extraHeaders = {}) {
@@ -239,6 +245,20 @@ function getBody(req, maxSize = MAX_BODY_SIZE) {
   });
 }
 
+function saveUploadedImage(dataUrl) {
+  const match = String(dataUrl || '').match(/^data:image\/(png|jpe?g|webp|gif|bmp);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) return null;
+
+  const ext = match[1].toLowerCase().replace('jpeg', 'jpg');
+  const buffer = Buffer.from(match[2], 'base64');
+  if (!buffer.length || buffer.length > 8 * 1024 * 1024) return null;
+
+  ensureUploadDir();
+  const filename = `invitation-qr-${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  return `/uploads/${filename}`;
+}
+
 function adminAccess() {
   return {
     allowed: true,
@@ -376,9 +396,18 @@ function serveFile(req, res) {
   if (/^\/(?:invite|invitation)\/[A-Za-z0-9_-]{8,64}$/.test(pathname)) {
     pathname = '/index.html';
   }
-  const filePath = path.resolve(ROOT, `.${pathname}`);
+  const isUpload = pathname.startsWith('/uploads/');
+  const filePath = isUpload
+    ? path.resolve(UPLOAD_DIR, `.${pathname.slice('/uploads'.length)}`)
+    : path.resolve(ROOT, `.${pathname}`);
 
-  if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
+  if (isUpload && !filePath.startsWith(UPLOAD_DIR + path.sep)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  if (!isUpload && !filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
@@ -478,6 +507,27 @@ const server = http.createServer(async (req, res) => {
 
       writeSiteData(body.data || {});
       json(res, 200, { ok: true });
+    } catch (e) {
+      json(res, 400, { ok: false, error: 'bad-request' });
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/upload-invitation-qr' && req.method === 'POST') {
+    try {
+      const body = await getBody(req, MAX_UPLOAD_BODY_SIZE);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+
+      const uploadedUrl = saveUploadedImage(body.imageData || '');
+      if (!uploadedUrl) {
+        json(res, 400, { ok: false, error: 'invalid-image' });
+        return;
+      }
+
+      json(res, 200, { ok: true, url: uploadedUrl });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
     }
