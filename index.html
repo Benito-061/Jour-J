@@ -5684,10 +5684,12 @@
             document.getElementById('adminDressCodeFemaleColorText').value = invitation.dressCodeFemaleColor;
             document.getElementById('adminInvitationMessage').value = invitation.invitationMessage;
             if (invitation.invitationQr && invitationQrPreview) {
+                window.currentInvitationQrSource = invitation.invitationQr;
                 invitationQrPreview.src = invitation.invitationQr;
                 invitationQrPreview.dataset.qrSrc = invitation.invitationQr;
                 invitationQrPreview.style.display = 'block';
             } else if (invitationQrPreview) {
+                window.currentInvitationQrSource = '';
                 invitationQrPreview.removeAttribute('src');
                 delete invitationQrPreview.dataset.qrSrc;
                 invitationQrPreview.style.display = 'none';
@@ -5750,9 +5752,11 @@
             const preview = document.getElementById('adminInvitationQrPreview');
             const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
             const tempStored = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
+            const activeQrSource = window.currentInvitationQrSource || '';
             const previewData = preview?.dataset?.qrSrc || '';
             const previewSrc = preview?.getAttribute('src') || '';
 
+            if (isInvitationQrSource(activeQrSource)) return activeQrSource;
             if (isInvitationQrSource(previewData)) return previewData;
             if (isInvitationQrSource(previewSrc)) return previewSrc;
             if (isInvitationQrSource(stored.invitationQr)) return stored.invitationQr;
@@ -5818,7 +5822,7 @@
             return data.url;
         }
 
-        function adminSaveInvitation() {
+        async function adminSaveInvitation() {
             const invitationName = document.getElementById('adminInvitationName').value.trim();
             const dressCodeMale = document.getElementById('adminDressCodeMale').value.trim();
             const dressCodeFemale = document.getElementById('adminDressCodeFemale').value.trim();
@@ -5827,6 +5831,11 @@
             if (!invitationName || !dressCodeMale || !dressCodeFemale) {
                 adminShowMessage('Remplissez le nom et les deux dress codes.', 'error');
                 return;
+            }
+
+            const selectedQrFile = document.getElementById('adminInvitationQrFile')?.files?.[0];
+            if (selectedQrFile && typeof handleAdminInvitationQrFile === 'function') {
+                await handleAdminInvitationQrFile(selectedQrFile);
             }
 
             const invitationQr = readInvitationQrFromPreview();
@@ -5946,7 +5955,8 @@
             if (maleLabel) maleLabel.textContent = `Homme : ${invitation.dressCodeMale}`;
             if (femaleLabel) femaleLabel.textContent = `Femme : ${invitation.dressCodeFemale}`;
 
-            renderInvitationQrSource(invitation.invitationQr);
+            const qrSource = window.currentInvitationQrSource || invitation.invitationQr;
+            renderInvitationQrSource(qrSource);
         }
 
         function renderInvitationQrSource(qrSource) {
@@ -6042,6 +6052,7 @@
         const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
         async function handleAdminInvitationQrFile(file) {
             if (!file) {
+                window.currentInvitationQrSource = '';
                 if (invitationQrPreview) {
                     invitationQrPreview.removeAttribute('src');
                     delete invitationQrPreview.dataset.qrSrc;
@@ -6072,6 +6083,7 @@
                 invitationQrPreview.dataset.qrSrc = imageData;
                 invitationQrPreview.style.display = 'block';
             }
+            window.currentInvitationQrSource = imageData;
             forceDisplayImportedInvitationQr(imageData);
 
             const stored = JSON.parse(localStorage.getItem('weddingInvitation') || sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
@@ -6084,6 +6096,12 @@
             }
 
             stored.invitationQr = qrSource;
+            window.currentInvitationQrSource = qrSource;
+            if (invitationQrPreview) {
+                invitationQrPreview.src = qrSource;
+                invitationQrPreview.dataset.qrSrc = qrSource;
+                invitationQrPreview.style.display = 'block';
+            }
             let savedLocally = true;
             try {
                 localStorage.setItem('weddingInvitation', JSON.stringify(stored));
