@@ -4385,6 +4385,58 @@
             return Boolean(getAdminSecretFromPage());
         }
 
+        function readImageFile(file) {
+            return new Promise((resolve, reject) => {
+                if (!file || !String(file.type || '').startsWith('image/')) {
+                    reject(new Error('invalid-image'));
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ''));
+                reader.onerror = () => reject(new Error('read-failed'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function prepareImageForUpload(file, maxDimension = 1600) {
+            const original = await readImageFile(file);
+            if (file.type === 'image/gif' && file.size <= 7 * 1024 * 1024) return original;
+
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => {
+                    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+                    const width = Math.max(1, Math.round(image.width * scale));
+                    const height = Math.max(1, Math.round(image.height * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(image, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.82));
+                };
+                image.onerror = () => reject(new Error('invalid-image'));
+                image.src = original;
+            });
+        }
+
+        async function uploadSiteImage(file, category, maxDimension = 1600) {
+            const adminSecret = getAdminSecretFromPage();
+            if (!adminSecret) throw new Error('admin-secret-missing');
+
+            const imageData = await prepareImageForUpload(file, maxDimension);
+            const response = await fetch('/api/upload-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminSecret, category, imageData })
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload.ok || !payload.url) {
+                throw new Error(payload.error || 'upload-failed');
+            }
+            return payload.url;
+        }
+
         function buildAdminShortcutUrl() {
             const secret = getAdminSecretFromPage();
             const url = new URL(window.location.origin + window.location.pathname);
@@ -4967,7 +5019,7 @@
             try { localStorage.setItem('adminTabsCollapsed', String(collapsed)); } catch (e) { console.warn('Impossible de sauvegarder l\'état des onglets', e); }
         }
 
-        function adminAddPhotos() {
+        async function adminAddPhotos() {
             const input = document.getElementById('adminPhotoInput');
             const files = Array.from(input.files);
             const MAX_PHOTO_SIZE = 30 * 1024 * 1024; // 30 Mo
@@ -4976,6 +5028,30 @@
                 adminShowMessage('Sélectionnez des photos d\'abord', 'error');
                 return;
             }
+
+            const validFiles = files.filter(file => file.size <= MAX_PHOTO_SIZE && String(file.type || '').startsWith('image/'));
+            const uploaded = [];
+            for (const file of validFiles) {
+                try {
+                    uploaded.push(await uploadSiteImage(file, 'gallery', 1600));
+                } catch (error) {
+                    console.warn('Image gallery upload failed', error);
+                }
+            }
+            if (!uploaded.length) {
+                input.value = '';
+                adminShowMessage('Aucune photo n’a pu être sauvegardée. Vérifiez le lien administrateur et le format du fichier.', 'error');
+                return;
+            }
+            const existing = JSON.parse(localStorage.getItem('weddingPhotos') || '[]');
+            const storedPhotos = [...existing, ...uploaded].slice(-12);
+            localStorage.setItem('weddingPhotos', JSON.stringify(storedPhotos));
+            input.value = '';
+            loadAdminPhotos();
+            refreshGalleryFromLocalStorage();
+            if (typeof publishSiteDataNow === 'function') await publishSiteDataNow();
+            adminShowMessage(`${uploaded.length} photo(s) sauvegardée(s).`, 'success');
+            return;
 
             let processed = 0;
             let added = 0;
@@ -5550,7 +5626,7 @@
 
                 // File input change handler
                 if (fileInput) {
-                    fileInput.addEventListener('change', (e) => {
+                    fileInput.addEventListener('change', async (e) => {
                         const f = e.target.files && e.target.files[0];
                         if (!f) return;
 
@@ -5560,6 +5636,22 @@
                             fileInput.value = '';
                             return;
                         }
+
+                        try {
+                            const uploadedUrl = await uploadSiteImage(f, 'programme-background', 1920);
+                            localStorage.setItem('programmeBackgroundUrl', uploadedUrl);
+                            const currentSettings = JSON.parse(localStorage.getItem('programmeBackgroundSettings') || '{}');
+                            currentSettings.bgUrl = uploadedUrl;
+                            localStorage.setItem('programmeBackgroundSettings', JSON.stringify(currentSettings));
+                            adminApplyProgrammeBackground();
+                            if (typeof publishSiteDataNow === 'function') await publishSiteDataNow();
+                            adminShowMessage('Image de fond sauvegardée et affichée.', 'success');
+                        } catch (error) {
+                            console.warn('Programme background upload failed', error);
+                            adminShowMessage('Impossible de sauvegarder cette image. Vérifiez le lien administrateur.', 'error');
+                        }
+                        fileInput.value = '';
+                        return;
 
                         const reader = new FileReader();
                         reader.onload = function(ev) {
@@ -5807,10 +5899,10 @@
             const adminSecret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
             if (!adminSecret) return '';
 
-            const response = await fetch('/api/upload-invitation-qr', {
+            const response = await fetch('/api/upload-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminSecret, imageData })
+                body: JSON.stringify({ adminSecret, category: 'invitation', imageData })
             });
             const data = await response.json();
             if (!response.ok || !data.ok || !data.url) {
@@ -6366,29 +6458,12 @@
             };
 
             // Read uploaded files (if any) as data URLs
-            const finalQrCodePromise = new Promise((resolve) => {
-                if (qrCodeFileInput && qrCodeFileInput.files && qrCodeFileInput.files.length > 0) {
-                    const file = qrCodeFileInput.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = () => resolve(qrCodeUrl || '');
-                    reader.readAsDataURL(file);
-                } else {
-                    resolve(qrCodeUrl || '');
-                }
-            });
-
-            const finalHeroBgPromise = new Promise((resolve) => {
-                if (heroFileInput && heroFileInput.files && heroFileInput.files.length > 0) {
-                    const file = heroFileInput.files[0];
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = () => resolve(heroBgUrl || '');
-                    reader.readAsDataURL(file);
-                } else {
-                    resolve(heroBgUrl || '');
-                }
-            });
+            const finalQrCodePromise = qrCodeFileInput?.files?.[0]
+                ? uploadSiteImage(qrCodeFileInput.files[0], 'hero-qr', 800)
+                : Promise.resolve(qrCodeUrl || '');
+            const finalHeroBgPromise = heroFileInput?.files?.[0]
+                ? uploadSiteImage(heroFileInput.files[0], 'hero-background', 1920)
+                : Promise.resolve(heroBgUrl || '');
 
             Promise.all([finalHeroBgPromise, finalQrCodePromise]).then(([finalHeroBgUrl, finalQrCodeUrl]) => {
                 persist(finalHeroBgUrl, finalQrCodeUrl).finally(() => {
