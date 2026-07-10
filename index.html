@@ -3117,13 +3117,13 @@
                         </div>
                         <div class="admin-input-group">
                             <label>⬆️ Importer l'image de l'invitation</label>
-                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input" onchange="handleAdminInvitationQrFile(this.files && this.files[0])">
+                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input">
                             <div style="margin-top:12px; text-align:center;">
                                 <img id="adminInvitationQrPreview" src="" alt="Aperçu de l'image d'invitation" style="display:none; max-width:100%; max-height:260px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
                             </div>
                         </div>
-                        <button onclick="adminSaveInvitation()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Invitation</button>
-                        <button onclick="adminDownloadInvitation()" class="admin-btn-primary" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 12px;">⬇️ Télécharger l'invitation</button>
+                        <button type="button" onclick="adminSaveInvitation()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Invitation</button>
+                        <button type="button" onclick="adminDownloadInvitation()" class="admin-btn-primary" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 12px;">⬇️ Télécharger l'invitation</button>
                     </div>
                     <div class="admin-card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
                         <h4 style="margin-bottom:12px; color:#5e72e4;">Prévisualisation</h4>
@@ -5830,11 +5830,6 @@
                 return;
             }
 
-            const selectedQrFile = document.getElementById('adminInvitationQrFile')?.files?.[0];
-            if (selectedQrFile && typeof handleAdminInvitationQrFile === 'function') {
-                await handleAdminInvitationQrFile(selectedQrFile);
-            }
-
             const invitationQr = readInvitationQrFromPreview();
             const invitationData = {
                 invitationName,
@@ -5845,12 +5840,30 @@
                 invitationMessage: invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
                 invitationQr
             };
-            localStorage.setItem('weddingInvitation', JSON.stringify(invitationData));
-            adminShowMessage('✅ Invitation sauvegardée !', 'success');
+            let savedLocally = true;
+            try {
+                localStorage.setItem('weddingInvitation', JSON.stringify(invitationData));
+                sessionStorage.removeItem('weddingInvitationTemp');
+            } catch (storageErr) {
+                savedLocally = false;
+                try {
+                    sessionStorage.setItem('weddingInvitationTemp', JSON.stringify(invitationData));
+                } catch (sessionErr) {
+                    adminShowMessage("Impossible de sauvegarder cette invitation : l'image est trop volumineuse.", 'error');
+                    return;
+                }
+            }
             updateInvitationPreview();
             updateInvitationSection();
             if (invitationQr) forceDisplayImportedInvitationQr(invitationQr);
-            if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
+            if (savedLocally && typeof publishSiteDataNow === 'function') {
+                await publishSiteDataNow();
+            } else if (savedLocally && typeof publishSiteDataSoon === 'function') {
+                publishSiteDataSoon();
+            }
+            adminShowMessage(savedLocally
+                ? '✅ Invitation sauvegardée !'
+                : "Invitation affichée pour cette session. L'image est trop volumineuse pour être conservée après rechargement.", 'success');
             console.log('✉️ INVITATION MIS À JOUR:', invitationData);
         }
 
