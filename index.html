@@ -1128,7 +1128,6 @@
             align-items: center;
             justify-content: center;
             min-height: auto;
-            aspect-ratio: 1 / 1;
             margin: 0 auto;
             border-radius: clamp(18px, 4vw, 28px);
             border: 1px solid rgba(212, 175, 55, 0.22);
@@ -1140,8 +1139,7 @@
         .invitation-qr-placeholder {
             width: 100%;
             max-width: 320px;
-            aspect-ratio: 1 / 1;
-            min-height: 0;
+            min-height: 220px;
             border-radius: clamp(14px, 3vw, 20px);
             border: 2px dashed rgba(99, 102, 241, 0.35);
             display: grid;
@@ -1157,7 +1155,7 @@
         .invitation-qr img {
             max-width: 100%;
             width: 100%;
-            height: 100%;
+            height: auto;
             object-fit: contain;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
@@ -1165,7 +1163,6 @@
             display: block;
             margin: 0 auto;
             padding: 8px;
-            aspect-ratio: 1 / 1;
         }
 
         .invitation-dresscode {
@@ -2769,12 +2766,12 @@
             <div class="invitation-card">
                 <div class="invitation-card-header">
                     <span class="invitation-badge">Invitation</span>
-                    <h3>Votre QR code d'invitation</h3>
+                    <h3>Votre image d'invitation</h3>
                 </div>
-                <p>Placez ici le QR code de votre invitation pour que vos invités puissent le scanner facilement.</p>
+                <p>Votre image d'invitation apparaîtra ici.</p>
                 <div class="invitation-qr" id="invitationQrContainer">
-                    <img id="invitationQrImage" alt="QR Code d'invitation" style="display:none;" />
-                    <div class="invitation-qr-placeholder" id="invitationQrPlaceholder">QR code ici</div>
+                    <img id="invitationQrImage" alt="Image d'invitation" style="display:none;" />
+                    <div class="invitation-qr-placeholder" id="invitationQrPlaceholder">Image ici</div>
                 </div>
                 <div class="invitation-dresscode">
                     <div class="invitation-dresscode-item">
@@ -2786,7 +2783,7 @@
                         <span id="invitationDresscodeFemaleLabel">Femme : Robe élégante</span>
                     </div>
                 </div>
-                <p class="invitation-note">VEILLEZ PRESENTER CE QR CODE AU PERSONNEL</p>
+                <p class="invitation-note">VEILLEZ PRESENTER CETTE INVITATION AU PERSONNEL</p>
             </div>
         </div>
     </section>
@@ -3119,10 +3116,10 @@
                             <textarea id="adminInvitationMessage" placeholder="Saisissez un message d'invitation facultatif" class="admin-input" style="min-height:90px;"></textarea>
                         </div>
                         <div class="admin-input-group">
-                            <label>⬆️ Importer un QR Code local</label>
+                            <label>⬆️ Importer l'image de l'invitation</label>
                             <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input" onchange="handleAdminInvitationQrFile(this.files && this.files[0])">
                             <div style="margin-top:12px; text-align:center;">
-                                <img id="adminInvitationQrPreview" src="" alt="Aperçu QR invitation" style="display:none; max-width:160px; max-height:160px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
+                                <img id="adminInvitationQrPreview" src="" alt="Aperçu de l'image d'invitation" style="display:none; max-width:100%; max-height:260px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
                             </div>
                         </div>
                         <button onclick="adminSaveInvitation()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Invitation</button>
@@ -5903,7 +5900,7 @@
         <p>${invitation.dressCodeFemale}</p>
       </div>
     </div>
-    ${invitation.invitationQr ? `<div class="qr-box"><img src="${invitation.invitationQr}" alt="QR Code invitation" /></div>` : ''}
+    ${invitation.invitationQr ? `<div class="qr-box"><img src="${invitation.invitationQr}" alt="Image d'invitation" /></div>` : ''}
   </div>
 </body>
 </html>`;
@@ -5944,7 +5941,7 @@
                     ? `Nous avons le plaisir d'inviter ${inviteeName}. ${baseMessage}`
                     : baseMessage;
             }
-            if (note) note.textContent = 'VEILLEZ PRESENTER CE QR CODE AU PERSONNEL';
+            if (note) note.textContent = 'VEILLEZ PRESENTER CETTE INVITATION AU PERSONNEL';
 
             const maleDot = document.getElementById('invitationDresscodeMaleDot');
             const femaleDot = document.getElementById('invitationDresscodeFemaleDot');
@@ -5968,14 +5965,14 @@
             if (!img) {
                 img = document.createElement('img');
                 img.id = 'invitationQrImage';
-                img.alt = "QR Code d'invitation";
+                img.alt = "Image d'invitation";
                 qrCont.appendChild(img);
             }
             if (!placeholder) {
                 placeholder = document.createElement('div');
                 placeholder.id = 'invitationQrPlaceholder';
                 placeholder.className = 'invitation-qr-placeholder';
-                placeholder.textContent = 'QR code ici';
+                placeholder.textContent = 'Image ici';
                 qrCont.appendChild(placeholder);
             }
 
@@ -5983,13 +5980,13 @@
                 img.removeAttribute('src');
                 img.style.display = 'none';
                 placeholder.style.display = 'grid';
-                placeholder.textContent = 'QR code ici';
+                placeholder.textContent = 'Image ici';
                 return;
             }
 
             img.src = qrSource;
             img.style.width = '100%';
-            img.style.height = '100%';
+            img.style.height = 'auto';
             img.style.objectFit = 'contain';
             img.style.display = 'block';
             img.style.margin = '0 auto';
