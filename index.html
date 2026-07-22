@@ -2817,6 +2817,62 @@
             .nav-overflow-menu a:focus-visible, .nav-overflow-menu button:focus-visible, .nav-more-button:focus-visible, .nav-toggle-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
             .hero { margin-top: 0; min-height: 100svh; }
             section { scroll-margin-bottom: 98px; }
+
+            /* Barre tactile compacte : tous les accès principaux restent visibles. */
+            nav {
+                background: transparent !important;
+                box-shadow: none !important;
+                border: 0 !important;
+                padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+            nav::before, nav::after { display: none; }
+            .nav-links, .nav-links.collapsed {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                height: 66px;
+                padding: 7px !important;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,.12);
+                border-radius: 999px;
+                background: #090909;
+                box-shadow: 0 14px 34px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08);
+            }
+            .nav-links li, .nav-more-item { display: block !important; flex: 1 1 0; min-width: 0; transition: flex .24s ease; }
+            .nav-links li.is-active, .nav-links li:has(a.active), .nav-links li:has(.nav-more-button.active) { flex: 2.15 1 0; }
+            .nav-links a, #adminNavButton, .nav-more-button {
+                min-height: 50px;
+                padding: 7px 8px !important;
+                flex-direction: row;
+                gap: 0;
+                border-radius: 999px;
+                color: rgba(255,255,255,.86) !important;
+                transition: color .2s ease, background .2s ease, gap .2s ease;
+            }
+            .nav-links a .nav-icon, #adminNavButton .nav-icon, .nav-more-button .nav-icon {
+                font-size: 21px;
+                color: currentColor;
+            }
+            .nav-links .nav-label { display: none; overflow: hidden; text-overflow: ellipsis; }
+            .nav-links a.active, .nav-more-button.active {
+                justify-content: flex-start;
+                gap: 8px;
+                padding-inline: 14px !important;
+                color: #fff !important;
+                background: #2a2a2a !important;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+            }
+            .nav-links a.active .nav-label, .nav-more-button.active .nav-label { display: block; font-weight: 700; font-size: 11px; }
+            .nav-overflow-menu {
+                right: 14px;
+                bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+                color: #fff;
+                background: rgba(9,9,9,.96);
+                border-color: rgba(255,255,255,.13);
+                box-shadow: 0 20px 44px rgba(0,0,0,.34);
+            }
+            .nav-overflow-menu a, .nav-overflow-menu button { color: #fff; }
+            .nav-overflow-menu a:hover, .nav-overflow-menu button:hover { background: #2a2a2a; }
         }
         @keyframes nav-menu-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
     </style>
@@ -3985,10 +4041,12 @@
             if (moreButton) {
                 moreButton.classList.toggle('active', isOverflowSection);
                 moreButton.setAttribute('aria-current', isOverflowSection ? 'page' : 'false');
+                if (moreButton.parentElement) moreButton.parentElement.classList.toggle('is-active', isOverflowSection);
             }
             mainNavAnchors.forEach(link => {
                 const isActive = link.getAttribute('href') === hash;
                 link.classList.toggle('active', isActive);
+                if (link.parentElement) link.parentElement.classList.toggle('is-active', isActive);
                 if (isActive) {
                     link.setAttribute('aria-current', 'page');
                     const navList = document.getElementById('mainNavLinks');
