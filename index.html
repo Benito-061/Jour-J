@@ -3774,7 +3774,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/guests', {
+                const response = await fetch('/api/guestbook', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(guestData)
@@ -3813,13 +3813,12 @@
         }
 
         function saveLocalGuestMessage(guestData) {
-            const stored = JSON.parse(localStorage.getItem('guestbookMessages') || '[]');
-            stored.unshift(guestData);
-            localStorage.setItem('guestbookMessages', JSON.stringify(stored.slice(0, 50)));
+            // Les messages sont désormais centralisés dans la base locale du serveur.
+            return guestData;
         }
 
         function getLocalGuestMessages() {
-            return JSON.parse(localStorage.getItem('guestbookMessages') || '[]');
+            return [];
         }
 
         // ========================================
@@ -3855,11 +3854,11 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/guests');
+                const response = await fetch('/api/guestbook', { cache: 'no-store' });
                 const data = await response.json();
 
-                if (data.guests && Array.isArray(data.guests) && data.guests.length > 0) {
-                    renderMessageList(data.guests, messagesList);
+                if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                    renderMessageList(data.messages, messagesList);
                     return;
                 }
 
@@ -3894,12 +3893,12 @@
 
             let messages = getLocalGuestMessages();
             try {
-                const resp = await fetch('http://localhost:3000/api/guests');
+                const resp = await fetch('/api/guestbook', { cache: 'no-store' });
                 if (resp.ok) {
                     const data = await resp.json();
-                    if (Array.isArray(data.guests)) {
+                    if (Array.isArray(data.messages)) {
                         // prepend remote guests so remote entries are prioritized
-                        messages = data.guests.concat(messages);
+                        messages = data.messages.concat(messages);
                     }
                 }
             } catch (e) {
