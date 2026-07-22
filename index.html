@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Le site est volontairement présenté sur une grille bureau, y compris hors écran large. -->
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
     <title>Bienvenue a notre mariage</title>
     <style>
         * {
@@ -2609,6 +2610,215 @@
                 line-height: 1.5;
             }
         }
+
+        /*
+         * MISE EN PAGE BUREAU
+         * Le site est destiné à être consulté comme une expérience ordinateur :
+         * navigation supérieure, sections en colonnes et grille d'images large.
+         * Cette règle protège les ordinateurs portables étroits du mode téléphone
+         * déclenché par les anciens points de rupture à 1024 px.
+         */
+        html,
+        body {
+            min-width: 1180px;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            html {
+                scroll-padding-bottom: 0;
+            }
+
+            body {
+                padding-bottom: 0;
+            }
+
+            nav {
+                top: 0;
+                right: auto;
+                bottom: auto;
+                left: 0;
+                padding: 12px 40px;
+                border-top: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+                box-shadow: 0 10px 42px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+            }
+
+            .nav-container {
+                max-width: 1400px;
+                justify-content: space-between;
+            }
+
+            .nav-container > div:first-child {
+                display: flex !important;
+            }
+
+            .nav-container > div:last-child {
+                width: auto;
+                gap: 12px !important;
+            }
+
+            .nav-toggle-btn {
+                display: none !important;
+            }
+
+            .nav-links,
+            .nav-links.collapsed {
+                display: flex;
+                width: auto;
+                max-height: 220px !important;
+                gap: clamp(16px, 2.5vw, 42px);
+                padding: 0;
+                opacity: 1 !important;
+                overflow: visible;
+                pointer-events: auto;
+            }
+
+            .nav-links a,
+            #adminNavButton {
+                display: block !important;
+                min-height: 0;
+                width: auto;
+                padding: 8px 0 !important;
+                color: var(--dark) !important;
+                background: transparent !important;
+                border: 0 !important;
+                border-radius: 0;
+                box-shadow: none;
+                font-size: 14px !important;
+                line-height: normal;
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+            }
+
+            .nav-links a .nav-icon,
+            #adminNavButton .nav-icon {
+                display: none;
+            }
+
+            .nav-links::before,
+            .nav-links a::before,
+            .nav-links a::after {
+                display: block;
+            }
+
+            .hero {
+                margin-top: 60px;
+                min-height: 0;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .countdown-grid {
+                grid-template-columns: repeat(4, minmax(180px, 1fr));
+            }
+
+            .timeline::before {
+                display: block;
+            }
+
+            .timeline-item {
+                width: 45% !important;
+            }
+
+            .timeline-item:nth-child(odd) {
+                margin-right: 55% !important;
+                text-align: right !important;
+            }
+
+            .timeline-item:nth-child(even) {
+                margin-left: 55% !important;
+            }
+
+            .timeline-marker {
+                position: absolute;
+                top: 30px;
+                left: auto;
+                right: -130px;
+                margin-bottom: 0;
+            }
+
+            .timeline-item:nth-child(even) .timeline-marker {
+                right: auto;
+                left: -130px;
+            }
+
+            section {
+                scroll-margin-bottom: 0;
+            }
+        }
+
+        /* Navigation adaptative : une seule structure, trois présentations. */
+        :root { --nav-wide: 264px; --nav-compact: 76px; }
+        .nav-more-item, .nav-overflow-menu { display: none; }
+
+        @media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+            html, body { min-width: 0; }
+            body { padding-left: var(--nav-wide); padding-bottom: 0; transition: padding-left .28s ease; }
+            nav { inset: 0 auto 0 0; width: var(--nav-wide); padding: 20px 14px; overflow: visible; border: 0; border-right: 1px solid rgba(212,175,55,.2); }
+            .nav-container, .nav-container > div:last-child { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 20px !important; }
+            .nav-container > div:first-child { display: flex !important; width: 100%; }
+            .logo { width: 100%; justify-content: center; box-sizing: border-box; }
+            .nav-links, .nav-links.collapsed { display: grid; width: 100%; max-height: none !important; gap: 6px; padding: 0; opacity: 1 !important; overflow: visible; }
+            .nav-links::before, .nav-links a::before { display: none; }
+            .nav-links a, #adminNavButton, .nav-more-button { min-height: 48px; width: 100%; box-sizing: border-box; display: flex !important; align-items: center; gap: 13px; padding: 11px 13px !important; border-radius: 14px; color: var(--dark) !important; background: transparent !important; border: 0 !important; box-shadow: none; font-size: 14px !important; text-align: left; white-space: nowrap; }
+            .nav-links a:hover, .nav-links a.active, #adminNavButton:hover { background: rgba(212,175,55,.13) !important; transform: translateX(3px); color: var(--primary) !important; }
+            .nav-links a.active { box-shadow: inset 3px 0 0 var(--primary); }
+            .nav-links a .nav-icon, #adminNavButton .nav-icon { display: inline-grid; place-items: center; width: 22px; font-size: 20px; color: var(--primary); }
+            .nav-toggle-btn { display: none !important; }
+            .hero { margin-top: 0; }
+            section { scroll-margin-top: 20px; }
+        }
+
+        @media (min-width: 768px) and (max-width: 1099px), (min-width: 1100px) and (max-width: 1299px) and (pointer: coarse) {
+            html, body { min-width: 0; }
+            body { padding-left: var(--nav-compact); padding-bottom: 0; transition: padding-left .28s ease; }
+            nav { inset: 0 auto 0 0; width: var(--nav-compact); padding: 14px 10px; overflow: visible; border: 0; border-right: 1px solid rgba(212,175,55,.2); transition: width .28s ease; }
+            nav.nav-expanded { width: var(--nav-wide); }
+            .nav-container, .nav-container > div:last-child { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 14px !important; }
+            .nav-container > div:first-child { display: flex !important; }
+            .logo { width: 100%; justify-content: center; overflow: hidden; padding: 9px 0; font-size: 0; }
+            .logo::first-letter { font-size: 25px; }
+            .nav-links, .nav-links.collapsed { display: grid; width: 100%; max-height: none !important; gap: 7px; padding: 0; opacity: 1 !important; overflow: visible; }
+            .nav-links::before, .nav-links a::before { display: none; }
+            .nav-links a, #adminNavButton { min-height: 48px; width: 100%; box-sizing: border-box; display: flex !important; align-items: center; justify-content: center; gap: 14px; padding: 10px !important; border-radius: 14px; color: var(--dark) !important; background: transparent !important; border: 0 !important; box-shadow: none; font-size: 0 !important; white-space: nowrap; }
+            .nav-links a:hover, .nav-links a.active, #adminNavButton:hover { background: rgba(212,175,55,.14) !important; color: var(--primary) !important; }
+            .nav-links a .nav-icon, #adminNavButton .nav-icon { display: inline-grid; place-items: center; width: 24px; font-size: 21px; color: var(--primary); }
+            .nav-toggle-btn { display: inline-flex !important; position: absolute; top: 76px; left: 50%; transform: translateX(-50%); z-index: 2; }
+            nav.nav-expanded .nav-toggle-btn { left: auto; right: 14px; transform: none; }
+            nav.nav-expanded .logo { font-size: 22px; padding: 8px 12px; }
+            nav.nav-expanded .nav-links a, nav.nav-expanded #adminNavButton { justify-content: flex-start; padding: 10px 13px !important; font-size: 14px !important; }
+            .hero { margin-top: 0; }
+            section { scroll-margin-top: 20px; }
+        }
+
+        @media (max-width: 767px) {
+            html, body { min-width: 0; scroll-padding-bottom: 94px; }
+            body { padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
+            nav { top: auto; bottom: 0; width: 100%; padding: 7px 8px calc(7px + env(safe-area-inset-bottom, 0px)); overflow: visible; }
+            .nav-container > div:first-child, .nav-toggle-btn { display: none !important; }
+            .nav-container, .nav-container > div:last-child { width: 100%; }
+            .nav-links, .nav-links.collapsed { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); width: 100%; gap: 4px; padding: 0; max-height: none !important; overflow: visible; opacity: 1 !important; }
+            .nav-links li:nth-child(n+5):not(.nav-more-item) { display: none !important; }
+            .nav-more-item { display: block; }
+            .nav-links::before, .nav-links a::before, .nav-links a::after { display: none; }
+            .nav-links a, #adminNavButton, .nav-more-button { min-height: 55px; width: 100%; display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 5px 2px !important; border-radius: 12px; color: var(--dark) !important; background: transparent !important; border: 0 !important; box-shadow: none; font-size: 10px !important; line-height: 1.1; white-space: nowrap; }
+            .nav-links a.active { color: var(--primary) !important; background: rgba(212,175,55,.16) !important; }
+            .nav-more-button.active { color: var(--primary) !important; background: rgba(212,175,55,.16) !important; }
+            .nav-links a .nav-icon, #adminNavButton .nav-icon, .nav-more-button .nav-icon { display: block; font-size: 20px; color: var(--primary); }
+            .nav-overflow-menu { position: fixed; right: 12px; bottom: calc(82px + env(safe-area-inset-bottom, 0px)); z-index: 1100; min-width: 190px; padding: 8px; border-radius: 16px; background: rgba(255,255,255,.94); box-shadow: 0 18px 42px rgba(15,23,42,.2); border: 1px solid rgba(212,175,55,.22); backdrop-filter: blur(18px); }
+            .nav-overflow-menu.is-open { display: grid; gap: 3px; animation: nav-menu-in .18s ease-out; }
+            .nav-overflow-menu a, .nav-overflow-menu button { display: flex; gap: 10px; align-items: center; width: 100%; padding: 12px; color: var(--dark); background: transparent; border: 0; border-radius: 10px; text-decoration: none; font: inherit; text-align: left; }
+            .nav-overflow-menu a:focus-visible, .nav-overflow-menu button:focus-visible, .nav-more-button:focus-visible, .nav-toggle-btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+            .hero { margin-top: 0; min-height: 100svh; }
+            section { scroll-margin-bottom: 98px; }
+        }
+        @keyframes nav-menu-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
     </style>
 
 </head>
@@ -2629,11 +2839,18 @@
                     <li><a href="#invitation"><span class="nav-icon" aria-hidden="true">&#9993;</span><span class="nav-label">Invitation</span></a></li>
                     <li><a href="#guestbook"><span class="nav-icon" aria-hidden="true">&#10084;</span><span class="nav-label">Livre d'Or</span></a></li>
                     <li id="adminNavItem" style="display:none;"><span id="adminNavButton" role="button" tabindex="-1" style="background:none;border:none;color: rgba(212, 175, 55, 0.6);font-size: 12px;cursor:pointer;padding:0;"><span class="nav-icon" aria-hidden="true">&#9881;</span><span class="nav-label">Admin</span></span></li>
+                    <li class="nav-more-item"><button type="button" class="nav-more-button" id="navMoreButton" aria-expanded="false" aria-controls="navOverflowMenu"><span class="nav-icon" aria-hidden="true">&#8943;</span><span class="nav-label">Plus</span></button></li>
                 </ul>
                 <button class="nav-toggle-btn" onclick="toggleNavbarLinks()" aria-expanded="true" title="Afficher/Masquer le menu">☰</button>
             </div>
         </div>
     </nav>
+    <div class="nav-overflow-menu" id="navOverflowMenu" hidden aria-label="Autres sections">
+        <a href="#gallery"><span aria-hidden="true">▣</span> Galerie</a>
+        <a href="#invitation"><span aria-hidden="true">✉</span> Invitation</a>
+        <a href="#guestbook"><span aria-hidden="true">♥</span> Livre d'Or</a>
+        <button type="button" id="navOverflowAdmin" hidden><span aria-hidden="true">⚙</span> Administration</button>
+    </div>
 
     <!-- HERO -->
     <section id="hero" class="hero hero-modern">
@@ -3763,6 +3980,12 @@
 
         function setActiveNavLink(hash) {
             if (!hash) return;
+            const moreButton = document.getElementById('navMoreButton');
+            const isOverflowSection = ['#gallery', '#invitation', '#guestbook'].includes(hash);
+            if (moreButton) {
+                moreButton.classList.toggle('active', isOverflowSection);
+                moreButton.setAttribute('aria-current', isOverflowSection ? 'page' : 'false');
+            }
             mainNavAnchors.forEach(link => {
                 const isActive = link.getAttribute('href') === hash;
                 link.classList.toggle('active', isActive);
@@ -3822,6 +4045,14 @@
             const links = document.getElementById('mainNavLinks');
             const btn = document.querySelector('.nav-toggle-btn');
             if (!links || !btn) return;
+            if (window.matchMedia('(min-width: 768px) and (max-width: 1099px), (min-width: 1100px) and (max-width: 1299px) and (pointer: coarse)').matches) {
+                const nav = document.querySelector('nav');
+                const expanded = nav.classList.toggle('nav-expanded');
+                btn.setAttribute('aria-expanded', String(expanded));
+                btn.textContent = expanded ? '✕' : '☰';
+                return;
+            }
+            if (window.matchMedia('(max-width: 767px)').matches) return;
             const collapsed = links.classList.toggle('collapsed');
             btn.setAttribute('aria-expanded', String(!collapsed));
             btn.textContent = collapsed ? '☰' : '✖';
@@ -3840,6 +4071,40 @@
             if (btn) btn.textContent = navCollapsed ? '☰' : '✖';
         } catch (e) { /* ignore */ }
 
+        (function setupAdaptiveNavigation() {
+            const nav = document.querySelector('nav');
+            const moreButton = document.getElementById('navMoreButton');
+            const overflowMenu = document.getElementById('navOverflowMenu');
+            if (!nav || !moreButton || !overflowMenu) return;
+
+            const closeOverflow = () => {
+                overflowMenu.hidden = true;
+                overflowMenu.classList.remove('is-open');
+                moreButton.setAttribute('aria-expanded', 'false');
+            };
+            const toggleOverflow = () => {
+                const opening = overflowMenu.hidden;
+                overflowMenu.hidden = !opening;
+                overflowMenu.classList.toggle('is-open', opening);
+                moreButton.setAttribute('aria-expanded', String(opening));
+            };
+
+            moreButton.addEventListener('click', toggleOverflow);
+            overflowMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeOverflow));
+            document.addEventListener('click', event => {
+                if (!overflowMenu.hidden && !overflowMenu.contains(event.target) && !moreButton.contains(event.target)) closeOverflow();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape') closeOverflow();
+            });
+            window.addEventListener('resize', () => {
+                if (!window.matchMedia('(max-width: 767px)').matches) closeOverflow();
+                if (!window.matchMedia('(min-width: 768px) and (max-width: 1099px), (min-width: 1100px) and (max-width: 1299px) and (pointer: coarse)').matches) {
+                    nav.classList.remove('nav-expanded');
+                }
+            });
+        })();
+
         // Admin nav button behavior
         (function attachAdminNavButton() {
             const adminItem = document.getElementById('adminNavItem');
@@ -3848,6 +4113,8 @@
 
             const adminVisible = typeof isAdminLinkMode === 'function' && isAdminLinkMode();
             if (adminItem) adminItem.style.display = adminVisible ? '' : 'none';
+            const overflowAdmin = document.getElementById('navOverflowAdmin');
+            if (overflowAdmin) overflowAdmin.hidden = !adminVisible;
             adminBtn.tabIndex = adminVisible ? 0 : -1;
 
             adminBtn.addEventListener('click', (event) => {
@@ -6276,6 +6543,11 @@
                     adminShowMessage('Impossible de lire cette image. Utilisez de préférence JPG, PNG ou WEBP.', 'error');
                 }
             });
+            if (overflowAdmin) {
+                overflowAdmin.addEventListener('click', () => {
+                    if (typeof openAdminModal === 'function') openAdminModal();
+                });
+            }
         }
         try {
             const qrFile = document.getElementById('adminQrCodeFile');
