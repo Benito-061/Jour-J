@@ -3790,6 +3790,8 @@
                     throw new Error('Erreur');
                 }
             } catch (error) {
+                showFormMsg('Le message n’a pas été partagé. Vérifiez que le serveur Jour-J est bien démarré.', '#f8d7da', '#842029');
+                return;
                 saveLocalGuestMessage(guestData);
                 showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
                 messageForm.reset();
@@ -3880,7 +3882,10 @@
         }
 
         loadMessages();
-        setInterval(loadMessages, 30000);
+        setInterval(loadMessages, 5000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') loadMessages();
+        });
 
         // Recherche par nom dans le Livre d'Or (localStorage + tentative fetch remote)
         async function searchGuestByName() {
