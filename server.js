@@ -294,7 +294,7 @@ function inviteAccess(req, providedDeviceId, inviteCode) {
     };
   }
 
-  if (invite.revoked) {
+  if (invite.revoked || invite.active === false) {
     return {
       body: { allowed: false, locked: true, mode: 'invite', reason: 'revoked-invite' },
       headers: resolvedDevice.headers
@@ -417,6 +417,35 @@ function invitePublicView(state, req) {
       blockedAttempts: invite.blockedAttempts || 0
     }))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+
+function guestPublicView(invite, token, req) {
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const origin = `${proto}://${req.headers.host}`;
+  return {
+    id: invite.id || token,
+    fullName: invite.fullName || 'Invité',
+    phone: invite.phone || '',
+    token,
+    url: `${origin}/?invite=${encodeURIComponent(token)}`,
+    active: invite.active !== false && !invite.revoked,
+    createdAt: invite.createdAt || '',
+    updatedAt: invite.updatedAt || '',
+    firstUsedAt: invite.firstUsedAt || '',
+    lastSeen: invite.lastSeen || '',
+    blockedAttempts: invite.blockedAttempts || 0
+  };
+}
+
+function guestList(state, req) {
+  return Object.entries(state.invites)
+    .map(([token, invite]) => guestPublicView(invite, token, req))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+
+function findGuestToken(state, id) {
+  if (state.invites[id]) return id;
+  return Object.entries(state.invites).find(([, invite]) => invite.id === id)?.[0] || '';
 }
 
 function serveFile(req, res) {
@@ -544,6 +573,98 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       json(res, 201, { ok: true, message: entry });
+    } catch (e) {
+      json(res, 400, { ok: false, error: 'bad-request' });
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/guests' && req.method === 'GET') {
+    if (!isAdminRequest(req, url)) {
+      json(res, 403, { ok: false, error: 'forbidden' });
+      return;
+    }
+    json(res, 200, { ok: true, guests: guestList(readState(), req) });
+    return;
+  }
+
+  if (url.pathname === '/api/guests' && req.method === 'POST') {
+    try {
+      const body = await getBody(req);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+
+      const state = readState();
+      const action = String(body.action || '').trim();
+      const now = new Date().toISOString();
+      let token = findGuestToken(state, String(body.id || ''));
+
+      if (action === 'create') {
+        const fullName = String(body.fullName || '').trim().slice(0, 160);
+        const phone = String(body.phone || '').trim().slice(0, 60);
+        if (!fullName) {
+          json(res, 400, { ok: false, error: 'invalid-name' });
+          return;
+        }
+        token = createInviteCode();
+        while (state.invites[token]) token = createInviteCode();
+        state.invites[token] = {
+          id: token,
+          fullName,
+          phone,
+          createdAt: now,
+          updatedAt: now,
+          active: true,
+          revoked: false,
+          deviceId: '',
+          firstUsedAt: '',
+          lastSeen: '',
+          blockedAttempts: 0
+        };
+      } else if (!token) {
+        json(res, 404, { ok: false, error: 'guest-not-found' });
+        return;
+      } else if (action === 'update') {
+        const fullName = String(body.fullName || '').trim().slice(0, 160);
+        if (!fullName) {
+          json(res, 400, { ok: false, error: 'invalid-name' });
+          return;
+        }
+        state.invites[token].fullName = fullName;
+        state.invites[token].phone = String(body.phone || '').trim().slice(0, 60);
+        state.invites[token].updatedAt = now;
+      } else if (action === 'toggle') {
+        const active = Boolean(body.active);
+        state.invites[token].active = active;
+        state.invites[token].revoked = !active;
+        state.invites[token].updatedAt = now;
+      } else if (action === 'delete') {
+        delete state.invites[token];
+      } else if (action === 'regenerate') {
+        const guest = { ...state.invites[token], id: '' };
+        let nextToken = createInviteCode();
+        while (state.invites[nextToken]) nextToken = createInviteCode();
+        delete state.invites[token];
+        state.invites[nextToken] = {
+          ...guest,
+          id: nextToken,
+          active: true,
+          revoked: false,
+          deviceId: '',
+          firstUsedAt: '',
+          lastSeen: '',
+          blockedAttempts: 0,
+          updatedAt: now
+        };
+      } else {
+        json(res, 400, { ok: false, error: 'invalid-action' });
+        return;
+      }
+
+      writeState(state);
+      json(res, 200, { ok: true, guests: guestList(readState(), req) });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
     }
