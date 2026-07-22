@@ -2804,8 +2804,14 @@
             .nav-container > div:first-child, .nav-toggle-btn { display: none !important; }
             .nav-container, .nav-container > div:last-child { width: 100%; }
             .nav-links, .nav-links.collapsed { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); width: 100%; gap: 4px; padding: 0; max-height: none !important; overflow: visible; opacity: 1 !important; }
-            .nav-links li:nth-child(n+5):not(.nav-more-item) { display: none !important; }
-            .nav-more-item { display: block; }
+            .nav-links li { display: none !important; }
+            .nav-links li:nth-child(1),
+            .nav-links li:nth-child(2),
+            .nav-links li:nth-child(3),
+            .nav-links li:nth-child(5),
+            .nav-links li:nth-child(6) { display: block !important; }
+            html.admin-navigation-enabled .nav-links li#adminNavItem { display: block !important; }
+            .nav-more-item { display: none !important; }
             .nav-links::before, .nav-links a::before, .nav-links a::after { display: none; }
             .nav-links a, #adminNavButton, .nav-more-button { min-height: 55px; width: 100%; display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 5px 2px !important; border-radius: 12px; color: var(--dark) !important; background: transparent !important; border: 0 !important; box-shadow: none; font-size: 10px !important; line-height: 1.1; white-space: nowrap; }
             .nav-links a.active { color: var(--primary) !important; background: rgba(212,175,55,.16) !important; }
@@ -2835,10 +2841,14 @@
                 overflow: hidden;
                 border: 1px solid rgba(255,255,255,.12);
                 border-radius: 999px;
-                background: #090909;
+                background: var(--adaptive-nav-surface, #090909);
                 box-shadow: 0 14px 34px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.08);
             }
             .nav-links li, .nav-more-item { display: block !important; flex: 1 1 0; min-width: 0; transition: flex .24s ease; }
+            .nav-links li { display: none !important; }
+            .nav-links li:nth-child(1), .nav-links li:nth-child(2), .nav-links li:nth-child(3), .nav-links li:nth-child(5), .nav-links li:nth-child(6) { display: block !important; }
+            html.admin-navigation-enabled .nav-links li#adminNavItem { display: block !important; }
+            .nav-links .nav-more-item { display: none !important; }
             .nav-links li.is-active, .nav-links li:has(a.active), .nav-links li:has(.nav-more-button.active) { flex: 2.15 1 0; }
             .nav-links a, #adminNavButton, .nav-more-button {
                 min-height: 50px;
@@ -4036,6 +4046,7 @@
 
         function setActiveNavLink(hash) {
             if (!hash) return;
+            updateAdaptiveNavigationSurface(hash);
             const moreButton = document.getElementById('navMoreButton');
             const isOverflowSection = ['#gallery', '#invitation', '#guestbook'].includes(hash);
             if (moreButton) {
@@ -4059,6 +4070,21 @@
                     link.removeAttribute('aria-current');
                 }
             });
+        }
+
+        function updateAdaptiveNavigationSurface(hash) {
+            const nav = document.querySelector('nav');
+            if (!nav) return;
+            const tones = {
+                '#hero': '#17120f',
+                '#countdown': '#a96c32',
+                '#programme': '#26323b',
+                '#location': '#111827',
+                '#gallery': '#4b3321',
+                '#invitation': '#76511b',
+                '#guestbook': '#4b2f46'
+            };
+            nav.style.setProperty('--adaptive-nav-surface', tones[hash] || '#090909');
         }
 
         document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -4171,6 +4197,7 @@
 
             const adminVisible = typeof isAdminLinkMode === 'function' && isAdminLinkMode();
             if (adminItem) adminItem.style.display = adminVisible ? '' : 'none';
+            document.documentElement.classList.toggle('admin-navigation-enabled', adminVisible);
             const overflowAdmin = document.getElementById('navOverflowAdmin');
             if (overflowAdmin) overflowAdmin.hidden = !adminVisible;
             adminBtn.tabIndex = adminVisible ? 0 : -1;
