@@ -8,6 +8,7 @@ const ROOT = __dirname;
 const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
 const JOUR_J_DATABASE_FILE = path.join(ROOT, 'work', 'Jour-J.json');
+const UPLOADS_DIR = path.join(ROOT, 'work', 'uploads');
 const MAX_BODY_SIZE = 1024 * 1024;
 const MAX_SITE_DATA_BODY_SIZE = 20 * 1024 * 1024;
 
@@ -21,11 +22,13 @@ const DEFAULT_STATE = {
 
 const DEFAULT_JOUR_J_DATABASE = {
   name: 'Jour-J',
-  version: 1,
+  version: 2,
   createdAt: '',
   updatedAt: '',
   invitations: {},
-  guestbookMessages: []
+  guestbookMessages: [],
+  activeCeremonyId: 'default',
+  ceremonies: {}
 };
 
 function ensureStateDir() {
@@ -44,15 +47,76 @@ function cleanState(state) {
 
 function cleanInvitationDatabase(database, fallbackInvites = {}) {
   const now = new Date().toISOString();
+  const legacyInvitations = database?.invitations && typeof database.invitations === 'object'
+    ? database.invitations
+    : (fallbackInvites && typeof fallbackInvites === 'object' ? fallbackInvites : {});
+  const legacyMessages = Array.isArray(database?.guestbookMessages) ? database.guestbookMessages : [];
+  const ceremonies = database?.ceremonies && typeof database.ceremonies === 'object'
+    ? database.ceremonies
+    : {};
+  if (!Object.keys(ceremonies).length) {
+    ceremonies.default = {
+      id: 'default',
+      name: 'Cérémonie principale',
+      date: '',
+      details: '',
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      siteData: {},
+      invitations: legacyInvitations,
+      guestbookMessages: legacyMessages
+    };
+  }
+  Object.entries(ceremonies).forEach(([id, ceremony]) => {
+    ceremonies[id] = {
+      id,
+      name: String(ceremony?.name || 'Cérémonie sans nom').slice(0, 160),
+      date: String(ceremony?.date || '').slice(0, 60),
+      details: String(ceremony?.details || '').slice(0, 1000),
+      status: ['active', 'draft', 'archived'].includes(ceremony?.status) ? ceremony.status : 'draft',
+      createdAt: ceremony?.createdAt || now,
+      updatedAt: ceremony?.updatedAt || now,
+      siteData: ceremony?.siteData && typeof ceremony.siteData === 'object' ? ceremony.siteData : {},
+      invitations: ceremony?.invitations && typeof ceremony.invitations === 'object' ? ceremony.invitations : {},
+      guestbookMessages: Array.isArray(ceremony?.guestbookMessages) ? ceremony.guestbookMessages : []
+    };
+  });
+  const activeCeremonyId = ceremonies[database?.activeCeremonyId] ? database.activeCeremonyId : Object.keys(ceremonies)[0];
+  const defaultCeremony = ceremonies.default || ceremonies[activeCeremonyId];
   return {
     name: 'Jour-J',
-    version: 1,
+    version: 2,
     createdAt: typeof database?.createdAt === 'string' && database.createdAt ? database.createdAt : now,
     updatedAt: now,
-    invitations: database?.invitations && typeof database.invitations === 'object'
-      ? database.invitations
-      : (fallbackInvites && typeof fallbackInvites === 'object' ? fallbackInvites : {}),
-    guestbookMessages: Array.isArray(database?.guestbookMessages) ? database.guestbookMessages : []
+    // Ces deux champs restent disponibles pour les anciennes routes, mais ils
+    // reflètent toujours la cérémonie principale afin de ne pas casser les
+    // liens créés avant le passage au multi-cérémonies.
+    invitations: defaultCeremony?.invitations || legacyInvitations,
+    guestbookMessages: defaultCeremony?.guestbookMessages || legacyMessages,
+    activeCeremonyId,
+    ceremonies
+  };
+}
+
+function ceremonyIdFrom(url, body = {}) {
+  return String(body.ceremonyId || body.ceremony || url.searchParams.get('ceremony') || url.searchParams.get('ceremonyId') || '').trim();
+}
+
+function getCeremony(database, requestedId = '') {
+  return database.ceremonies[requestedId] || database.ceremonies[database.activeCeremonyId] || database.ceremonies.default;
+}
+
+function publicCeremony(ceremony) {
+  return {
+    id: ceremony.id,
+    name: ceremony.name,
+    date: ceremony.date,
+    details: ceremony.details,
+    status: ceremony.status,
+    createdAt: ceremony.createdAt,
+    updatedAt: ceremony.updatedAt,
+    guestCount: Object.keys(ceremony.invitations).length
   };
 }
 
@@ -76,10 +140,17 @@ function readJourJDatabase(fallbackInvites = {}) {
 
 function writeJourJDatabase(invitations, guestbookMessages) {
   const current = readJourJDatabase();
+  const defaultCeremony = getCeremony(current, 'default');
+  if (defaultCeremony) {
+    defaultCeremony.invitations = invitations;
+    defaultCeremony.guestbookMessages = Array.isArray(guestbookMessages) ? guestbookMessages : current.guestbookMessages;
+    defaultCeremony.updatedAt = new Date().toISOString();
+  }
   const database = cleanInvitationDatabase({
     ...current,
     invitations,
-    guestbookMessages: Array.isArray(guestbookMessages) ? guestbookMessages : current.guestbookMessages
+    guestbookMessages: Array.isArray(guestbookMessages) ? guestbookMessages : current.guestbookMessages,
+    ceremonies: current.ceremonies
   });
   writeJsonAtomically(JOUR_J_DATABASE_FILE, database);
 }
@@ -108,6 +179,25 @@ function addGuestbookMessage(input) {
   return entry;
 }
 
+function listCeremonyGuestbookMessages(ceremonyId = '') {
+  const ceremony = getCeremony(readJourJDatabase(), ceremonyId);
+  return (ceremony?.guestbookMessages || []).slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+}
+
+function addCeremonyGuestbookMessage(ceremonyId, input) {
+  const name = String(input?.name || '').trim().slice(0, 120);
+  const message = String(input?.message || '').trim().slice(0, 500);
+  if (!name || !message) return null;
+  const database = readJourJDatabase();
+  const ceremony = getCeremony(database, ceremonyId);
+  if (!ceremony) return null;
+  const entry = { id: crypto.randomUUID(), name, message, attending: Boolean(input?.attending), created_at: new Date().toISOString() };
+  ceremony.guestbookMessages = [entry, ...ceremony.guestbookMessages].slice(0, 300);
+  ceremony.updatedAt = entry.created_at;
+  writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+  return entry;
+}
+
 function readState() {
   let state;
   try {
@@ -125,6 +215,23 @@ function writeState(state) {
   writeJsonAtomically(STATE_FILE, { ...clean, invites: {} });
 }
 
+function readCeremonySiteData(ceremonyId = '') {
+  const database = readJourJDatabase();
+  const ceremony = getCeremony(database, ceremonyId);
+  if (ceremony && Object.keys(ceremony.siteData).length) return ceremony.siteData;
+  return ceremony?.id === 'default' ? readSiteData() : {};
+}
+
+function writeCeremonySiteData(ceremonyId, data) {
+  const database = readJourJDatabase();
+  const ceremony = getCeremony(database, ceremonyId);
+  if (!ceremony) throw new Error('ceremony-not-found');
+  ceremony.siteData = data && typeof data === 'object' ? data : {};
+  ceremony.updatedAt = new Date().toISOString();
+  if (ceremony.id === 'default') writeSiteData(ceremony.siteData);
+  writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+}
+
 function readSiteData() {
   try {
     const data = JSON.parse(fs.readFileSync(SITE_DATA_FILE, 'utf8'));
@@ -137,6 +244,20 @@ function readSiteData() {
 function writeSiteData(data) {
   ensureStateDir();
   fs.writeFileSync(SITE_DATA_FILE, JSON.stringify(data && typeof data === 'object' ? data : {}, null, 2));
+}
+
+function saveUploadedImage(imageData, category = 'image') {
+  const match = String(imageData || '').match(/^data:image\/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) throw new Error('invalid-image');
+  const extension = match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
+  const binary = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+  if (!binary.length || binary.length > 12 * 1024 * 1024) throw new Error('image-too-large');
+
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  const safeCategory = String(category || 'image').replace(/[^a-z0-9_-]/gi, '').slice(0, 32) || 'image';
+  const filename = `${safeCategory}-${crypto.randomUUID()}.${extension}`;
+  fs.writeFileSync(path.join(UPLOADS_DIR, filename), binary);
+  return `/work/uploads/${filename}`;
 }
 
 function json(res, status, body, extraHeaders = {}) {
@@ -280,12 +401,18 @@ function adminAccess() {
   };
 }
 
-function inviteAccess(req, providedDeviceId, inviteCode) {
+function inviteAccess(req, providedDeviceId, inviteCode, requestedCeremonyId = '') {
   const resolvedDevice = resolveClientDevice(req, providedDeviceId);
   const deviceId = resolvedDevice.deviceId;
-  const state = readState();
+  const database = readJourJDatabase();
+  let ceremony = getCeremony(database, requestedCeremonyId);
+  // Les anciens liens ne contiennent pas de paramètre cérémonie. On retrouve
+  // alors le bon lien dans toutes les cérémonies sans les mélanger.
+  if (!ceremony?.invitations?.[inviteCode]) {
+    ceremony = Object.values(database.ceremonies).find(item => item.invitations?.[inviteCode]);
+  }
   const now = new Date().toISOString();
-  const invite = state.invites[inviteCode];
+  const invite = ceremony?.invitations?.[inviteCode];
 
   if (!invite) {
     return {
@@ -306,25 +433,28 @@ function inviteAccess(req, providedDeviceId, inviteCode) {
     invite.firstUsedAt = now;
     invite.lastSeen = now;
     invite.blockedAttempts = invite.blockedAttempts || 0;
-    writeState(state);
+    ceremony.updatedAt = now;
+    writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
     return {
-      body: { allowed: true, locked: false, mode: 'invite', inviteCode },
+      body: { allowed: true, locked: false, mode: 'invite', inviteCode, ceremonyId: ceremony.id, guest: { id: invite.id || inviteCode, fullName: invite.fullName || '', phone: invite.phone || '' } },
       headers: resolvedDevice.headers
     };
   }
 
   if (invite.deviceId === deviceId) {
     invite.lastSeen = now;
-    writeState(state);
+    ceremony.updatedAt = now;
+    writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
     return {
-      body: { allowed: true, locked: false, mode: 'invite', inviteCode },
+      body: { allowed: true, locked: false, mode: 'invite', inviteCode, ceremonyId: ceremony.id, guest: { id: invite.id || inviteCode, fullName: invite.fullName || '', phone: invite.phone || '' } },
       headers: resolvedDevice.headers
     };
   }
 
   invite.blockedAttempts = (invite.blockedAttempts || 0) + 1;
   invite.lastBlockedAt = now;
-  writeState(state);
+  ceremony.updatedAt = now;
+  writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
   return {
     body: { allowed: false, locked: true, mode: 'invite', reason: 'already-used' },
     headers: resolvedDevice.headers
@@ -419,7 +549,7 @@ function invitePublicView(state, req) {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 
-function guestPublicView(invite, token, req) {
+function guestPublicView(invite, token, req, ceremonyId = '') {
   const proto = req.headers['x-forwarded-proto'] || 'https';
   const origin = `${proto}://${req.headers.host}`;
   return {
@@ -427,7 +557,7 @@ function guestPublicView(invite, token, req) {
     fullName: invite.fullName || 'Invité',
     phone: invite.phone || '',
     token,
-    url: `${origin}/?invite=${encodeURIComponent(token)}`,
+    url: `${origin}/?invite=${encodeURIComponent(token)}${ceremonyId ? `&ceremony=${encodeURIComponent(ceremonyId)}` : ''}`,
     active: invite.active !== false && !invite.revoked,
     createdAt: invite.createdAt || '',
     updatedAt: invite.updatedAt || '',
@@ -437,9 +567,9 @@ function guestPublicView(invite, token, req) {
   };
 }
 
-function guestList(state, req) {
+function guestList(state, req, ceremonyId = '') {
   return Object.entries(state.invites)
-    .map(([token, invite]) => guestPublicView(invite, token, req))
+    .map(([token, invite]) => guestPublicView(invite, token, req, ceremonyId))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 
@@ -501,7 +631,7 @@ const server = http.createServer(async (req, res) => {
 
     const inviteCode = url.searchParams.get('invite') || '';
     if (isValidInviteCode(inviteCode)) {
-      const result = inviteAccess(req, url.searchParams.get('deviceId') || '', inviteCode);
+      const result = inviteAccess(req, url.searchParams.get('deviceId') || '', inviteCode, ceremonyIdFrom(url));
       json(res, 200, result.body, result.headers);
       return;
     }
@@ -521,7 +651,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (isValidInviteCode(body.invite || '')) {
-        const result = inviteAccess(req, body.deviceId || '', body.invite);
+        const result = inviteAccess(req, body.deviceId || '', body.invite, ceremonyIdFrom(url, body));
         json(res, 200, result.body, result.headers);
         return;
       }
@@ -537,8 +667,23 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/api/site-data' && req.method === 'GET') {
     json(res, 200, {
       ok: true,
-      data: readSiteData()
+      ceremonyId: getCeremony(readJourJDatabase(), ceremonyIdFrom(url)).id,
+      data: readCeremonySiteData(ceremonyIdFrom(url))
     });
+    return;
+  }
+
+  if (url.pathname === '/api/upload-image' && req.method === 'POST') {
+    try {
+      const body = await getBody(req, MAX_SITE_DATA_BODY_SIZE);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+      json(res, 201, { ok: true, url: saveUploadedImage(body.imageData, body.category) });
+    } catch (e) {
+      json(res, 400, { ok: false, error: e.message === 'image-too-large' ? 'image-too-large' : 'invalid-image' });
+    }
     return;
   }
 
@@ -551,7 +696,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      writeSiteData(body.data || {});
+      writeCeremonySiteData(ceremonyIdFrom(url, body), body.data || {});
       json(res, 200, { ok: true });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
@@ -559,15 +704,91 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (url.pathname === '/api/ceremonies' && req.method === 'GET') {
+    if (!isAdminRequest(req, url)) {
+      json(res, 403, { ok: false, error: 'forbidden' });
+      return;
+    }
+    const database = readJourJDatabase();
+    json(res, 200, {
+      ok: true,
+      activeCeremonyId: database.activeCeremonyId,
+      ceremonies: Object.values(database.ceremonies).map(publicCeremony).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/ceremonies' && req.method === 'POST') {
+    try {
+      const body = await getBody(req);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+      const database = readJourJDatabase();
+      const action = String(body.action || '').trim();
+      const now = new Date().toISOString();
+      const id = String(body.id || '').trim();
+
+      if (action === 'create') {
+        const name = String(body.name || '').trim().slice(0, 160);
+        if (!name) {
+          json(res, 400, { ok: false, error: 'invalid-name' });
+          return;
+        }
+        const ceremonyId = `ceremony_${crypto.randomUUID()}`;
+        database.ceremonies[ceremonyId] = {
+          id: ceremonyId, name, date: String(body.date || '').slice(0, 60), details: String(body.details || '').slice(0, 1000),
+          status: 'draft', createdAt: now, updatedAt: now, siteData: {}, invitations: {}, guestbookMessages: []
+        };
+        database.activeCeremonyId = ceremonyId;
+      } else if (!database.ceremonies[id]) {
+        json(res, 404, { ok: false, error: 'ceremony-not-found' });
+        return;
+      } else if (action === 'select') {
+        database.activeCeremonyId = id;
+      } else if (action === 'update') {
+        const ceremony = database.ceremonies[id];
+        const name = String(body.name || '').trim().slice(0, 160);
+        if (!name) {
+          json(res, 400, { ok: false, error: 'invalid-name' });
+          return;
+        }
+        ceremony.name = name;
+        ceremony.date = String(body.date || '').slice(0, 60);
+        ceremony.details = String(body.details || '').slice(0, 1000);
+        ceremony.status = ['active', 'draft', 'archived'].includes(body.status) ? body.status : ceremony.status;
+        ceremony.updatedAt = now;
+      } else if (action === 'delete') {
+        if (Object.keys(database.ceremonies).length === 1) {
+          json(res, 400, { ok: false, error: 'last-ceremony' });
+          return;
+        }
+        delete database.ceremonies[id];
+        if (database.activeCeremonyId === id) database.activeCeremonyId = Object.keys(database.ceremonies)[0];
+      } else {
+        json(res, 400, { ok: false, error: 'invalid-action' });
+        return;
+      }
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      json(res, 200, { ok: true, activeCeremonyId: database.activeCeremonyId, ceremonies: Object.values(database.ceremonies).map(publicCeremony) });
+    } catch (e) {
+      json(res, 400, { ok: false, error: 'bad-request' });
+    }
+    return;
+  }
+
   if (url.pathname === '/api/guestbook' && req.method === 'GET') {
-    json(res, 200, { ok: true, messages: listGuestbookMessages() });
+    const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url));
+    json(res, 200, { ok: true, ceremonyId: ceremony.id, messages: listCeremonyGuestbookMessages(ceremony.id) });
     return;
   }
 
   if (url.pathname === '/api/guestbook' && req.method === 'POST') {
     try {
       const body = await getBody(req);
-      const entry = addGuestbookMessage(body);
+      const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url, body));
+      const entry = addCeremonyGuestbookMessage(ceremony.id, body);
       if (!entry) {
         json(res, 400, { ok: false, error: 'invalid-message' });
         return;
@@ -584,7 +805,8 @@ const server = http.createServer(async (req, res) => {
       json(res, 403, { ok: false, error: 'forbidden' });
       return;
     }
-    json(res, 200, { ok: true, guests: guestList(readState(), req) });
+    const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url));
+    json(res, 200, { ok: true, ceremonyId: ceremony.id, guests: guestList({ invites: ceremony.invitations }, req, ceremony.id) });
     return;
   }
 
@@ -596,7 +818,9 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const state = readState();
+      const database = readJourJDatabase();
+      const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
+      const state = { invites: ceremony.invitations };
       const action = String(body.action || '').trim();
       const now = new Date().toISOString();
       let token = findGuestToken(state, String(body.id || ''));
@@ -663,8 +887,10 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      writeState(state);
-      json(res, 200, { ok: true, guests: guestList(readState(), req) });
+      ceremony.invitations = state.invites;
+      ceremony.updatedAt = now;
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      json(res, 200, { ok: true, ceremonyId: ceremony.id, guests: guestList({ invites: ceremony.invitations }, req, ceremony.id) });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
     }

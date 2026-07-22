@@ -3162,6 +3162,7 @@
             <div id="adminContent" style="display: none; padding: 25px; max-height: 600px; overflow-y: auto;">
                 <!-- Tabs -->
                 <div class="admin-tabs collapsed" id="adminTabs">
+                    <button onclick="switchAdminTab('ceremonies', this)" class="admin-tab-btn" data-tab="ceremonies">✦ Cérémonies</button>
                     <button onclick="switchAdminTab('photos', this)" class="admin-tab-btn active" data-tab="photos">📸 Photos</button>
                     <button onclick="switchAdminTab('music', this)" class="admin-tab-btn" data-tab="music">🎵 Musique</button>
                     <button onclick="switchAdminTab('countdown', this)" class="admin-tab-btn" data-tab="countdown">⏰ Compte à Rebours</button>
@@ -3173,6 +3174,26 @@
                     <button onclick="switchAdminTab('invites', this)" class="admin-tab-btn" data-tab="invites">🔗 Liens invités</button>
                     <button onclick="switchAdminTab('privateMessages', this)" class="admin-tab-btn" data-tab="privateMessages">📩 Messages Privés</button>
                     <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
+                </div>
+
+                <div id="admin-ceremonies-tab" style="display:none;">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+                        <div><h3 style="color:#5e72e4; margin:0 0 6px; font-size:1.8rem;">✦ Cérémonies</h3><p style="margin:0; color:#64748b;">Gérez chaque cérémonie, son univers et ses invités indépendamment.</p></div>
+                        <button type="button" class="admin-btn-success" onclick="adminNewCeremony()">＋ Nouvelle cérémonie</button>
+                    </div>
+                    <div class="admin-card" style="padding:14px; margin-bottom:16px; background:#f8fafc;">
+                        <input id="adminCeremonySearch" class="admin-input" type="search" placeholder="Rechercher une cérémonie..." oninput="renderAdminCeremonies()">
+                    </div>
+                    <div id="adminCeremonyList" style="display:grid; gap:12px;"><p style="color:#64748b;">Chargement des cérémonies...</p></div>
+                    <div id="adminCeremonyEditor" class="admin-card" style="display:none; margin-top:18px;">
+                        <h4 id="adminCeremonyEditorTitle" style="margin:0 0 16px; color:#5e72e4;">Nouvelle cérémonie</h4>
+                        <input id="adminCeremonyId" type="hidden">
+                        <div class="admin-input-group"><label>Nom de la cérémonie</label><input id="adminCeremonyName" class="admin-input" placeholder="Ex : Mariage de Josue & Aurelie"></div>
+                        <div class="admin-input-group"><label>Date</label><input id="adminCeremonyDate" class="admin-input" type="date"></div>
+                        <div class="admin-input-group"><label>Informations générales</label><textarea id="adminCeremonyDetails" class="admin-input" style="min-height:80px;" placeholder="Lieu, thème, notes d'organisation..."></textarea></div>
+                        <div class="admin-input-group"><label>Statut</label><select id="adminCeremonyStatus" class="admin-input"><option value="draft">Brouillon</option><option value="active">Active</option><option value="archived">Archivée</option></select></div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;"><button type="button" class="admin-btn-success" onclick="adminSaveCeremony()">Sauvegarder</button><button type="button" class="admin-btn-primary" onclick="adminCloseCeremonyEditor()">Annuler</button></div>
+                    </div>
                 </div>
 
                 <!-- Photos Tab -->
@@ -3774,10 +3795,10 @@
             };
 
             try {
-                const response = await fetch('/api/guestbook', {
+                const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(guestData)
+                    body: JSON.stringify({ ...guestData, ceremonyId: getActiveCeremonyId() })
                 });
 
                 if (response.ok) {
@@ -3856,7 +3877,7 @@
             }
 
             try {
-                const response = await fetch('/api/guestbook', { cache: 'no-store' });
+                const response = await fetch(ceremonyApiUrl('/api/guestbook'), { cache: 'no-store' });
                 const data = await response.json();
 
                 if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
@@ -3898,7 +3919,7 @@
 
             let messages = getLocalGuestMessages();
             try {
-                const resp = await fetch('/api/guestbook', { cache: 'no-store' });
+                const resp = await fetch(ceremonyApiUrl('/api/guestbook'), { cache: 'no-store' });
                 if (resp.ok) {
                     const data = await resp.json();
                     if (Array.isArray(data.messages)) {
@@ -4737,6 +4758,22 @@
             }
         }
 
+        function getActiveCeremonyId() {
+            const params = new URLSearchParams(window.location.search);
+            const fromUrl = params.get('ceremony') || params.get('ceremonyId') || '';
+            if (fromUrl) {
+                localStorage.setItem('activeCeremonyId', fromUrl);
+                return fromUrl;
+            }
+            return localStorage.getItem('activeCeremonyId') || 'default';
+        }
+
+        function ceremonyApiUrl(path) {
+            const url = new URL(path, window.location.origin);
+            url.searchParams.set('ceremony', getActiveCeremonyId());
+            return url.toString();
+        }
+
         function isAdminLinkMode() {
             return Boolean(getAdminSecretFromPage());
         }
@@ -4797,12 +4834,13 @@
             const secret = getAdminSecretFromPage();
             const url = new URL(window.location.origin + window.location.pathname);
             if (secret) url.searchParams.set('adminSecret', secret);
+            url.searchParams.set('ceremony', getActiveCeremonyId());
             return url.toString();
         }
 
         async function loadRemoteSiteData() {
             try {
-                const response = await fetch('/api/site-data', { method: 'GET', cache: 'no-store' });
+                const response = await fetch(ceremonyApiUrl('/api/site-data'), { method: 'GET', cache: 'no-store' });
                 if (!response.ok) return;
                 const payload = await response.json();
                 const data = payload && payload.data && typeof payload.data === 'object' ? payload.data : {};
@@ -4815,6 +4853,8 @@
                         } else {
                             localStorage.setItem(key, String(data[key]));
                         }
+                    } else {
+                        localStorage.removeItem(key);
                     }
                 });
             } catch (e) {
@@ -4853,7 +4893,7 @@
                 const response = await fetch('/api/site-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminSecret, data })
+                body: JSON.stringify({ adminSecret, ceremonyId: getActiveCeremonyId(), data })
                 });
                 if (response.ok) {
                     latestSiteDataJson = nextSiteDataJson;
@@ -4879,7 +4919,7 @@
             const nextSiteDataJson = JSON.stringify(data);
             if (nextSiteDataJson === latestSiteDataJson) return;
 
-            const payload = JSON.stringify({ adminSecret, data });
+            const payload = JSON.stringify({ adminSecret, ceremonyId: getActiveCeremonyId(), data });
             if (navigator.sendBeacon) {
                 navigator.sendBeacon('/api/site-data', new Blob([payload], { type: 'application/json' }));
             }
@@ -5077,7 +5117,7 @@
             // Liste de tous les tabs connus
             const tabIds = [
                 'admin-photos-tab','admin-music-tab','admin-countdown-tab','admin-programmes-tab',
-                'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-invites-tab','admin-privateMessages-tab'
+                'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-invites-tab','admin-privateMessages-tab','admin-ceremonies-tab'
             ];
             // Cacher tous les tabs de façon sûre
             tabIds.forEach(id => {
@@ -5098,6 +5138,11 @@
 
             // Afficher le tab sélectionné et appeler le loader correspondant si nécessaire
             switch (tab) {
+                case 'ceremonies': {
+                    const el = document.getElementById('admin-ceremonies-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminCeremonies === 'function') loadAdminCeremonies();
+                    break;
+                }
                 case 'photos': {
                     const el = document.getElementById('admin-photos-tab'); if (el) el.style.display = 'block'; break;
                 }
@@ -5162,6 +5207,116 @@
             setTimeout(() => msgDiv.style.display = 'none', 4000);
         }
 
+        let adminCeremoniesCache = [];
+
+        function ceremonyAdminApiUrl() {
+            const url = new URL('/api/ceremonies', window.location.origin);
+            const secret = getAdminSecretFromPage();
+            if (secret) url.searchParams.set('adminSecret', secret);
+            return url.toString();
+        }
+
+        async function loadAdminCeremonies() {
+            const container = document.getElementById('adminCeremonyList');
+            if (container) container.innerHTML = '<p style="color:#64748b;">Chargement des cérémonies...</p>';
+            try {
+                const response = await fetch(ceremonyAdminApiUrl(), { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || 'load-failed');
+                adminCeremoniesCache = Array.isArray(data.ceremonies) ? data.ceremonies : [];
+                if (data.activeCeremonyId) localStorage.setItem('activeCeremonyId', data.activeCeremonyId);
+                renderAdminCeremonies();
+            } catch (error) {
+                if (container) container.innerHTML = '<div style="padding:16px; border-radius:12px; background:#fff1f2; color:#be123c;">Impossible de charger les cérémonies.</div>';
+            }
+        }
+
+        function renderAdminCeremonies() {
+            const container = document.getElementById('adminCeremonyList');
+            if (!container) return;
+            const activeId = getActiveCeremonyId();
+            const term = (document.getElementById('adminCeremonySearch')?.value || '').trim().toLowerCase();
+            const ceremonies = adminCeremoniesCache.filter(item => !term || `${item.name} ${item.date} ${item.status}`.toLowerCase().includes(term));
+            if (!ceremonies.length) {
+                container.innerHTML = '<div style="padding:26px; text-align:center; border:1px dashed #cbd5e1; border-radius:16px; color:#64748b;">Aucune cérémonie trouvée.</div>';
+                return;
+            }
+            container.innerHTML = ceremonies.map(item => {
+                const active = item.id === activeId;
+                const status = item.status === 'active' ? 'Active' : item.status === 'archived' ? 'Archivée' : 'Brouillon';
+                return `<article style="padding:18px; border-radius:16px; border:1px solid ${active ? '#818cf8' : '#e2e8f0'}; background:${active ? 'linear-gradient(135deg,#eef2ff,#fff)' : '#fff'}; box-shadow:${active ? '0 10px 28px rgba(99,102,241,.14)' : 'none'};">
+                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${item.guestCount || 0} invité(s) · ${status}</p></div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="admin-btn-primary" onclick="adminSelectCeremony('${item.id}')">Sélectionner</button><button type="button" class="admin-btn-primary" onclick="adminEditCeremony('${item.id}')">Modifier</button><button type="button" class="admin-btn-primary" style="background:#e74c3c;color:#fff;" onclick="adminDeleteCeremony('${item.id}')">Supprimer</button></div></div>
+                </article>`;
+            }).join('');
+        }
+
+        async function postCeremonyAction(payload) {
+            const response = await fetch('/api/ceremonies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ...payload }) });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || 'ceremony-action-failed');
+            adminCeremoniesCache = Array.isArray(data.ceremonies) ? data.ceremonies : adminCeremoniesCache;
+            return data;
+        }
+
+        function adminNewCeremony() {
+            document.getElementById('adminCeremonyId').value = '';
+            document.getElementById('adminCeremonyName').value = '';
+            document.getElementById('adminCeremonyDate').value = '';
+            document.getElementById('adminCeremonyDetails').value = '';
+            document.getElementById('adminCeremonyStatus').value = 'draft';
+            document.getElementById('adminCeremonyEditorTitle').textContent = 'Nouvelle cérémonie';
+            document.getElementById('adminCeremonyEditor').style.display = 'block';
+        }
+
+        function adminEditCeremony(id) {
+            const ceremony = adminCeremoniesCache.find(item => item.id === id);
+            if (!ceremony) return;
+            document.getElementById('adminCeremonyId').value = ceremony.id;
+            document.getElementById('adminCeremonyName').value = ceremony.name || '';
+            document.getElementById('adminCeremonyDate').value = ceremony.date || '';
+            document.getElementById('adminCeremonyDetails').value = ceremony.details || '';
+            document.getElementById('adminCeremonyStatus').value = ceremony.status || 'draft';
+            document.getElementById('adminCeremonyEditorTitle').textContent = 'Modifier la cérémonie';
+            document.getElementById('adminCeremonyEditor').style.display = 'block';
+        }
+
+        function adminCloseCeremonyEditor() { document.getElementById('adminCeremonyEditor').style.display = 'none'; }
+
+        async function adminSaveCeremony() {
+            const id = document.getElementById('adminCeremonyId').value;
+            const name = document.getElementById('adminCeremonyName').value.trim();
+            if (!name) { adminShowMessage('Donnez un nom à la cérémonie.', 'error'); return; }
+            try {
+                const data = await postCeremonyAction({ action: id ? 'update' : 'create', id, name, date: document.getElementById('adminCeremonyDate').value, details: document.getElementById('adminCeremonyDetails').value.trim(), status: document.getElementById('adminCeremonyStatus').value });
+                adminCloseCeremonyEditor();
+                if (data.activeCeremonyId) await adminSelectCeremony(data.activeCeremonyId, false);
+                await loadAdminCeremonies();
+                adminShowMessage('Cérémonie sauvegardée.', 'success');
+            } catch (error) { adminShowMessage('Impossible de sauvegarder cette cérémonie.', 'error'); }
+        }
+
+        async function adminSelectCeremony(id, reloadList = true) {
+            try {
+                const data = await postCeremonyAction({ action: 'select', id });
+                const selectedId = data.activeCeremonyId || id;
+                localStorage.setItem('activeCeremonyId', selectedId);
+                const url = new URL(window.location.href); url.searchParams.set('ceremony', selectedId); history.replaceState({}, '', url);
+                await loadRemoteSiteData();
+                loadAllCMSData();
+                if (reloadList) await loadAdminCeremonies();
+                if (typeof loadAdminGuests === 'function') await loadAdminGuests();
+                adminShowMessage('Cérémonie active chargée.', 'success');
+            } catch (error) { adminShowMessage('Impossible de sélectionner cette cérémonie.', 'error'); }
+        }
+
+        async function adminDeleteCeremony(id) {
+            const ceremony = adminCeremoniesCache.find(item => item.id === id);
+            if (!ceremony || !confirm(`Supprimer définitivement « ${ceremony.name} » et ses invités ?`)) return;
+            try { await postCeremonyAction({ action: 'delete', id }); await loadAdminCeremonies(); adminShowMessage('Cérémonie supprimée.', 'success'); }
+            catch (error) { adminShowMessage('Impossible de supprimer cette cérémonie. La dernière cérémonie est protégée.', 'error'); }
+        }
+
         let adminGuestsCache = [];
 
         function escapeAdminText(value) {
@@ -5178,6 +5333,7 @@
             const url = new URL('/api/guests', window.location.origin);
             const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
             if (secret) url.searchParams.set('adminSecret', secret);
+            url.searchParams.set('ceremony', getActiveCeremonyId());
             return url.toString();
         }
 
@@ -5262,7 +5418,7 @@
             const response = await fetch('/api/guests', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminSecret: secret, ...payload })
+                body: JSON.stringify({ adminSecret: secret, ceremonyId: getActiveCeremonyId(), ...payload })
             });
             const data = await response.json();
             if (!response.ok || !data.ok) throw new Error(data.error || 'guest-action-failed');
@@ -7174,6 +7330,7 @@
                     } else {
                         const inviteToken = getInviteTokenFromUrl();
                         url.searchParams.set('deviceId', getDeviceId());
+                        if (typeof getActiveCeremonyId === 'function') url.searchParams.set('ceremony', getActiveCeremonyId());
                         if (inviteToken) url.searchParams.set('invite', inviteToken);
                     }
                     const resp = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
@@ -7206,6 +7363,14 @@
                     return;
                 }
 
+                if (data.ceremonyId && typeof getActiveCeremonyId === 'function' && data.ceremonyId !== getActiveCeremonyId()) {
+                    localStorage.setItem('activeCeremonyId', data.ceremonyId);
+                    const ceremonyUrl = new URL(window.location.href);
+                    ceremonyUrl.searchParams.set('ceremony', data.ceremonyId);
+                    history.replaceState({}, '', ceremonyUrl);
+                    try { await loadRemoteSiteData(); } catch (e) {}
+                    try { loadAllCMSData(); } catch (e) {}
+                }
                 unlockSite();
                 if (data.guest) {
                     window.currentInvitationGuest = data.guest;
@@ -7218,7 +7383,7 @@
                 const resp = await fetch(API_SHARE, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceId, invite: getInviteTokenFromUrl(), timestamp: new Date().toISOString() })
+                    body: JSON.stringify({ deviceId, invite: getInviteTokenFromUrl(), ceremonyId: typeof getActiveCeremonyId === 'function' ? getActiveCeremonyId() : '', timestamp: new Date().toISOString() })
                 });
                 if (!resp.ok) throw new Error('share request failed');
                 return resp.json();
