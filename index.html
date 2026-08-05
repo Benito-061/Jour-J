@@ -1122,8 +1122,10 @@
             overflow-wrap: anywhere;
         }
 
-        .invitation-qr {
+        .invitation-image-frame {
             width: min(100%, 460px);
+            aspect-ratio: 1 / 1;
+            box-sizing: border-box;
             display: grid;
             place-items: center;
             align-items: center;
@@ -1137,10 +1139,10 @@
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65), 0 18px 44px rgba(15, 23, 42, 0.08);
         }
 
-        .invitation-qr-placeholder {
+        .invitation-image-placeholder,
+        .invitation-image-loading {
             width: 100%;
-            max-width: 320px;
-            min-height: 220px;
+            height: 100%;
             border-radius: clamp(14px, 3vw, 20px);
             border: 2px dashed rgba(99, 102, 241, 0.35);
             display: grid;
@@ -1153,17 +1155,32 @@
             padding: 16px;
         }
 
-        .invitation-qr img {
+        .invitation-image-placeholder {
+            gap: 10px;
+        }
+
+        .invitation-image-placeholder span {
+            font-size: 2.2rem;
+            color: #6366f1;
+        }
+
+        .invitation-image-loading {
+            color: #475569;
+        }
+
+        .invitation-image-frame img {
             max-width: 100%;
             width: 100%;
-            height: auto;
-            object-fit: contain;
+            height: 100%;
+            object-fit: cover;
+            box-sizing: border-box;
             border-radius: 16px;
+            border: 2px dashed rgba(99, 102, 241, 0.35);
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
             background: white;
             display: block;
             margin: 0 auto;
-            padding: 8px;
+            padding: 0;
         }
 
         .invitation-dresscode {
@@ -2526,7 +2543,7 @@
                 text-align: center;
             }
 
-            .invitation-qr {
+            .invitation-image-frame {
                 width: min(100%, 420px);
             }
 
@@ -2583,13 +2600,14 @@
                 padding: 18px 14px;
             }
 
-            .invitation-qr {
+            .invitation-image-frame {
                 width: 100%;
                 padding: 12px;
                 border-radius: 16px;
             }
 
-            .invitation-qr-placeholder {
+            .invitation-image-placeholder,
+            .invitation-image-loading {
                 max-width: 100%;
                 font-size: 0.95rem;
             }
@@ -3052,9 +3070,10 @@
                     <h3>Votre image d'invitation</h3>
                 </div>
                 <p>Votre image d'invitation apparaîtra ici.</p>
-                <div class="invitation-qr" id="invitationQrContainer">
-                    <img id="invitationQrImage" alt="Image d'invitation" style="display:none;" />
-                    <div class="invitation-qr-placeholder" id="invitationQrPlaceholder">Image ici</div>
+                <div class="invitation-image-frame" id="invitationImageFrame" aria-busy="true">
+                    <div class="invitation-image-loading" id="invitationImageLoading" hidden>Chargement de l'image…</div>
+                    <img id="invitationImage" alt="Image de l'invitation" hidden />
+                    <div class="invitation-image-placeholder" id="invitationImagePlaceholder"><strong>Image ici</strong></div>
                 </div>
                 <div class="invitation-dresscode">
                     <div class="invitation-dresscode-item">
@@ -3421,10 +3440,12 @@
                         </div>
                         <div class="admin-input-group">
                             <label>⬆️ Importer l'image de l'invitation</label>
-                            <input type="file" id="adminInvitationQrFile" accept="image/*" class="admin-input">
+                            <input type="file" id="adminInvitationImageFile" accept="image/jpeg,image/png,image/webp" class="admin-input">
                             <div style="margin-top:12px; text-align:center;">
-                                <img id="adminInvitationQrPreview" src="" alt="Aperçu de l'image d'invitation" style="display:none; max-width:100%; max-height:260px; border-radius: 18px; border: 1px solid #e5e7eb; object-fit:contain;" />
+                                <p id="adminInvitationImageStatus" style="margin:0; color:#64748b;">Aucune image enregistrée.</p>
+                                <img id="adminInvitationImagePreview" src="" alt="Aperçu de l'image d'invitation" hidden style="width:min(100%,260px); aspect-ratio:1 / 1; border-radius:18px; border:1px solid #e5e7eb; object-fit:cover;" />
                             </div>
+                            <button type="button" id="adminInvitationImageDelete" class="admin-btn-primary" style="display:none; margin-top:10px; background:#e74c3c; color:#fff;" onclick="deleteInvitationImage()">Supprimer l'image</button>
                         </div>
                         <button type="button" onclick="adminSaveInvitation()" class="admin-btn-success" style="width: 100%; padding: 12px; font-size: 16px;">✅ Sauvegarder Invitation</button>
                         <button type="button" onclick="adminDownloadInvitation()" class="admin-btn-primary" style="width: 100%; padding: 12px; font-size: 16px; margin-top: 12px;">⬇️ Télécharger l'invitation</button>
@@ -6270,11 +6291,8 @@
                 dressCodeFemale: 'Robe élégante',
                 dressCodeMaleColor: '#0f6ab4',
                 dressCodeFemaleColor: '#dc2626',
-                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
-                invitationQr: ''
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.'
             }));
-
-            const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
 
             document.getElementById('adminInvitationName').value = invitation.invitationName;
             document.getElementById('adminDressCodeMale').value = invitation.dressCodeMale;
@@ -6284,19 +6302,9 @@
             document.getElementById('adminDressCodeFemaleColor').value = invitation.dressCodeFemaleColor;
             document.getElementById('adminDressCodeFemaleColorText').value = invitation.dressCodeFemaleColor;
             document.getElementById('adminInvitationMessage').value = invitation.invitationMessage;
-            if (invitation.invitationQr && invitationQrPreview) {
-                window.currentInvitationQrSource = invitation.invitationQr;
-                invitationQrPreview.src = invitation.invitationQr;
-                invitationQrPreview.dataset.qrSrc = invitation.invitationQr;
-                invitationQrPreview.style.display = 'block';
-            } else if (invitationQrPreview) {
-                window.currentInvitationQrSource = '';
-                invitationQrPreview.removeAttribute('src');
-                delete invitationQrPreview.dataset.qrSrc;
-                invitationQrPreview.style.display = 'none';
-            }
             updateInvitationPreview();
             syncDressCodeColors();
+            loadInvitationImage(true);
         }
 
         function updateInvitationPreview() {
@@ -6349,80 +6357,6 @@
             }
         }
 
-        function readInvitationQrFromPreview() {
-            const preview = document.getElementById('adminInvitationQrPreview');
-            const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
-            const tempStored = JSON.parse(sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
-            const activeQrSource = window.currentInvitationQrSource || '';
-            const previewData = preview?.dataset?.qrSrc || '';
-            const previewSrc = preview?.getAttribute('src') || '';
-
-            if (isInvitationQrSource(activeQrSource)) return activeQrSource;
-            if (isInvitationQrSource(previewData)) return previewData;
-            if (isInvitationQrSource(previewSrc)) return previewSrc;
-            if (isInvitationQrSource(stored.invitationQr)) return stored.invitationQr;
-            if (isInvitationQrSource(tempStored.invitationQr)) return tempStored.invitationQr;
-            return '';
-        }
-
-        function isInvitationQrSource(value) {
-            const src = String(value || '').trim();
-            return src.startsWith('data:image/') || src.startsWith('/uploads/') || src.startsWith('https://') || src.startsWith('http://');
-        }
-
-        function fileToInvitationQrDataUrl(file) {
-            return new Promise((resolve, reject) => {
-                if (!file) {
-                    reject(new Error('Aucun fichier selectionne'));
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onerror = () => reject(new Error('Impossible de lire l image'));
-                reader.onload = () => {
-                    const originalDataUrl = reader.result;
-                    const img = new Image();
-                    img.onload = () => {
-                        const maxSize = 900;
-                        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-                        const width = Math.max(1, Math.round(img.width * scale));
-                        const height = Math.max(1, Math.round(img.height * scale));
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.imageSmoothingEnabled = true;
-                        ctx.imageSmoothingQuality = 'high';
-                        ctx.drawImage(img, 0, 0, width, height);
-                        try {
-                            resolve(canvas.toDataURL('image/webp', 0.82));
-                        } catch (e) {
-                            resolve(originalDataUrl);
-                        }
-                    };
-                    img.onerror = () => resolve(originalDataUrl);
-                    img.src = originalDataUrl;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function uploadInvitationQrToServer(imageData) {
-            const adminSecret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
-            if (!adminSecret) return '';
-
-            const response = await fetch('/api/upload-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminSecret, category: 'invitation', imageData })
-            });
-            const data = await response.json();
-            if (!response.ok || !data.ok || !data.url) {
-                throw new Error(data.error || 'upload-failed');
-            }
-            return data.url;
-        }
-
         async function adminSaveInvitation() {
             const invitationName = document.getElementById('adminInvitationName').value.trim();
             const dressCodeMale = document.getElementById('adminDressCodeMale').value.trim();
@@ -6434,7 +6368,14 @@
                 return;
             }
 
-            const invitationQr = readInvitationQrFromPreview();
+            if (pendingInvitationImageFile) {
+                const uploaded = await uploadInvitationImage(pendingInvitationImageFile);
+                if (!uploaded) return;
+                pendingInvitationImageFile = null;
+                const imageInput = document.getElementById('adminInvitationImageFile');
+                if (imageInput) imageInput.value = '';
+            }
+
             const invitationData = {
                 invitationName,
                 dressCodeMale,
@@ -6442,7 +6383,6 @@
                 dressCodeMaleColor: document.getElementById('adminDressCodeMaleColor').value.trim() || '#0f6ab4',
                 dressCodeFemaleColor: document.getElementById('adminDressCodeFemaleColor').value.trim() || '#dc2626',
                 invitationMessage: invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
-                invitationQr
             };
             let savedLocally = true;
             try {
@@ -6459,7 +6399,7 @@
             }
             updateInvitationPreview();
             updateInvitationSection();
-            if (invitationQr) forceDisplayImportedInvitationQr(invitationQr);
+            await loadInvitationImage(true);
             if (savedLocally && typeof publishSiteDataNow === 'function') {
                 await publishSiteDataNow();
             } else if (savedLocally && typeof publishSiteDataSoon === 'function') {
@@ -6478,9 +6418,9 @@
                 dressCodeFemale: 'Robe élégante',
                 dressCodeMaleColor: '#0f6ab4',
                 dressCodeFemaleColor: '#dc2626',
-                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
-                invitationQr: ''
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.'
             }));
+            const invitationImageUrl = invitationImageState.image?.url || '';
 
             const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
@@ -6517,7 +6457,7 @@
         <p>${invitation.dressCodeFemale}</p>
       </div>
     </div>
-    ${invitation.invitationQr ? `<div class="qr-box"><img src="${invitation.invitationQr}" alt="Image d'invitation" /></div>` : ''}
+    ${invitationImageUrl ? `<div class="qr-box"><img src="${invitationImageUrl}" alt="Image d'invitation" /></div>` : ''}
   </div>
 </body>
 </html>`;
@@ -6541,8 +6481,7 @@
                 dressCodeFemale: 'Robe élégante',
                 dressCodeMaleColor: '#0f6ab4',
                 dressCodeFemaleColor: '#dc2626',
-                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
-                invitationQr: ''
+                invitationMessage: 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.'
             }));
 
             const card = document.querySelector('#invitation .invitation-card');
@@ -6569,62 +6508,112 @@
             if (maleLabel) maleLabel.textContent = `Homme : ${invitation.dressCodeMale}`;
             if (femaleLabel) femaleLabel.textContent = `Femme : ${invitation.dressCodeFemale}`;
 
-            const qrSource = window.currentInvitationQrSource || invitation.invitationQr;
-            renderInvitationQrSource(qrSource);
+            loadInvitationImage();
         }
 
-        function renderInvitationQrSource(qrSource) {
-            const qrCont = document.getElementById('invitationQrContainer');
-            if (!qrCont) return;
-            let img = document.getElementById('invitationQrImage');
-            let placeholder = document.getElementById('invitationQrPlaceholder');
+        const invitationImageState = { ceremonyId: '', image: null, loading: false };
 
-            if (!img) {
-                img = document.createElement('img');
-                img.id = 'invitationQrImage';
-                img.alt = "Image d'invitation";
-                qrCont.appendChild(img);
-            }
-            if (!placeholder) {
-                placeholder = document.createElement('div');
-                placeholder.id = 'invitationQrPlaceholder';
-                placeholder.className = 'invitation-qr-placeholder';
-                placeholder.textContent = 'Image ici';
-                qrCont.appendChild(placeholder);
-            }
+        function invitationImageApiUrl() {
+            const url = new URL('/api/invitation-image', window.location.origin);
+            url.searchParams.set('ceremony', getActiveCeremonyId());
+            return url.toString();
+        }
 
-            if (!isInvitationQrSource(qrSource)) {
-                img.removeAttribute('src');
-                img.style.display = 'none';
-                placeholder.style.display = 'grid';
-                placeholder.textContent = 'Image ici';
+        function renderInvitationImage() {
+            const frame = document.getElementById('invitationImageFrame');
+            const image = document.getElementById('invitationImage');
+            const loading = document.getElementById('invitationImageLoading');
+            const placeholder = document.getElementById('invitationImagePlaceholder');
+            const preview = document.getElementById('adminInvitationImagePreview');
+            const status = document.getElementById('adminInvitationImageStatus');
+            const removeButton = document.getElementById('adminInvitationImageDelete');
+            const current = invitationImageState.image;
+            if (frame) frame.setAttribute('aria-busy', String(invitationImageState.loading));
+            if (loading) loading.hidden = true;
+            if (!current) {
+                if (image) { image.hidden = true; image.removeAttribute('src'); }
+                if (placeholder) placeholder.hidden = false;
+                if (preview) { preview.hidden = true; preview.removeAttribute('src'); }
+                if (status) status.textContent = invitationImageState.loading ? 'Chargement…' : 'Aucune image enregistrée.';
+                if (removeButton) removeButton.style.display = 'none';
                 return;
             }
-
-            img.src = qrSource;
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.objectFit = 'contain';
-            img.style.display = 'block';
-            img.style.margin = '0 auto';
-            img.style.borderRadius = '14px';
-            img.style.border = '1px solid #e5e7eb';
-            img.style.background = 'white';
-            img.style.padding = '6px';
-            img.onerror = () => {
-                img.style.display = 'none';
-                placeholder.style.display = 'grid';
-                placeholder.textContent = 'Image invalide';
-            };
-            placeholder.style.display = 'none';
+            if (placeholder) placeholder.hidden = true;
+            if (image) {
+                image.hidden = false;
+                image.src = current.url;
+                image.onload = () => { if (loading) loading.hidden = true; };
+                image.onerror = () => { invitationImageState.image = null; invitationImageState.loading = false; renderInvitationImage(); adminShowMessage('Image d’invitation introuvable.', 'error'); };
+            }
+            if (preview) { preview.hidden = false; preview.src = current.url; }
+            if (status) status.textContent = 'Image enregistrée et liée à cette invitation.';
+            if (removeButton) removeButton.style.display = 'inline-flex';
         }
 
-        function forceDisplayImportedInvitationQr(qrSource) {
-            renderInvitationQrSource(qrSource);
-            const img = document.getElementById('invitationQrImage');
-            if (img && isInvitationQrSource(qrSource)) {
-                img.style.setProperty('display', 'block', 'important');
+        async function loadInvitationImage(force = false) {
+            const ceremonyId = getActiveCeremonyId();
+            if (!force && (invitationImageState.loading || invitationImageState.ceremonyId === ceremonyId)) return;
+            invitationImageState.ceremonyId = ceremonyId;
+            invitationImageState.loading = true;
+            renderInvitationImage();
+            try {
+                const response = await fetch(invitationImageApiUrl(), { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || 'image-load-failed');
+                invitationImageState.image = data.image || null;
+            } catch (error) {
+                invitationImageState.image = null;
+                adminShowMessage('Impossible de charger l’image de l’invitation.', 'error');
+            } finally {
+                invitationImageState.loading = false;
+                renderInvitationImage();
             }
+        }
+
+        function readInvitationImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!file || !allowed.includes(file.type)) return reject(new Error('invalid-image-format'));
+                if (file.size > 8 * 1024 * 1024) return reject(new Error('image-too-large'));
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('read-failed'));
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadInvitationImage(file) {
+            try {
+                invitationImageState.loading = true;
+                renderInvitationImage();
+                const imageData = await readInvitationImageFile(file);
+                const response = await fetch('/api/invitation-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId(), imageData }) });
+                const data = await response.json();
+                if (!response.ok || !data.ok || !data.image) throw new Error(data.error || 'upload-failed');
+                invitationImageState.ceremonyId = data.ceremonyId;
+                invitationImageState.image = data.image;
+                adminShowMessage('Image enregistrée et affichée.', 'success');
+                return true;
+            } catch (error) {
+                const messages = { 'invalid-image-format': 'Format invalide : utilisez JPG, PNG ou WEBP.', 'image-too-large': 'Image trop volumineuse : maximum 8 Mo.', forbidden: 'Votre session administrateur est invalide.', 'upload-failed': 'Le serveur n’a pas pu enregistrer cette image.' };
+                adminShowMessage(messages[error.message] || 'Impossible de charger cette image.', 'error');
+                return false;
+            } finally {
+                invitationImageState.loading = false;
+                renderInvitationImage();
+            }
+        }
+
+        async function deleteInvitationImage() {
+            if (!invitationImageState.image || !confirm('Supprimer cette image de l’invitation ?')) return;
+            try {
+                const response = await fetch('/api/invitation-image', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId() }) });
+                const data = await response.json();
+                if (!response.ok || !data.ok) throw new Error(data.error || 'delete-failed');
+                invitationImageState.image = null;
+                adminShowMessage('Image supprimée.', 'success');
+            } catch (error) { adminShowMessage('Impossible de supprimer cette image.', 'error'); }
+            renderInvitationImage();
         }
 
         function updateLocationSection() {
@@ -6662,137 +6651,24 @@
                 });
             }
         });
-        const invitationQrFile = document.getElementById('adminInvitationQrFile');
-        const invitationQrPreview = document.getElementById('adminInvitationQrPreview');
-        async function handleAdminInvitationQrFile(file) {
-            if (!file) {
-                window.currentInvitationQrSource = '';
-                if (invitationQrPreview) {
-                    invitationQrPreview.removeAttribute('src');
-                    delete invitationQrPreview.dataset.qrSrc;
-                    invitationQrPreview.style.display = 'none';
-                }
+        const invitationImageFile = document.getElementById('adminInvitationImageFile');
+        let pendingInvitationImageFile = null;
+        if (invitationImageFile) {
+            invitationImageFile.addEventListener('change', async (event) => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
                 try {
-                    const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
-                    delete stored.invitationQr;
-                    localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                    renderInvitationQrSource('');
-                    if (typeof updateInvitationSection === 'function') updateInvitationSection();
-                    if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
-                } catch (err) { }
-                return;
-            }
-
-            let imageData = '';
-            try {
-                imageData = await fileToInvitationQrDataUrl(file);
-            } catch (err) {
-                console.warn('Erreur lecture QR', err);
-                adminShowMessage('Impossible de lire cette image. Essayez un fichier JPG, PNG ou WEBP.', 'error');
-                return;
-            }
-
-            if (invitationQrPreview) {
-                invitationQrPreview.src = imageData;
-                invitationQrPreview.dataset.qrSrc = imageData;
-                invitationQrPreview.style.display = 'block';
-            }
-            window.currentInvitationQrSource = imageData;
-            forceDisplayImportedInvitationQr(imageData);
-
-            const stored = JSON.parse(localStorage.getItem('weddingInvitation') || sessionStorage.getItem('weddingInvitationTemp') || JSON.stringify({}));
-            let qrSource = imageData;
-            try {
-                const uploadedUrl = await uploadInvitationQrToServer(imageData);
-                if (uploadedUrl) qrSource = uploadedUrl;
-            } catch (uploadErr) {
-                console.warn('Upload QR impossible, affichage local temporaire', uploadErr);
-            }
-
-            stored.invitationQr = qrSource;
-            window.currentInvitationQrSource = qrSource;
-            if (invitationQrPreview) {
-                invitationQrPreview.src = qrSource;
-                invitationQrPreview.dataset.qrSrc = qrSource;
-                invitationQrPreview.style.display = 'block';
-            }
-            let savedLocally = true;
-            try {
-                localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                sessionStorage.removeItem('weddingInvitationTemp');
-            } catch (storageErr) {
-                savedLocally = false;
-                try {
-                    sessionStorage.setItem('weddingInvitationTemp', JSON.stringify(stored));
-                } catch (sessionErr) {
-                    console.warn('QR affiché mais trop lourd pour le stockage du navigateur', sessionErr);
-                }
-            }
-
-            if (typeof updateInvitationSection === 'function') updateInvitationSection();
-            forceDisplayImportedInvitationQr(qrSource);
-
-            try {
-                if (savedLocally && typeof publishSiteDataNow === 'function') {
-                    await publishSiteDataNow();
-                } else if (savedLocally && typeof publishSiteDataSoon === 'function') {
-                    publishSiteDataSoon();
-                }
-            } catch (publishErr) {
-                console.warn('QR affiché mais non synchronisé serveur', publishErr);
-            }
-
-            adminShowMessage(savedLocally
-                ? 'QR code chargé et affiché dans l’invitation.'
-                : 'QR code affiché. Image trop grande pour être gardée après rechargement.', 'success');
-        }
-
-        if (invitationQrFile) {
-            invitationQrFile.addEventListener('change', async (e) => {
-                await handleAdminInvitationQrFile(e.target.files && e.target.files[0]);
-                return;
-                const file = e.target.files && e.target.files[0];
-                if (!file) {
-                    if (invitationQrPreview) {
-                        invitationQrPreview.removeAttribute('src');
-                        delete invitationQrPreview.dataset.qrSrc;
-                        invitationQrPreview.style.display = 'none';
-                    }
-                    try {
-                        const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
-                        delete stored.invitationQr;
-                        localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                        renderInvitationQrSource('');
-                        if (typeof updateInvitationSection === 'function') updateInvitationSection();
-                        if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
-                    } catch (err) { }
-                    return;
-                }
-                try {
-                    const imageData = await fileToInvitationQrDataUrl(file);
-                    if (invitationQrPreview) {
-                        invitationQrPreview.src = imageData;
-                        invitationQrPreview.dataset.qrSrc = imageData;
-                        invitationQrPreview.style.display = 'block';
-                    }
-                    const stored = JSON.parse(localStorage.getItem('weddingInvitation') || JSON.stringify({}));
-                    stored.invitationQr = imageData;
-                    localStorage.setItem('weddingInvitation', JSON.stringify(stored));
-                    forceDisplayImportedInvitationQr(imageData);
-                    if (typeof updateInvitationSection === 'function') updateInvitationSection();
-                    forceDisplayImportedInvitationQr(imageData);
-                    if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
-                    adminShowMessage('QR code chargé et affiché dans l’invitation.', 'success');
-                } catch (err) {
-                    console.warn('Erreur sauvegarde QR', err);
-                    adminShowMessage('Impossible de lire cette image. Utilisez de préférence JPG, PNG ou WEBP.', 'error');
+                    await readInvitationImageFile(file);
+                    pendingInvitationImageFile = file;
+                    const preview = document.getElementById('adminInvitationImagePreview');
+                    const status = document.getElementById('adminInvitationImageStatus');
+                    if (preview) { preview.src = URL.createObjectURL(file); preview.hidden = false; }
+                    if (status) status.textContent = 'Image prête. Cliquez sur « Sauvegarder Invitation » pour la publier.';
+                } catch (error) {
+                    const message = error.message === 'image-too-large' ? 'Image trop volumineuse : maximum 8 Mo.' : 'Format invalide : utilisez JPG, JPEG, PNG ou WEBP.';
+                    adminShowMessage(message, 'error');
                 }
             });
-            if (overflowAdmin) {
-                overflowAdmin.addEventListener('click', () => {
-                    if (typeof openAdminModal === 'function') openAdminModal();
-                });
-            }
         }
         try {
             const qrFile = document.getElementById('adminQrCodeFile');

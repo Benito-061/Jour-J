@@ -9,8 +9,10 @@ const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
 const JOUR_J_DATABASE_FILE = path.join(ROOT, 'work', 'Jour-J.json');
 const UPLOADS_DIR = path.join(ROOT, 'work', 'uploads');
+const INVITATION_UPLOADS_DIR = path.join(UPLOADS_DIR, 'invitations');
 const MAX_BODY_SIZE = 1024 * 1024;
 const MAX_SITE_DATA_BODY_SIZE = 20 * 1024 * 1024;
+const MAX_INVITATION_IMAGE_SIZE = 8 * 1024 * 1024;
 
 const DEFAULT_STATE = {
   ownerDeviceId: '',
@@ -64,6 +66,7 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
       createdAt: now,
       updatedAt: now,
       siteData: {},
+      invitationImage: null,
       invitations: legacyInvitations,
       guestbookMessages: legacyMessages
     };
@@ -78,6 +81,7 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
       createdAt: ceremony?.createdAt || now,
       updatedAt: ceremony?.updatedAt || now,
       siteData: ceremony?.siteData && typeof ceremony.siteData === 'object' ? ceremony.siteData : {},
+      invitationImage: cleanInvitationImage(ceremony?.invitationImage),
       invitations: ceremony?.invitations && typeof ceremony.invitations === 'object' ? ceremony.invitations : {},
       guestbookMessages: Array.isArray(ceremony?.guestbookMessages) ? ceremony.guestbookMessages : []
     };
@@ -105,6 +109,21 @@ function ceremonyIdFrom(url, body = {}) {
 
 function getCeremony(database, requestedId = '') {
   return database.ceremonies[requestedId] || database.ceremonies[database.activeCeremonyId] || database.ceremonies.default;
+}
+
+function cleanInvitationImage(image) {
+  if (!image || typeof image !== 'object') return null;
+  const fileName = String(image.fileName || '');
+  const mimeType = String(image.mimeType || '');
+  if (!/^[a-f0-9-]{36}\.(?:jpg|png|webp)$/i.test(fileName)) return null;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) return null;
+  return {
+    fileName,
+    mimeType,
+    size: Number.isFinite(image.size) ? image.size : 0,
+    updatedAt: typeof image.updatedAt === 'string' ? image.updatedAt : '',
+    version: typeof image.version === 'string' ? image.version : ''
+  };
 }
 
 function publicCeremony(ceremony) {
@@ -257,7 +276,51 @@ function saveUploadedImage(imageData, category = 'image') {
   const safeCategory = String(category || 'image').replace(/[^a-z0-9_-]/gi, '').slice(0, 32) || 'image';
   const filename = `${safeCategory}-${crypto.randomUUID()}.${extension}`;
   fs.writeFileSync(path.join(UPLOADS_DIR, filename), binary);
-  return `/work/uploads/${filename}`;
+  // URL publique stable. Les anciennes images /work/uploads restent servies
+  // pour ne pas casser les invitations déjà enregistrées.
+  return `/uploads/${filename}`;
+}
+
+function decodeInvitationImage(imageData) {
+  const match = String(imageData || '').match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) throw new Error('invalid-image-format');
+  const mimeType = match[1].toLowerCase();
+  const binary = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+  if (!binary.length || binary.length > MAX_INVITATION_IMAGE_SIZE) throw new Error('image-too-large');
+  const signatures = {
+    'image/jpeg': buffer => buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+    'image/png': buffer => buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    'image/webp': buffer => buffer.length >= 12 && buffer.subarray(0, 4).toString() === 'RIFF' && buffer.subarray(8, 12).toString() === 'WEBP'
+  };
+  if (!signatures[mimeType](binary)) throw new Error('invalid-image-content');
+  return { binary, mimeType, extension: mimeType === 'image/jpeg' ? 'jpg' : mimeType.slice('image/'.length) };
+}
+
+function saveInvitationImage(imageData) {
+  const decoded = decodeInvitationImage(imageData);
+  fs.mkdirSync(INVITATION_UPLOADS_DIR, { recursive: true });
+  const fileName = `${crypto.randomUUID()}.${decoded.extension}`;
+  const target = path.join(INVITATION_UPLOADS_DIR, fileName);
+  const temporary = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(temporary, decoded.binary);
+  fs.renameSync(temporary, target);
+  if (!fs.existsSync(target)) throw new Error('image-write-failed');
+  return { fileName, mimeType: decoded.mimeType, size: decoded.binary.length, updatedAt: new Date().toISOString(), version: crypto.randomUUID() };
+}
+
+function removeInvitationImage(image) {
+  const metadata = cleanInvitationImage(image);
+  if (!metadata) return;
+  const target = path.resolve(INVITATION_UPLOADS_DIR, metadata.fileName);
+  if (target.startsWith(INVITATION_UPLOADS_DIR + path.sep) && fs.existsSync(target)) fs.unlinkSync(target);
+}
+
+function publicInvitationImage(image) {
+  const metadata = cleanInvitationImage(image);
+  if (!metadata) return null;
+  const target = path.join(INVITATION_UPLOADS_DIR, metadata.fileName);
+  if (!fs.existsSync(target)) return null;
+  return { url: `/media/invitations/${metadata.fileName}?v=${encodeURIComponent(metadata.version || metadata.updatedAt)}`, updatedAt: metadata.updatedAt, version: metadata.version };
 }
 
 function json(res, status, body, extraHeaders = {}) {
@@ -266,7 +329,7 @@ function json(res, status, body, extraHeaders = {}) {
     'Cache-Control': 'no-store',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Secret, X-Reset-Token',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     ...extraHeaders
   });
   res.end(JSON.stringify(body));
@@ -581,9 +644,13 @@ function findGuestToken(state, id) {
 function serveFile(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
-  const filePath = path.resolve(ROOT, `.${pathname}`);
+  const isPublicUpload = pathname.startsWith('/uploads/');
+  const filePath = isPublicUpload
+    ? path.resolve(UPLOADS_DIR, pathname.slice('/uploads/'.length))
+    : path.resolve(ROOT, `.${pathname}`);
+  const allowedRoot = isPublicUpload ? UPLOADS_DIR : ROOT;
 
-  if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
+  if (!filePath.startsWith(allowedRoot + path.sep) && filePath !== allowedRoot) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
@@ -605,6 +672,7 @@ function serveFile(req, res) {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
       '.webp': 'image/webp',
+      '.gif': 'image/gif',
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon',
       '.json': 'application/json; charset=utf-8'
@@ -615,11 +683,33 @@ function serveFile(req, res) {
   });
 }
 
+function serveInvitationImage(res, fileName) {
+  if (!/^[a-f0-9-]{36}\.(?:jpg|png|webp)$/i.test(fileName)) {
+    res.writeHead(404); res.end('Not found'); return;
+  }
+  const target = path.resolve(INVITATION_UPLOADS_DIR, fileName);
+  if (!target.startsWith(INVITATION_UPLOADS_DIR + path.sep)) {
+    res.writeHead(403); res.end('Forbidden'); return;
+  }
+  fs.readFile(target, (error, data) => {
+    if (error) { res.writeHead(404); res.end('Not found'); return; }
+    const extension = path.extname(target).toLowerCase();
+    const type = extension === '.png' ? 'image/png' : extension === '.webp' ? 'image/webp' : 'image/jpeg';
+    res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' });
+    res.end(data);
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'OPTIONS') {
     json(res, 200, { ok: true });
+    return;
+  }
+
+  if (url.pathname.startsWith('/media/invitations/') && req.method === 'GET') {
+    serveInvitationImage(res, decodeURIComponent(url.pathname.slice('/media/invitations/'.length)));
     return;
   }
 
@@ -670,6 +760,48 @@ const server = http.createServer(async (req, res) => {
       ceremonyId: getCeremony(readJourJDatabase(), ceremonyIdFrom(url)).id,
       data: readCeremonySiteData(ceremonyIdFrom(url))
     });
+    return;
+  }
+
+  if (url.pathname === '/api/invitation-image' && req.method === 'GET') {
+    const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url));
+    json(res, 200, { ok: true, ceremonyId: ceremony.id, image: publicInvitationImage(ceremony.invitationImage) });
+    return;
+  }
+
+  if (url.pathname === '/api/invitation-image' && req.method === 'POST') {
+    try {
+      const body = await getBody(req, Math.ceil(MAX_INVITATION_IMAGE_SIZE * 1.4));
+      if (!isAdminRequest(req, url, body)) { json(res, 403, { ok: false, error: 'forbidden' }); return; }
+      const database = readJourJDatabase();
+      const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
+      const previousImage = ceremony.invitationImage;
+      const image = saveInvitationImage(body.imageData);
+      ceremony.invitationImage = image;
+      ceremony.updatedAt = image.updatedAt;
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      try { removeInvitationImage(previousImage); } catch (e) { console.warn('Ancienne image invitation non supprimée', e.message); }
+      json(res, 201, { ok: true, ceremonyId: ceremony.id, image: publicInvitationImage(image) });
+    } catch (e) {
+      const errors = ['image-too-large', 'invalid-image-format', 'invalid-image-content', 'image-write-failed'];
+      json(res, 400, { ok: false, error: errors.includes(e.message) ? e.message : 'upload-failed' });
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/invitation-image' && req.method === 'DELETE') {
+    try {
+      const body = await getBody(req);
+      if (!isAdminRequest(req, url, body)) { json(res, 403, { ok: false, error: 'forbidden' }); return; }
+      const database = readJourJDatabase();
+      const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
+      const previousImage = ceremony.invitationImage;
+      ceremony.invitationImage = null;
+      ceremony.updatedAt = new Date().toISOString();
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      try { removeInvitationImage(previousImage); } catch (e) { console.warn('Image invitation non supprimée', e.message); }
+      json(res, 200, { ok: true, ceremonyId: ceremony.id });
+    } catch (e) { json(res, 400, { ok: false, error: 'bad-request' }); }
     return;
   }
 
@@ -764,8 +896,10 @@ const server = http.createServer(async (req, res) => {
           json(res, 400, { ok: false, error: 'last-ceremony' });
           return;
         }
+        const imageToRemove = database.ceremonies[id].invitationImage;
         delete database.ceremonies[id];
         if (database.activeCeremonyId === id) database.activeCeremonyId = Object.keys(database.ceremonies)[0];
+        try { removeInvitationImage(imageToRemove); } catch (e) { console.warn('Image de cérémonie non supprimée', e.message); }
       } else {
         json(res, 400, { ok: false, error: 'invalid-action' });
         return;
