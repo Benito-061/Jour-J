@@ -6368,11 +6368,15 @@
                 return;
             }
 
-            if (pendingInvitationImageFile) {
-                const uploaded = await uploadInvitationImage(pendingInvitationImageFile);
+            const imageInput = document.getElementById('adminInvitationImageFile');
+            const imageToSave = pendingInvitationImageFile || imageInput?.files?.[0] || null;
+            if (imageToSave) {
+                const saveButton = document.querySelector('#admin-invitation-tab button[onclick="adminSaveInvitation()"]');
+                if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Enregistrement de l’image…'; }
+                const uploaded = await uploadInvitationImage(imageToSave);
+                if (saveButton) { saveButton.disabled = false; saveButton.textContent = '✅ Sauvegarder Invitation'; }
                 if (!uploaded) return;
                 pendingInvitationImageFile = null;
-                const imageInput = document.getElementById('adminInvitationImageFile');
                 if (imageInput) imageInput.value = '';
             }
 
