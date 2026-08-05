@@ -1123,7 +1123,8 @@
         }
 
         .invitation-image-frame {
-            width: min(100%, 460px);
+            width: 4cm;
+            height: 4cm;
             aspect-ratio: 1 / 1;
             box-sizing: border-box;
             display: grid;
@@ -1135,12 +1136,13 @@
             border-radius: clamp(18px, 4vw, 28px);
             border: 1px solid rgba(212, 175, 55, 0.22);
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.78));
-            padding: clamp(14px, 4vw, 28px);
+            padding: 0;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65), 0 18px 44px rgba(15, 23, 42, 0.08);
         }
 
         .invitation-image-placeholder,
         .invitation-image-loading {
+            grid-area: 1 / 1;
             width: 100%;
             height: 100%;
             border-radius: clamp(14px, 3vw, 20px);
@@ -1155,20 +1157,12 @@
             padding: 16px;
         }
 
-        .invitation-image-placeholder {
-            gap: 10px;
-        }
-
-        .invitation-image-placeholder span {
-            font-size: 2.2rem;
-            color: #6366f1;
-        }
-
         .invitation-image-loading {
             color: #475569;
         }
 
         .invitation-image-frame img {
+            grid-area: 1 / 1;
             max-width: 100%;
             width: 100%;
             height: 100%;
@@ -1181,6 +1175,10 @@
             display: block;
             margin: 0 auto;
             padding: 0;
+        }
+
+        .invitation-image-frame > [hidden] {
+            display: none !important;
         }
 
         .invitation-dresscode {
@@ -2544,7 +2542,8 @@
             }
 
             .invitation-image-frame {
-                width: min(100%, 420px);
+                width: 4cm;
+                height: 4cm;
             }
 
             .invitation-dresscode {
@@ -2601,7 +2600,8 @@
             }
 
             .invitation-image-frame {
-                width: 100%;
+                width: 4cm;
+                height: 4cm;
                 padding: 12px;
                 border-radius: 16px;
             }
