@@ -1962,6 +1962,325 @@
             margin: 10px 0;
             line-height: 1.5;
         }
+
+        /* Interface Admin — présentation inspirée d'une console de gestion QR :
+           cette couche est uniquement visuelle et ne touche à aucune fonction. */
+        #adminModal {
+            background: rgba(2, 6, 23, 0.78) !important;
+            backdrop-filter: blur(8px);
+        }
+
+        #adminModal > div {
+            width: min(1440px, calc(100% - 32px));
+            max-width: 1440px !important;
+            margin: 18px auto !important;
+            min-height: min(860px, calc(100vh - 36px));
+            border: 1px solid #26334b;
+            border-radius: 0 !important;
+            background: #10192b !important;
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55) !important;
+        }
+
+        .admin-header {
+            min-height: 78px;
+            padding: 20px 28px;
+            background: #111a2c !important;
+            border-bottom: 1px solid #26334b;
+            box-shadow: none !important;
+        }
+
+        .admin-header::before { display: none; }
+
+        .admin-header h2 {
+            color: #f8fafc !important;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            text-shadow: none;
+        }
+
+        .admin-header h2::after {
+            content: ' · Manager';
+            display: block;
+            margin-top: 2px;
+            color: #94a3b8;
+            font-size: 0.76rem;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        .admin-close-btn,
+        .admin-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #35435d;
+            border-radius: 8px;
+            background: #17233a;
+            color: #b7c8df;
+            box-shadow: none;
+        }
+
+        .admin-close-btn:hover,
+        .admin-toggle-btn:hover {
+            transform: none;
+            background: #213552;
+            border-color: #4f8cf7;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        #adminContent {
+            display: grid !important;
+            grid-template-columns: 238px minmax(0, 1fr);
+            gap: 0;
+            max-height: min(780px, calc(100vh - 140px)) !important;
+            padding: 0 !important;
+            background: #10192b;
+        }
+
+        .admin-tabs {
+            grid-column: 1;
+            grid-row: 1 / span 20;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 0;
+            padding: 24px 12px;
+            border: 0;
+            border-right: 1px solid #26334b;
+            border-radius: 0;
+            background: #060b1a;
+            box-shadow: none;
+        }
+
+        .admin-tabs::before {
+            content: 'MENU PRINCIPAL';
+            padding: 0 14px 12px;
+            color: #70839e;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+        }
+
+        .admin-tab-btn {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: #a7b6cb;
+            font-size: 0.86rem;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-align: left;
+            text-transform: none;
+            box-shadow: none;
+        }
+
+        .admin-tab-btn::before,
+        .admin-tab-btn::after { display: none; }
+
+        .admin-tab-btn:hover {
+            transform: none;
+            border-color: transparent;
+            background: #111d33;
+            color: #e2edff;
+            box-shadow: none;
+        }
+
+        .admin-tab-btn.active {
+            transform: none;
+            border-color: #173c83;
+            background: #10275a;
+            color: #e9f2ff;
+            box-shadow: inset 3px 0 0 #4f8cf7;
+        }
+
+        #adminContent > [id$="-tab"] {
+            grid-column: 2;
+            padding: 30px 34px;
+            min-width: 0;
+            background: #10192b;
+            color: #d7e3f4;
+        }
+
+        #adminContent > [id$="-tab"] > h3 {
+            color: #f5f8ff !important;
+            font-size: 1.7rem !important;
+            letter-spacing: -0.03em;
+        }
+
+        #adminMessage {
+            grid-column: 2;
+            margin: 0 34px 24px !important;
+            border-radius: 8px;
+            box-shadow: none;
+            animation: none;
+        }
+
+        .admin-card {
+            padding: 20px;
+            border: 1px solid #2b3850;
+            border-radius: 10px;
+            background: #121d31 !important;
+            color: #d9e4f5;
+            box-shadow: none;
+            animation: none;
+        }
+
+        .admin-card:hover {
+            transform: none;
+            border-color: #405473;
+            background: #121d31;
+            box-shadow: none;
+        }
+
+        .admin-card h3,
+        .admin-card h4,
+        .admin-card p { color: #d9e4f5 !important; }
+
+        .admin-card h3,
+        .admin-card h4 {
+            border-bottom-color: #2b3850;
+            font-size: 0.96rem;
+            letter-spacing: 0.01em;
+            text-transform: none;
+        }
+
+        .admin-input-group { margin-bottom: 16px; animation: none; }
+
+        .admin-input-group label {
+            margin-bottom: 7px;
+            color: #9aacc5;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+        }
+
+        .admin-input {
+            padding: 11px 12px;
+            border: 1px solid #34435d;
+            border-radius: 7px;
+            background: #0d1627;
+            color: #edf4ff;
+            font-size: 0.9rem;
+            box-shadow: none;
+        }
+
+        .admin-input::placeholder { color: #71839c; font-style: normal; }
+        .admin-input:hover { border-color: #4b668e; background: #0d1627; box-shadow: none; }
+
+        .admin-input:focus {
+            transform: none;
+            border-color: #4f8cf7;
+            background: #0d1627;
+            box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.16);
+        }
+
+        .admin-btn-primary,
+        .admin-btn-success,
+        .admin-btn-danger {
+            min-width: auto;
+            padding: 10px 14px;
+            border: 1px solid #3b4d69;
+            border-radius: 7px;
+            background: #192842;
+            color: #c9d8eb;
+            font-size: 0.78rem;
+            letter-spacing: 0;
+            text-transform: none;
+            box-shadow: none;
+        }
+
+        .admin-btn-primary::before,
+        .admin-btn-success::before,
+        .admin-btn-danger::before { display: none; }
+
+        .admin-btn-primary:hover,
+        .admin-btn-success:hover,
+        .admin-btn-danger:hover {
+            transform: none;
+            border-color: #4f8cf7;
+            background: #203b68;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .admin-btn-success {
+            border-color: #336bd1;
+            background: #2b5fbe;
+            color: #fff;
+        }
+
+        .admin-btn-success:hover { background: #3474dc; }
+
+        #adminCeremonyList article,
+        #adminCeremonyGuestsList > div,
+        #adminGuestsTable table { background: #121d31 !important; border-color: #2b3850 !important; color: #d9e4f5 !important; }
+
+        @media (max-width: 800px) {
+            #adminModal > div { width: calc(100% - 12px); min-height: calc(100vh - 12px); margin: 6px auto !important; }
+            #adminContent { display: block !important; max-height: calc(100vh - 105px) !important; }
+            .admin-tabs { border-right: 0; border-bottom: 1px solid #26334b; }
+            #adminContent > [id$="-tab"] { padding: 22px 16px; }
+        }
+
+        /* Console Admin en plein écran, avec des mouvements légers et fonctionnels. */
+        #adminModal { overflow: hidden !important; }
+
+        #adminModal > div {
+            width: 100vw !important;
+            max-width: none !important;
+            min-height: 100vh !important;
+            height: 100vh;
+            margin: 0 !important;
+            border: 0;
+            border-radius: 0 !important;
+            animation: adminConsoleEnter 0.28s ease-out;
+        }
+
+        #adminContent {
+            max-height: calc(100vh - 79px) !important;
+            height: calc(100vh - 79px);
+            overflow: hidden !important;
+        }
+
+        .admin-tabs {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #31425e transparent;
+        }
+
+        #adminContent > [id$="-tab"] {
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #3b4d69 transparent;
+            animation: adminTabEnter 0.22s ease-out;
+        }
+
+        .admin-tab-btn { transition: background-color .18s ease, color .18s ease, box-shadow .18s ease; }
+        .admin-card { transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
+
+        .admin-card:hover {
+            border-color: #425b7e;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+        }
+
+        @keyframes adminConsoleEnter {
+            from { opacity: 0; transform: scale(0.992); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes adminTabEnter {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 800px) {
+            #adminModal > div { width: 100vw !important; min-height: 100vh !important; height: 100vh; margin: 0 !important; }
+            #adminContent { height: calc(100vh - 79px); max-height: calc(100vh - 79px) !important; overflow-y: auto !important; }
+            #adminContent > [id$="-tab"] { height: auto; min-height: calc(100vh - 200px); overflow: visible; }
+        }
         /* FOOTER */
         footer {
             background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 50%, #0f0f0f 100%);
@@ -3213,6 +3532,14 @@
                         <input id="adminCeremonySearch" class="admin-input" type="search" placeholder="Rechercher une cérémonie..." oninput="renderAdminCeremonies()">
                     </div>
                     <div id="adminCeremonyList" style="display:grid; gap:12px;"><p style="color:#64748b;">Chargement des cérémonies...</p></div>
+                    <div id="adminCeremonyGuestsPanel" class="admin-card" style="display:none; margin-top:18px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                            <div><h4 id="adminCeremonyGuestsTitle" style="margin:0; color:#1e293b;">Invités</h4><p id="adminCeremonyGuestsCount" style="margin:5px 0 0; color:#64748b; font-size:14px;"></p></div>
+                            <button type="button" class="admin-btn-primary" onclick="switchAdminTab('invites')">Gérer les invités</button>
+                        </div>
+                        <input id="adminCeremonyGuestSearch" class="admin-input" type="search" placeholder="Rechercher un invité de cette cérémonie : nom ou téléphone" oninput="renderCeremonyGuests()">
+                        <div id="adminCeremonyGuestsList" style="display:grid; gap:8px; margin-top:12px;"></div>
+                    </div>
                     <div id="adminCeremonyEditor" class="admin-card" style="display:none; margin-top:18px;">
                         <h4 id="adminCeremonyEditorTitle" style="margin:0 0 16px; color:#5e72e4;">Nouvelle cérémonie</h4>
                         <input id="adminCeremonyId" type="hidden">
@@ -5238,6 +5565,7 @@
         }
 
         let adminCeremoniesCache = [];
+        let adminCeremoniesVisibleCount = 100;
 
         function ceremonyAdminApiUrl() {
             const url = new URL('/api/ceremonies', window.location.origin);
@@ -5256,6 +5584,7 @@
                 adminCeremoniesCache = Array.isArray(data.ceremonies) ? data.ceremonies : [];
                 if (data.activeCeremonyId) localStorage.setItem('activeCeremonyId', data.activeCeremonyId);
                 renderAdminCeremonies();
+                await loadAdminGuests();
             } catch (error) {
                 if (container) container.innerHTML = '<div style="padding:16px; border-radius:12px; background:#fff1f2; color:#be123c;">Impossible de charger les cérémonies.</div>';
             }
@@ -5271,14 +5600,22 @@
                 container.innerHTML = '<div style="padding:26px; text-align:center; border:1px dashed #cbd5e1; border-radius:16px; color:#64748b;">Aucune cérémonie trouvée.</div>';
                 return;
             }
-            container.innerHTML = ceremonies.map(item => {
+            const visibleCeremonies = ceremonies.slice(0, term ? ceremonies.length : adminCeremoniesVisibleCount);
+            container.innerHTML = visibleCeremonies.map(item => {
                 const active = item.id === activeId;
                 const status = item.status === 'active' ? 'Active' : item.status === 'archived' ? 'Archivée' : 'Brouillon';
                 return `<article style="padding:18px; border-radius:16px; border:1px solid ${active ? '#818cf8' : '#e2e8f0'}; background:${active ? 'linear-gradient(135deg,#eef2ff,#fff)' : '#fff'}; box-shadow:${active ? '0 10px 28px rgba(99,102,241,.14)' : 'none'};">
                     <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${item.guestCount || 0} invité(s) · ${status}</p></div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="admin-btn-primary" onclick="adminSelectCeremony('${item.id}')">Sélectionner</button><button type="button" class="admin-btn-primary" onclick="adminEditCeremony('${item.id}')">Modifier</button><button type="button" class="admin-btn-primary" style="background:#e74c3c;color:#fff;" onclick="adminDeleteCeremony('${item.id}')">Supprimer</button></div></div>
                 </article>`;
-            }).join('');
+            }).join('') + (visibleCeremonies.length < ceremonies.length
+                ? `<button type="button" class="admin-btn-primary" onclick="adminShowMoreCeremonies()">Afficher davantage (${visibleCeremonies.length} sur ${ceremonies.length})</button>`
+                : (ceremonies.length > 100 ? `<p style="margin:0; color:#64748b; text-align:center;">${ceremonies.length} cérémonies affichées</p>` : ''));
+        }
+
+        function adminShowMoreCeremonies() {
+            adminCeremoniesVisibleCount += 100;
+            renderAdminCeremonies();
         }
 
         async function postCeremonyAction(payload) {
@@ -5336,6 +5673,7 @@
                 loadAllCMSData();
                 if (reloadList) await loadAdminCeremonies();
                 if (typeof loadAdminGuests === 'function') await loadAdminGuests();
+                renderCeremonyGuests();
                 adminShowMessage('Cérémonie active chargée.', 'success');
             } catch (error) { adminShowMessage('Impossible de sélectionner cette cérémonie.', 'error'); }
         }
@@ -5373,6 +5711,7 @@
                 const data = await response.json();
                 adminGuestsCache = data && Array.isArray(data.guests) ? data.guests : [];
                 renderAdminGuests();
+                renderCeremonyGuests();
             } catch (e) {
                 adminShowMessage('Impossible de charger les invités.', 'error');
             }
@@ -6517,6 +6856,30 @@
         function getSavedInvitationPreview() {
             try { return sessionStorage.getItem(INVITATION_IMAGE_SESSION_KEY) || ''; }
             catch (error) { return ''; }
+        }
+
+        function renderCeremonyGuests() {
+            const panel = document.getElementById('adminCeremonyGuestsPanel');
+            const list = document.getElementById('adminCeremonyGuestsList');
+            const title = document.getElementById('adminCeremonyGuestsTitle');
+            const count = document.getElementById('adminCeremonyGuestsCount');
+            if (!panel || !list) return;
+            const ceremony = adminCeremoniesCache.find(item => item.id === getActiveCeremonyId());
+            if (!ceremony) { panel.style.display = 'none'; return; }
+
+            panel.style.display = 'block';
+            if (title) title.textContent = `Invités — ${ceremony.name}`;
+            const search = (document.getElementById('adminCeremonyGuestSearch')?.value || '').trim().toLowerCase();
+            const guests = adminGuestsCache.filter((guest) => `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase().includes(search));
+            if (count) count.textContent = `${adminGuestsCache.length} invité(s) dans cette cérémonie${search ? ` · ${guests.length} résultat(s)` : ''}`;
+            if (!guests.length) {
+                list.innerHTML = '<div style="padding:14px; border:1px solid #e5e7eb; border-radius:10px; color:#64748b;">Aucun invité ne correspond à cette recherche.</div>';
+                return;
+            }
+            // Le résultat est limité dans le navigateur pour garder une recherche fluide,
+            // y compris avec des listes très importantes.
+            const shown = guests.slice(0, 100);
+            list.innerHTML = shown.map(guest => `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;"><div><strong>${escapeAdminText(guest.fullName || 'Invité')}</strong><div style="margin-top:3px; color:#64748b; font-size:13px;">${escapeAdminText(guest.phone || 'Sans téléphone')} · ${guest.active ? 'Actif' : 'Inactif'}</div></div><button type="button" class="admin-btn-primary" onclick="adminEditGuest('${guest.id}'); switchAdminTab('invites')">Ouvrir</button></div>`).join('') + (guests.length > shown.length ? `<p style="margin:4px 0 0; color:#64748b; text-align:center;">Affichage des 100 premiers résultats sur ${guests.length}. Affinez votre recherche.</p>` : '');
         }
 
         function saveInvitationPreview(imageData) {
