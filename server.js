@@ -320,7 +320,9 @@ function publicInvitationImage(image) {
   if (!metadata) return null;
   const target = path.join(INVITATION_UPLOADS_DIR, metadata.fileName);
   if (!fs.existsSync(target)) return null;
-  return { url: `/uploads/invitations/${metadata.fileName}?v=${encodeURIComponent(metadata.version || metadata.updatedAt)}`, updatedAt: metadata.updatedAt, version: metadata.version };
+  // Route dédiée : elle sert l'image depuis son dossier protégé, sans dépendre du
+  // routage général des fichiers statiques.
+  return { url: `/media/invitations/${metadata.fileName}?v=${encodeURIComponent(metadata.version || metadata.updatedAt)}`, updatedAt: metadata.updatedAt, version: metadata.version };
 }
 
 function json(res, status, body, extraHeaders = {}) {

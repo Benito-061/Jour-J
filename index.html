@@ -6507,7 +6507,7 @@
             loadInvitationImage();
         }
 
-        const invitationImageState = { ceremonyId: '', image: null, loading: false };
+        const invitationImageState = { ceremonyId: '', image: null, previewUrl: '', loading: false };
 
         function invitationImageApiUrl() {
             const url = new URL('/api/invitation-image', window.location.origin);
@@ -6524,9 +6524,10 @@
             const status = document.getElementById('adminInvitationImageStatus');
             const removeButton = document.getElementById('adminInvitationImageDelete');
             const current = invitationImageState.image;
+            const sourceUrl = current?.url || invitationImageState.previewUrl;
             if (frame) frame.setAttribute('aria-busy', String(invitationImageState.loading));
             if (loading) loading.hidden = true;
-            if (!current) {
+            if (!sourceUrl) {
                 if (image) { image.hidden = true; image.removeAttribute('src'); }
                 if (placeholder) placeholder.hidden = false;
                 if (preview) { preview.hidden = true; preview.removeAttribute('src'); }
@@ -6537,9 +6538,22 @@
             if (placeholder) placeholder.hidden = true;
             if (image) {
                 image.hidden = false;
-                image.src = current.url;
+                image.src = sourceUrl;
                 image.onload = () => { if (loading) loading.hidden = true; };
-                image.onerror = () => { invitationImageState.image = null; invitationImageState.loading = false; renderInvitationImage(); adminShowMessage('Image d’invitation introuvable.', 'error'); };
+                image.onerror = () => {
+                    // Si la copie distante est momentanément indisponible, on conserve
+                    // l'aperçu choisi : l'emplacement « Image ici » ne redevient jamais vide.
+                    if (current && invitationImageState.previewUrl) {
+                        invitationImageState.image = null;
+                        invitationImageState.loading = false;
+                        renderInvitationImage();
+                        return;
+                    }
+                    invitationImageState.image = null;
+                    invitationImageState.loading = false;
+                    renderInvitationImage();
+                    adminShowMessage('Image d’invitation introuvable.', 'error');
+                };
             }
             if (preview) { preview.hidden = false; preview.src = current.url; }
             if (status) status.textContent = 'Image enregistrée et liée à cette invitation.';
@@ -6615,6 +6629,9 @@
                 invitationImageState.loading = true;
                 renderInvitationImage();
                 const imageData = await readInvitationImageFile(file);
+                // Affichage instantané, avant même la réponse du serveur.
+                invitationImageState.previewUrl = imageData;
+                renderInvitationImage();
                 const response = await fetch('/api/invitation-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId(), imageData }) });
                 const data = await response.json();
                 if (!response.ok || !data.ok || !data.image) throw new Error(data.error || 'upload-failed');
