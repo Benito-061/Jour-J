@@ -6379,6 +6379,7 @@
                 dressCodeMaleColor: document.getElementById('adminDressCodeMaleColor').value.trim() || '#0f6ab4',
                 dressCodeFemaleColor: document.getElementById('adminDressCodeFemaleColor').value.trim() || '#dc2626',
                 invitationMessage: invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
+                imageData: invitationImageState.previewUrl || JSON.parse(localStorage.getItem('weddingInvitation') || '{}').imageData || '',
             };
             let savedLocally = true;
             try {
@@ -6482,6 +6483,10 @@
 
             const card = document.querySelector('#invitation .invitation-card');
             if (!card) return;
+            if (invitation.imageData && String(invitation.imageData).startsWith('data:image/')) {
+                invitationImageState.previewUrl = invitation.imageData;
+                renderInvitationImage();
+            }
             const title = card.querySelector('h3');
             const text = card.querySelector('p');
             const note = card.querySelector('.invitation-note');
@@ -6507,7 +6512,24 @@
             loadInvitationImage(true);
         }
 
-        const invitationImageState = { ceremonyId: '', image: null, previewUrl: '', loading: false };
+        const INVITATION_IMAGE_SESSION_KEY = 'weddingInvitationImagePreview';
+
+        function getSavedInvitationPreview() {
+            try { return sessionStorage.getItem(INVITATION_IMAGE_SESSION_KEY) || ''; }
+            catch (error) { return ''; }
+        }
+
+        function saveInvitationPreview(imageData) {
+            try { sessionStorage.setItem(INVITATION_IMAGE_SESSION_KEY, imageData); }
+            catch (error) { /* L'affichage immédiat continue même si le navigateur limite le stockage. */ }
+        }
+
+        function clearSavedInvitationPreview() {
+            try { sessionStorage.removeItem(INVITATION_IMAGE_SESSION_KEY); }
+            catch (error) { /* aucune action nécessaire */ }
+        }
+
+        const invitationImageState = { ceremonyId: '', image: null, previewUrl: getSavedInvitationPreview(), loading: false };
 
         function invitationImageApiUrl() {
             const url = new URL('/api/invitation-image', window.location.origin);
@@ -6524,7 +6546,9 @@
             const status = document.getElementById('adminInvitationImageStatus');
             const removeButton = document.getElementById('adminInvitationImageDelete');
             const current = invitationImageState.image;
-            const sourceUrl = current?.url || invitationImageState.previewUrl;
+            // La copie choisie dans Admin est prioritaire : le cadre s'actualise
+            // instantanément, puis la copie serveur prend le relais si nécessaire.
+            const sourceUrl = invitationImageState.previewUrl || current?.url;
             if (frame) frame.setAttribute('aria-busy', String(invitationImageState.loading));
             if (loading) loading.hidden = true;
             if (!sourceUrl) {
@@ -6636,7 +6660,16 @@
                 const imageData = await readInvitationImageFile(file);
                 // Affichage instantané, avant même la réponse du serveur.
                 invitationImageState.previewUrl = imageData;
+                saveInvitationPreview(imageData);
+                // La photo fait partie des données de l'invitation : elle est donc
+                // disponible dans le cadre blanc même si le serveur est indisponible.
+                try {
+                    const invitation = JSON.parse(localStorage.getItem('weddingInvitation') || '{}');
+                    invitation.imageData = imageData;
+                    localStorage.setItem('weddingInvitation', JSON.stringify(invitation));
+                } catch (error) { /* le rendu immédiat reste actif */ }
                 renderInvitationImage();
+                updateInvitationSection();
                 const response = await fetch('/api/invitation-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId(), imageData }) });
                 const data = await response.json();
                 if (!response.ok || !data.ok || !data.image) throw new Error(data.error || 'upload-failed');
@@ -6661,6 +6694,8 @@
                 const data = await response.json();
                 if (!response.ok || !data.ok) throw new Error(data.error || 'delete-failed');
                 invitationImageState.image = null;
+                invitationImageState.previewUrl = '';
+                clearSavedInvitationPreview();
                 adminShowMessage('Image supprimée.', 'success');
             } catch (error) { adminShowMessage('Impossible de supprimer cette image.', 'error'); }
             renderInvitationImage();
