@@ -6559,9 +6559,15 @@
                 if (removeButton) removeButton.style.display = 'none';
                 return;
             }
-            if (placeholder) placeholder.hidden = true;
+            // Ce rendu ne dépend d'aucun appel réseau : si une photo vient d'être
+            // choisie, le navigateur la place immédiatement dans le cadre blanc.
+            if (placeholder) {
+                placeholder.hidden = true;
+                placeholder.style.display = 'none';
+            }
             if (image) {
                 image.hidden = false;
+                image.style.display = 'block';
                 image.src = sourceUrl;
                 image.onload = () => { if (loading) loading.hidden = true; };
                 image.onerror = () => {
@@ -6738,15 +6744,27 @@
         });
         const invitationImageFile = document.getElementById('adminInvitationImageFile');
         if (invitationImageFile) {
-            invitationImageFile.addEventListener('change', async (event) => {
+            invitationImageFile.addEventListener('change', (event) => {
                 const file = event.target.files && event.target.files[0];
                 if (!file) return;
-                try {
-                    await uploadInvitationImage(file);
-                    event.target.value = '';
-                } catch (error) {
-                    adminShowMessage('Impossible de charger cette image.', 'error');
+
+                if (!String(file.type || '').startsWith('image/')) {
+                    adminShowMessage('Sélectionnez un fichier image.', 'error');
+                    return;
                 }
+
+                // Affichage direct du fichier local : aucune sauvegarde n'est
+                // nécessaire pour remplacer « Image ici » dans le cadre blanc.
+                invitationImageState.previewUrl = URL.createObjectURL(file);
+                renderInvitationImage();
+                const preview = document.getElementById('adminInvitationImagePreview');
+                if (preview) { preview.src = invitationImageState.previewUrl; preview.hidden = false; }
+                const status = document.getElementById('adminInvitationImageStatus');
+                if (status) status.textContent = 'Image affichée dans l’invitation. Enregistrement en cours…';
+                event.target.value = '';
+
+                // La copie durable est faite ensuite, sans bloquer l'affichage.
+                uploadInvitationImage(file);
             });
         }
         try {
