@@ -1205,6 +1205,12 @@
             overflow-wrap: anywhere;
         }
 
+        /* Les intitulés restent lisibles, quelle que soit la couleur choisie pour les pastilles. */
+        .invitation-dresscode-item,
+        .invitation-dresscode-item span:not(.dresscode-circle) {
+            color: #000000 !important;
+        }
+
         .dresscode-circle {
             width: 16px;
             height: 16px;
@@ -3443,7 +3449,7 @@
                         </div>
                         <div class="admin-input-group">
                             <label>⬆️ Importer l'image de l'invitation</label>
-                            <input type="file" id="adminInvitationImageFile" accept="image/jpeg,image/png,image/webp" class="admin-input">
+                            <input type="file" id="adminInvitationImageFile" accept="image/*" class="admin-input">
                             <div style="margin-top:12px; text-align:center;">
                                 <p id="adminInvitationImageStatus" style="margin:0; color:#64748b;">Aucune image enregistrée.</p>
                                 <img id="adminInvitationImagePreview" src="" alt="Aperçu de l'image d'invitation" hidden style="width:min(100%,260px); aspect-ratio:1 / 1; border-radius:18px; border:1px solid #e5e7eb; object-fit:cover;" />
@@ -6366,27 +6372,10 @@
             const dressCodeFemale = document.getElementById('adminDressCodeFemale').value.trim();
             const invitationMessage = document.getElementById('adminInvitationMessage').value.trim();
 
-            if (!invitationName || !dressCodeMale || !dressCodeFemale) {
-                adminShowMessage('Remplissez le nom et les deux dress codes.', 'error');
-                return;
-            }
-
-            const imageInput = document.getElementById('adminInvitationImageFile');
-            const imageToSave = pendingInvitationImageFile || imageInput?.files?.[0] || null;
-            if (imageToSave) {
-                const saveButton = document.querySelector('#admin-invitation-tab button[onclick="adminSaveInvitation()"]');
-                if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Enregistrement de l’image…'; }
-                const uploaded = await uploadInvitationImage(imageToSave);
-                if (saveButton) { saveButton.disabled = false; saveButton.textContent = '✅ Sauvegarder Invitation'; }
-                if (!uploaded) return;
-                pendingInvitationImageFile = null;
-                if (imageInput) imageInput.value = '';
-            }
-
             const invitationData = {
-                invitationName,
-                dressCodeMale,
-                dressCodeFemale,
+                invitationName: invitationName || 'Invitation VIP',
+                dressCodeMale: dressCodeMale || 'Tenue semi-formelle',
+                dressCodeFemale: dressCodeFemale || 'Robe élégante',
                 dressCodeMaleColor: document.getElementById('adminDressCodeMaleColor').value.trim() || '#0f6ab4',
                 dressCodeFemaleColor: document.getElementById('adminDressCodeFemaleColor').value.trim() || '#dc2626',
                 invitationMessage: invitationMessage || 'Nous serions heureux de vous compter parmi nous pour célébrer notre mariage.',
@@ -6577,16 +6566,48 @@
             }
         }
 
-        function readInvitationImageFile(file) {
-            return new Promise((resolve, reject) => {
-                const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-                if (!file || !allowed.includes(file.type)) return reject(new Error('invalid-image-format'));
-                if (file.size > 8 * 1024 * 1024) return reject(new Error('image-too-large'));
-                const reader = new FileReader();
-                reader.onerror = () => reject(new Error('read-failed'));
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(file);
-            });
+        async function readInvitationImageFile(file) {
+            if (!file || !String(file.type || '').startsWith('image/')) throw new Error('invalid-image-format');
+
+            // Toute image lisible par le navigateur est optimisée en JPEG avant publication.
+            const sourceUrl = URL.createObjectURL(file);
+            try {
+                const source = new Image();
+                source.decoding = 'async';
+                await new Promise((resolve, reject) => {
+                    source.onload = resolve;
+                    source.onerror = () => reject(new Error('unsupported-image'));
+                    source.src = sourceUrl;
+                });
+
+                let width = Math.max(1, source.naturalWidth || source.width);
+                let height = Math.max(1, source.naturalHeight || source.height);
+                const largestSide = 2400;
+                if (Math.max(width, height) > largestSide) {
+                    const ratio = largestSide / Math.max(width, height);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+                }
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                if (!context) throw new Error('read-failed');
+                for (let attempt = 0; attempt < 4; attempt += 1) {
+                    canvas.width = width;
+                    canvas.height = height;
+                    context.fillStyle = '#ffffff';
+                    context.fillRect(0, 0, width, height);
+                    context.drawImage(source, 0, 0, width, height);
+                    const imageData = canvas.toDataURL('image/jpeg', 0.86 - attempt * 0.12);
+                    const bytes = Math.ceil((imageData.length - imageData.indexOf(',') - 1) * 3 / 4);
+                    if (bytes <= 7.5 * 1024 * 1024) return imageData;
+                    width = Math.max(1, Math.round(width * 0.75));
+                    height = Math.max(1, Math.round(height * 0.75));
+                }
+                throw new Error('image-too-large');
+            } finally {
+                URL.revokeObjectURL(sourceUrl);
+            }
         }
 
         async function uploadInvitationImage(file) {
@@ -6602,7 +6623,7 @@
                 adminShowMessage('Image enregistrée et affichée.', 'success');
                 return true;
             } catch (error) {
-                const messages = { 'invalid-image-format': 'Format invalide : utilisez JPG, PNG ou WEBP.', 'image-too-large': 'Image trop volumineuse : maximum 8 Mo.', forbidden: 'Votre session administrateur est invalide.', 'upload-failed': 'Le serveur n’a pas pu enregistrer cette image.' };
+                const messages = { 'invalid-image-format': 'Sélectionnez un fichier image.', 'unsupported-image': 'Ce format n’est pas pris en charge par votre navigateur.', 'image-too-large': 'Cette image reste trop volumineuse après optimisation.', forbidden: 'Votre session administrateur est invalide.', 'upload-failed': 'Le serveur n’a pas pu enregistrer cette image.' };
                 adminShowMessage(messages[error.message] || 'Impossible de charger cette image.', 'error');
                 return false;
             } finally {
@@ -6659,21 +6680,15 @@
             }
         });
         const invitationImageFile = document.getElementById('adminInvitationImageFile');
-        let pendingInvitationImageFile = null;
         if (invitationImageFile) {
             invitationImageFile.addEventListener('change', async (event) => {
                 const file = event.target.files && event.target.files[0];
                 if (!file) return;
                 try {
-                    await readInvitationImageFile(file);
-                    pendingInvitationImageFile = file;
-                    const preview = document.getElementById('adminInvitationImagePreview');
-                    const status = document.getElementById('adminInvitationImageStatus');
-                    if (preview) { preview.src = URL.createObjectURL(file); preview.hidden = false; }
-                    if (status) status.textContent = 'Image prête. Cliquez sur « Sauvegarder Invitation » pour la publier.';
+                    await uploadInvitationImage(file);
+                    event.target.value = '';
                 } catch (error) {
-                    const message = error.message === 'image-too-large' ? 'Image trop volumineuse : maximum 8 Mo.' : 'Format invalide : utilisez JPG, JPEG, PNG ou WEBP.';
-                    adminShowMessage(message, 'error');
+                    adminShowMessage('Impossible de charger cette image.', 'error');
                 }
             });
         }
