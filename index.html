@@ -2316,10 +2316,64 @@
 
         .admin-theme-btn:hover { background: #213552; border-color: #4f8cf7; transform: translateY(-1px); }
 
+        /* Règle globale de lisibilité : tout le texte de l’admin est blanc en mode sombre et noir en mode jour. */
+        #adminModal:not(.admin-light),
+        #adminModal:not(.admin-light) * {
+            color: #ffffff !important;
+        }
+
+        #adminModal.admin-light,
+        #adminModal.admin-light * {
+            color: #000000 !important;
+        }
+
+        #adminModal.admin-light {
+            --admin-bg: #f4f7fb;
+            --admin-panel: #edf3ff;
+            --admin-panel-alt: #e4edf9;
+            --admin-panel-soft: #f0f5ff;
+            --admin-border: #d3ddea;
+            --admin-border-strong: #bfd0ea;
+            --admin-text: #0f172a;
+            --admin-text-soft: #1e293b;
+            --admin-muted: #475569;
+            --admin-accent: #2563eb;
+            --admin-accent-strong: #1d4ed8;
+            --admin-btn: #edf4ff;
+            --admin-btn-hover: #dfeeff;
+            --admin-input: #ffffff;
+        }
+
         /* Mode jour : contenu clair, encre bleu-gris et barre latérale conservée. */
         #adminModal.admin-light > div,
         #adminModal.admin-light #adminContent,
         #adminModal.admin-light #adminContent > [id$="-tab"] { background: #f6f8fc !important; }
+
+        #adminModal.admin-light .admin-header {
+            background: linear-gradient(180deg, #eef5ff 0%, #edf3ff 100%) !important;
+            border-bottom-color: #dfeaf9;
+        }
+
+        #adminModal.admin-light .admin-tabs {
+            background: linear-gradient(180deg, #edf3ff 0%, #eaf0f9 100%);
+            border-right-color: #dfeaf9;
+        }
+
+        #adminModal.admin-light .admin-tab-btn {
+            color: #1f2937;
+        }
+
+        #adminModal.admin-light .admin-tab-btn:hover {
+            background: #e5eefc;
+            color: #0f172a;
+        }
+
+        #adminModal.admin-light .admin-tab-btn.active {
+            background: linear-gradient(90deg, rgba(90, 146, 255, 0.18), rgba(59, 130, 246, 0.08));
+            border-color: rgba(37, 99, 235, 0.35);
+            color: #0f172a;
+            box-shadow: inset 3px 0 0 #2563eb;
+        }
 
         #adminModal.admin-light .admin-card,
         #adminModal.admin-light #adminCeremonyList article,
@@ -2333,9 +2387,9 @@
 
         #adminModal.admin-light .admin-input { background: #fff; border-color: #cbd5e1; color: #1e293b; }
         #adminModal.admin-light .admin-input::placeholder { color: #94a3b8; }
-        #adminModal.admin-light .admin-btn-primary { background: #fff; border-color: #cbd5e1; color: #294560; }
-        #adminModal.admin-light .admin-btn-primary:hover { background: #edf6ff; color: #0d4f85; }
-        #adminModal.admin-light .admin-theme-btn { color: #cbd5e1; }
+        #adminModal.admin-light .admin-btn-primary { background: #edf4ff; border-color: #cbd5e1; color: #1d4ed8; }
+        #adminModal.admin-light .admin-btn-primary:hover { background: #dfeeff; color: #0d4f85; }
+        #adminModal.admin-light .admin-theme-btn { color: #1f2937; background: #eef3ff; border-color: #cbd5e1; }
 
         /* FOOTER */
         footer {
