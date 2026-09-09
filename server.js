@@ -13,6 +13,7 @@ const INVITATION_UPLOADS_DIR = path.join(UPLOADS_DIR, 'invitations');
 const MAX_BODY_SIZE = 1024 * 1024;
 const MAX_SITE_DATA_BODY_SIZE = 20 * 1024 * 1024;
 const MAX_INVITATION_IMAGE_SIZE = 8 * 1024 * 1024;
+const eventClients = new Set();
 
 const DEFAULT_STATE = {
   ownerDeviceId: '',
@@ -335,6 +336,48 @@ function json(res, status, body, extraHeaders = {}) {
     ...extraHeaders
   });
   res.end(JSON.stringify(body));
+}
+
+function publishDataEvent(type, ceremonyId, payload = {}) {
+  const event = `event: ${type}\ndata: ${JSON.stringify({ type, ceremonyId, ...payload })}\n\n`;
+  for (const client of eventClients) {
+    if (client.ceremonyId && client.ceremonyId !== ceremonyId) continue;
+    try { client.res.write(event); } catch (error) { eventClients.delete(client); }
+  }
+}
+
+function guestTokenFromRequest(url, body = {}) {
+  return String(body.invite || body.token || url.searchParams.get('invite') || url.searchParams.get('token') || '').trim();
+}
+
+function findInviteContext(database, ceremonyId, token) {
+  if (!token) return null;
+  let ceremony = getCeremony(database, ceremonyId);
+  if (!ceremony?.invitations?.[token]) {
+    ceremony = Object.values(database.ceremonies).find(item => item.invitations?.[token]);
+  }
+  const invite = ceremony?.invitations?.[token];
+  return invite ? { ceremony, invite, token } : null;
+}
+
+function guestbookEntryForInvite(input, invite, ceremonyId) {
+  const message = String(input?.message || '').trim().slice(0, 500);
+  if (!invite || !message) return null;
+  const status = ['confirmed', 'pending', 'delegated', 'declined'].includes(input.status)
+    ? input.status
+    : (input.attending ? 'confirmed' : 'pending');
+  return {
+    id: crypto.randomUUID(),
+    guestId: invite.id || '',
+    name: String(invite.fullName || 'Invité').trim().slice(0, 160),
+    message,
+    attending: status === 'confirmed',
+    status,
+    delegateName: String(input.delegateName || '').trim().slice(0, 160),
+    delegatePhone: String(input.delegatePhone || '').trim().slice(0, 60),
+    ceremonyId,
+    created_at: new Date().toISOString()
+  };
 }
 
 function safeEqual(a, b) {
@@ -710,6 +753,30 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (url.pathname === '/api/events' && req.method === 'GET') {
+    const ceremonyId = ceremonyIdFrom(url);
+    const inviteCode = guestTokenFromRequest(url);
+    const admin = isAdminRequest(req, url);
+    if (!admin && !findInviteContext(readJourJDatabase(), ceremonyId, inviteCode)) {
+      json(res, 403, { ok: false, error: 'forbidden' });
+      return;
+    }
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store',
+      Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.write(': connected\n\n');
+    const client = { res, ceremonyId, admin };
+    eventClients.add(client);
+    const heartbeat = setInterval(() => {
+      try { res.write(': heartbeat\n\n'); } catch (error) { clearInterval(heartbeat); eventClients.delete(client); }
+    }, 25000);
+    req.on('close', () => { clearInterval(heartbeat); eventClients.delete(client); });
+    return;
+  }
+
   if (url.pathname.startsWith('/media/invitations/') && req.method === 'GET') {
     serveInvitationImage(res, decodeURIComponent(url.pathname.slice('/media/invitations/'.length)));
     return;
@@ -831,6 +898,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       writeCeremonySiteData(ceremonyIdFrom(url, body), body.data || {});
+      publishDataEvent('site-data-changed', ceremonyIdFrom(url, body));
       json(res, 200, { ok: true });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
@@ -907,6 +975,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      publishDataEvent('ceremony-changed', database.activeCeremonyId, { ceremonies: Object.values(database.ceremonies).map(publicCeremony) });
       json(res, 200, { ok: true, activeCeremonyId: database.activeCeremonyId, ceremonies: Object.values(database.ceremonies).map(publicCeremony) });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
@@ -923,16 +992,56 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/api/guestbook' && req.method === 'POST') {
     try {
       const body = await getBody(req);
-      const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url, body));
-      const entry = addCeremonyGuestbookMessage(ceremony.id, body);
+      const database = readJourJDatabase();
+      const ceremonyId = ceremonyIdFrom(url, body);
+      const ceremony = getCeremony(database, ceremonyId);
+      const adminRequest = isAdminRequest(req, url, body);
+      const inviteContext = findInviteContext(database, ceremony.id, guestTokenFromRequest(url, body));
+      if (!adminRequest && !inviteContext) {
+        json(res, 403, { ok: false, error: 'invitation-required' });
+        return;
+      }
+      const entry = adminRequest
+        ? addCeremonyGuestbookMessage(ceremony.id, body)
+        : guestbookEntryForInvite(body, inviteContext.invite, inviteContext.ceremony.id);
       if (!entry) {
         json(res, 400, { ok: false, error: 'invalid-message' });
         return;
       }
+      if (!adminRequest) {
+        inviteContext.ceremony.guestbookMessages = [entry, ...inviteContext.ceremony.guestbookMessages].slice(0, 300);
+        inviteContext.ceremony.updatedAt = entry.created_at;
+        writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      }
+      publishDataEvent('guestbook-changed', ceremony.id, { message: entry });
       json(res, 201, { ok: true, message: entry });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });
     }
+    return;
+  }
+
+  if (url.pathname === '/api/guestbook' && req.method === 'DELETE') {
+    try {
+      const body = await getBody(req);
+      if (!isAdminRequest(req, url, body)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+      const database = readJourJDatabase();
+      const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
+      const messageId = String(body.id || '').trim();
+      const before = ceremony.guestbookMessages.length;
+      ceremony.guestbookMessages = ceremony.guestbookMessages.filter(message => String(message.id) !== messageId);
+      if (before === ceremony.guestbookMessages.length) {
+        json(res, 404, { ok: false, error: 'message-not-found' });
+        return;
+      }
+      ceremony.updatedAt = new Date().toISOString();
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      publishDataEvent('guestbook-changed', ceremony.id, { deletedId: messageId });
+      json(res, 200, { ok: true, ceremonyId: ceremony.id, messages: listCeremonyGuestbookMessages(ceremony.id) });
+    } catch (e) { json(res, 400, { ok: false, error: 'bad-request' }); }
     return;
   }
 
@@ -1026,6 +1135,7 @@ const server = http.createServer(async (req, res) => {
       ceremony.invitations = state.invites;
       ceremony.updatedAt = now;
       writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      publishDataEvent('guest-changed', ceremony.id, { guests: guestList({ invites: ceremony.invitations }, req, ceremony.id) });
       json(res, 200, { ok: true, ceremonyId: ceremony.id, guests: guestList({ invites: ceremony.invitations }, req, ceremony.id) });
     } catch (e) {
       json(res, 400, { ok: false, error: 'bad-request' });

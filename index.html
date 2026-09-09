@@ -4451,7 +4451,7 @@
             guestResponseDraft = null;
         }
 
-        function saveGuestResponseAndClose(payload) {
+        async function saveGuestResponseAndClose(payload) {
             const draft = guestResponseDraft || {};
             const guest = getGuestFromCurrentLink();
             const finalData = {
@@ -4479,7 +4479,12 @@
                 guestId: finalData.guestId
             };
 
-            saveLocalGuestMessage(guestData);
+            const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...guestData, invite: getInvitationTokenFromCurrentUrl() })
+            });
+            if (!response.ok) throw new Error('guestbook-save-failed');
             showFormMsg('✓ Message envoyé avec succès !', '#d4edda', '#155724');
             messageForm.reset();
             syncGuestIdentityField();
@@ -4519,11 +4524,10 @@
                     const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...guestData, ceremonyId: getActiveCeremonyId() })
+                        body: JSON.stringify({ ...guestData, ceremonyId: getActiveCeremonyId(), invite: getInvitationTokenFromCurrentUrl() })
                     });
 
                     if (response.ok) {
-                        saveLocalGuestMessage(guestData);
                         showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
                         messageForm.reset();
                         syncGuestIdentityField();
@@ -4533,8 +4537,7 @@
                         throw new Error('Erreur');
                     }
                 } catch (error) {
-                    saveLocalGuestMessage(guestData);
-                    showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
+                    showFormMsg('⚠️ Le message n’a pas pu être enregistré sur le serveur.', '#fff3cd', '#856404');
                     messageForm.reset();
                     syncGuestIdentityField();
                     charCount.textContent = '0 / 500';
@@ -4574,6 +4577,11 @@
             return 'weddingGuestbookMessages';
         }
 
+        function getInvitationTokenFromCurrentUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('invite') || params.get('token') || '';
+        }
+
         function buildGuestbookItemId(item) {
             if (item && item.id) return String(item.id);
             const seed = `${item && item.name ? item.name : 'guest'}-${item && item.created_at ? item.created_at : Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -4592,27 +4600,7 @@
         }
 
         function saveLocalGuestMessage(guestData) {
-            try {
-                const key = getStorageGuestbookKey();
-                const list = JSON.parse(localStorage.getItem(key) || '[]');
-                const safeEntry = {
-                    id: guestData.id || buildGuestbookItemId(guestData),
-                    name: String(guestData.name || '').trim(),
-                    message: String(guestData.message || '').trim(),
-                    attending: Boolean(guestData.attending),
-                    status: guestData.status || (guestData.attending ? 'confirmed' : 'pending'),
-                    delegateName: guestData.delegateName || '',
-                    delegatePhone: guestData.delegatePhone || '',
-                    created_at: guestData.created_at || new Date().toISOString(),
-                    ceremonyId: guestData.ceremonyId || getActiveCeremonyId(),
-                    guestId: guestData.guestId || ''
-                };
-                list.unshift(safeEntry);
-                localStorage.setItem(key, JSON.stringify(list.slice(0, 250)));
-                return safeEntry;
-            } catch (error) {
-                return guestData;
-            }
+            return guestData;
         }
 
         function getLocalGuestMessages() {
@@ -4632,7 +4620,7 @@
             }
         }
 
-        function deleteGuestbookMessage(id) {
+        async function deleteGuestbookMessage(id) {
             if (!adminLoggedIn || !(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) {
                 return;
             }
@@ -4640,12 +4628,18 @@
                 return;
             }
 
-            const messages = getLocalGuestMessages().filter((message) => String(message.id || buildGuestbookItemId(message)) !== String(id));
-            localStorage.setItem(getStorageGuestbookKey(), JSON.stringify(messages));
-            if (typeof adminShowMessage === 'function') {
-                adminShowMessage('Commentaire supprimé.', 'success');
+            try {
+                const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, ceremonyId: getActiveCeremonyId() })
+                });
+                if (!response.ok) throw new Error('delete-failed');
+                if (typeof adminShowMessage === 'function') adminShowMessage('Commentaire supprimé.', 'success');
+                loadMessages();
+            } catch (error) {
+                if (typeof adminShowMessage === 'function') adminShowMessage('Impossible de supprimer ce commentaire.', 'error');
             }
-            loadMessages();
         }
 
         // ========================================
@@ -4675,13 +4669,7 @@
 
         async function loadMessages() {
             const messagesList = document.getElementById('messagesList');
-            const localMessages = getLocalGuestMessages();
-
-            if (localMessages.length > 0) {
-                renderMessageList(localMessages, messagesList);
-            } else {
-                messagesList.innerHTML = '<p class="loading">Chargement des messages...</p>';
-            }
+            messagesList.innerHTML = '<p class="loading">Chargement des messages...</p>';
 
             try {
                 const response = await fetch(ceremonyApiUrl('/api/guestbook'), { cache: 'no-store' });
@@ -4692,14 +4680,10 @@
                     return;
                 }
 
-                if (!localMessages.length) {
-                    messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
-                }
+                messagesList.innerHTML = '<p class="loading">Aucun message pour le moment. Soyez le premier!</p>';
             } catch (error) {
                 console.warn('Erreur de chargement des messages distants:', error);
-                if (!localMessages.length) {
-                    messagesList.innerHTML = '<p class="loading">Impossible de charger les messages</p>';
-                }
+                messagesList.innerHTML = '<p class="loading">Impossible de charger les messages</p>';
             }
         }
 
@@ -4710,10 +4694,38 @@
         }
 
         loadMessages();
-        setInterval(loadMessages, 5000);
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') loadMessages();
         });
+
+        function connectCentralEvents() {
+            if (!window.EventSource) return;
+            const eventsUrl = new URL('/api/events', window.location.origin);
+            eventsUrl.searchParams.set('ceremony', getActiveCeremonyId());
+            const adminSecret = getAdminSecretFromPage();
+            if (adminSecret) eventsUrl.searchParams.set('adminSecret', adminSecret);
+            else {
+                const invite = getInvitationTokenFromCurrentUrl();
+                if (invite) eventsUrl.searchParams.set('invite', invite);
+            }
+
+            const source = new EventSource(eventsUrl.toString());
+            source.addEventListener('message', () => loadMessages());
+            source.addEventListener('guestbook-changed', () => loadMessages());
+            source.addEventListener('guest-changed', () => {
+                if (adminLoggedIn && typeof loadAdminGuests === 'function') loadAdminGuests();
+            });
+            source.addEventListener('ceremony-changed', () => {
+                if (adminLoggedIn && typeof loadAdminCeremonies === 'function') loadAdminCeremonies();
+            });
+            source.onerror = () => {
+                source.close();
+                setTimeout(connectCentralEvents, 5000);
+            };
+            window.centralEventSource = source;
+        }
+
+        connectCentralEvents();
 
         // Recherche par nom dans le Livre d'Or (localStorage + tentative fetch remote)
         async function searchGuestByName() {
@@ -6118,7 +6130,11 @@
             const container = document.getElementById('adminCeremonyList');
             if (container) container.innerHTML = '<p style="color:#64748b;">Chargement des cérémonies...</p>';
             try {
-                const ceremonies = getStoredCeremonies();
+                const response = await fetch(ceremonyAdminApiUrl(), { cache: 'no-store' });
+                if (!response.ok) throw new Error('ceremonies-load-failed');
+                const payload = await response.json();
+                const ceremonies = Array.isArray(payload.ceremonies) ? payload.ceremonies.map(normalizeCeremony) : [];
+                if (payload.activeCeremonyId) localStorage.setItem('activeCeremonyId', payload.activeCeremonyId);
                 adminCeremoniesCache = ceremonies;
                 renderAdminCeremonies();
                 await loadAdminGuests();
@@ -6141,7 +6157,7 @@
             container.innerHTML = visibleCeremonies.map(item => {
                 const active = item.id === activeId;
                 const status = item.status === 'active' ? 'Active' : item.status === 'archived' ? 'Archivée' : 'Brouillon';
-                const guestCount = (getStoredGuests().filter(guest => guest.ceremonyId === item.id || (!guest.ceremonyId && item.id === getActiveCeremonyId())).length);
+                const guestCount = adminGuestsCache.filter(guest => guest.ceremonyId === item.id || (!guest.ceremonyId && item.id === getActiveCeremonyId())).length;
                 return `<article style="padding:18px; border-radius:16px; border:1px solid ${active ? '#818cf8' : '#e2e8f0'}; background:${active ? 'linear-gradient(135deg,#eef2ff,#fff)' : '#fff'}; box-shadow:${active ? '0 10px 28px rgba(99,102,241,.14)' : 'none'};">
                     <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${guestCount} invité(s) · ${status}</p></div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="admin-btn-primary" onclick="adminSelectCeremony('${item.id}')">Sélectionner</button><button type="button" class="admin-btn-primary" onclick="adminEditCeremony('${item.id}')">Modifier</button><button type="button" class="admin-btn-primary" style="background:#e74c3c;color:#fff;" onclick="adminDeleteCeremony('${item.id}')">Supprimer</button></div></div>
@@ -6157,63 +6173,16 @@
         }
 
         async function postCeremonyAction(payload) {
-            const action = payload && payload.action ? payload.action : 'list';
-            let ceremonies = getStoredCeremonies();
-            const now = new Date().toISOString();
-
-            if (action === 'create') {
-                const ceremony = normalizeCeremony({
-                    id: payload.id || generateId('ceremony'),
-                    name: payload.name,
-                    date: payload.date || '',
-                    details: payload.details || '',
-                    status: payload.status || 'draft',
-                    guestCount: 0,
-                    createdAt: now,
-                    updatedAt: now
-                });
-                ceremonies.push(ceremony);
-                saveStoredCeremonies(ceremonies);
-                localStorage.setItem('activeCeremonyId', ceremony.id);
-                return { ok: true, activeCeremonyId: ceremony.id, ceremonies: adminCeremoniesCache };
-            }
-
-            if (action === 'update') {
-                const index = ceremonies.findIndex(item => item.id === payload.id);
-                if (index === -1) throw new Error('ceremony-not-found');
-                ceremonies[index] = normalizeCeremony({
-                    ...ceremonies[index],
-                    name: payload.name || ceremonies[index].name,
-                    date: payload.date ?? ceremonies[index].date,
-                    details: payload.details ?? ceremonies[index].details,
-                    status: payload.status || ceremonies[index].status,
-                    updatedAt: now
-                });
-                saveStoredCeremonies(ceremonies);
-                localStorage.setItem('activeCeremonyId', ceremonies[index].id);
-                return { ok: true, activeCeremonyId: ceremonies[index].id, ceremonies: adminCeremoniesCache };
-            }
-
-            if (action === 'delete') {
-                const remaining = ceremonies.filter(item => item.id !== payload.id);
-                if (!remaining.length) {
-                    saveStoredCeremonies([]);
-                    localStorage.setItem('activeCeremonyId', 'default');
-                    return { ok: true, activeCeremonyId: 'default', ceremonies: [] };
-                }
-                saveStoredCeremonies(remaining);
-                const fallback = remaining[0].id;
-                localStorage.setItem('activeCeremonyId', fallback);
-                return { ok: true, activeCeremonyId: fallback, ceremonies: adminCeremoniesCache };
-            }
-
-            if (action === 'select') {
-                const selectedId = payload.id || getActiveCeremonyId();
-                localStorage.setItem('activeCeremonyId', selectedId);
-                return { ok: true, activeCeremonyId: selectedId, ceremonies: getStoredCeremonies() };
-            }
-
-            return { ok: true, ceremonies: ceremonies };
+            const response = await fetch(ceremonyAdminApiUrl(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...payload, ceremonyId: payload.ceremonyId || getActiveCeremonyId() })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.error || 'ceremony-action-failed');
+            adminCeremoniesCache = Array.isArray(result.ceremonies) ? result.ceremonies.map(normalizeCeremony) : adminCeremoniesCache;
+            if (result.activeCeremonyId) localStorage.setItem('activeCeremonyId', result.activeCeremonyId);
+            return result;
         }
 
         function adminNewCeremony() {
@@ -6297,7 +6266,10 @@
 
         async function loadAdminGuests() {
             try {
-                adminGuestsCache = getStoredGuests();
+                const response = await fetch(adminGuestApiUrl(), { cache: 'no-store' });
+                if (!response.ok) throw new Error('guests-load-failed');
+                const payload = await response.json();
+                adminGuestsCache = Array.isArray(payload.guests) ? payload.guests.map(normalizeGuest) : [];
                 renderAdminGuests();
                 renderCeremonyGuests();
             } catch (e) {
@@ -6309,7 +6281,7 @@
             const container = document.getElementById('adminGuestsTable');
             if (!container) return;
             const search = (document.getElementById('adminGuestSearch')?.value || '').trim().toLowerCase();
-            const guests = getStoredGuests().filter((guest) => {
+            const guests = adminGuestsCache.filter((guest) => {
                 const ceremonyName = (getStoredCeremonies().find(c => c.id === guest.ceremonyId)?.name || '').toLowerCase();
                 const haystack = `${guest.fullName || ''} ${guest.phone || ''} ${ceremonyName}`.toLowerCase();
                 return !search || haystack.includes(search);
@@ -6367,61 +6339,15 @@
         }
 
         async function postGuestAction(payload) {
-            const action = payload && payload.action ? payload.action : 'list';
-            const ceremonyId = payload && payload.ceremonyId ? payload.ceremonyId : getActiveCeremonyId();
-            let guests = getStoredGuests();
-            const now = new Date().toISOString();
-
-            if (action === 'create' || action === 'update') {
-                const normalized = normalizeGuest({
-                    id: payload.id || generateId('guest'),
-                    ceremonyId,
-                    fullName: payload.fullName,
-                    phone: payload.phone || '',
-                    url: payload.url || `${window.location.origin}${window.location.pathname}?ceremony=${encodeURIComponent(ceremonyId)}&guest=${encodeURIComponent(payload.id || generateId('guest'))}`,
-                    active: payload.active !== undefined ? Boolean(payload.active) : true,
-                    createdAt: payload.createdAt || now,
-                    updatedAt: now
-                });
-
-                const index = guests.findIndex(guest => guest.id === normalized.id);
-                if (index >= 0) {
-                    guests[index] = normalized;
-                } else {
-                    guests.push(normalized);
-                }
-                saveStoredGuests(guests);
-                return { ok: true, guests: adminGuestsCache, ceremonyId };
-            }
-
-            if (action === 'delete') {
-                const remaining = guests.filter(guest => guest.id !== payload.id);
-                saveStoredGuests(remaining);
-                return { ok: true, guests: adminGuestsCache, ceremonyId };
-            }
-
-            if (action === 'toggle') {
-                const index = guests.findIndex(guest => guest.id === payload.id);
-                if (index === -1) throw new Error('guest-not-found');
-                guests[index] = normalizeGuest({ ...guests[index], active: payload.active !== undefined ? Boolean(payload.active) : !guests[index].active, updatedAt: now });
-                saveStoredGuests(guests);
-                return { ok: true, guests: adminGuestsCache, ceremonyId };
-            }
-
-            if (action === 'regenerate') {
-                const index = guests.findIndex(guest => guest.id === payload.id);
-                if (index === -1) throw new Error('guest-not-found');
-                const updated = normalizeGuest({
-                    ...guests[index],
-                    url: `${window.location.origin}${window.location.pathname}?ceremony=${encodeURIComponent(guests[index].ceremonyId || ceremonyId)}&guest=${encodeURIComponent(guests[index].id)}`,
-                    updatedAt: now
-                });
-                guests[index] = updated;
-                saveStoredGuests(guests);
-                return { ok: true, guests: adminGuestsCache, ceremonyId };
-            }
-
-            return { ok: true, guests: guests, ceremonyId };
+            const response = await fetch(adminGuestApiUrl(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...payload, ceremonyId: payload.ceremonyId || getActiveCeremonyId() })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.error || 'guest-action-failed');
+            adminGuestsCache = Array.isArray(result.guests) ? result.guests.map(normalizeGuest) : adminGuestsCache;
+            return result;
         }
 
         async function adminSaveGuest() {
@@ -8395,6 +8321,7 @@
                 unlockSite();
                 if (data.guest) {
                     window.currentInvitationGuest = data.guest;
+                    try { syncGuestIdentityField(); } catch (e) {}
                     try { updateInvitationSection(); } catch (e) {}
                     try { updateHeroGuest(); } catch (e) {}
                 }
