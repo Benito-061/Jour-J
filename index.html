@@ -1966,6 +1966,20 @@
         /* Interface Admin — présentation inspirée d'une console de gestion QR :
            cette couche est uniquement visuelle et ne touche à aucune fonction. */
         #adminModal {
+            --admin-bg: #0b1220;
+            --admin-panel: #111d32;
+            --admin-panel-alt: #152742;
+            --admin-panel-soft: #1b2e4b;
+            --admin-border: #2b3d5c;
+            --admin-border-strong: #3d5a87;
+            --admin-text: #edf5ff;
+            --admin-text-soft: #d9e6fb;
+            --admin-muted: #a8bad7;
+            --admin-accent: #6ea8ff;
+            --admin-accent-strong: #4f8cf7;
+            --admin-btn: #1c3969;
+            --admin-btn-hover: #214d8f;
+            --admin-input: #0d1729;
             background: rgba(2, 6, 23, 0.78) !important;
             backdrop-filter: blur(8px);
         }
@@ -1975,24 +1989,24 @@
             max-width: 1440px !important;
             margin: 18px auto !important;
             min-height: min(860px, calc(100vh - 36px));
-            border: 1px solid #26334b;
+            border: 1px solid var(--admin-border);
             border-radius: 0 !important;
-            background: #10192b !important;
+            background: var(--admin-bg) !important;
             box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55) !important;
         }
 
         .admin-header {
             min-height: 78px;
             padding: 20px 28px;
-            background: #111a2c !important;
-            border-bottom: 1px solid #26334b;
+            background: linear-gradient(180deg, #0d1729 0%, #111d32 100%) !important;
+            border-bottom: 1px solid var(--admin-border);
             box-shadow: none !important;
         }
 
         .admin-header::before { display: none; }
 
         .admin-header h2 {
-            color: #f8fafc !important;
+            color: var(--admin-text) !important;
             font-size: 1.2rem;
             letter-spacing: -0.02em;
             text-shadow: none;
@@ -2012,18 +2026,18 @@
         .admin-toggle-btn {
             width: 40px;
             height: 40px;
-            border: 1px solid #35435d;
+            border: 1px solid var(--admin-border-strong);
             border-radius: 8px;
-            background: #17233a;
-            color: #b7c8df;
+            background: var(--admin-panel-soft);
+            color: var(--admin-text-soft);
             box-shadow: none;
         }
 
         .admin-close-btn:hover,
         .admin-toggle-btn:hover {
             transform: none;
-            background: #213552;
-            border-color: #4f8cf7;
+            background: var(--admin-btn-hover);
+            border-color: var(--admin-accent-strong);
             color: #fff;
             box-shadow: none;
         }
@@ -2034,7 +2048,7 @@
             gap: 0;
             max-height: min(780px, calc(100vh - 140px)) !important;
             padding: 0 !important;
-            background: #10192b;
+            background: var(--admin-bg);
         }
 
         .admin-tabs {
@@ -2047,16 +2061,16 @@
             margin: 0;
             padding: 24px 12px;
             border: 0;
-            border-right: 1px solid #26334b;
+            border-right: 1px solid var(--admin-border);
             border-radius: 0;
-            background: #060b1a;
+            background: linear-gradient(180deg, #070d1a 0%, #0d1628 100%);
             box-shadow: none;
         }
 
         .admin-tabs::before {
             content: 'MENU PRINCIPAL';
             padding: 0 14px 12px;
-            color: #ffffff;
+            color: var(--admin-muted);
             font-size: 0.69rem;
             font-weight: 800;
             letter-spacing: 0.1em;
@@ -2068,7 +2082,7 @@
             border: 1px solid transparent;
             border-radius: 8px;
             background: transparent;
-            color: #ffffff;
+            color: var(--admin-text-soft);
             font-size: 0.86rem;
             font-weight: 600;
             letter-spacing: 0;
@@ -2083,29 +2097,29 @@
         .admin-tab-btn:hover {
             transform: none;
             border-color: transparent;
-            background: #111d33;
-            color: #ffffff;
+            background: var(--admin-panel-alt);
+            color: var(--admin-text);
             box-shadow: none;
         }
 
         .admin-tab-btn.active {
             transform: none;
-            border-color: #173c83;
-            background: #10275a;
-            color: #ffffff;
-            box-shadow: inset 3px 0 0 #4f8cf7;
+            border-color: rgba(110, 168, 255, 0.8);
+            background: linear-gradient(90deg, rgba(48, 85, 166, 0.7), rgba(19, 41, 79, 0.95));
+            color: var(--admin-text);
+            box-shadow: inset 3px 0 0 var(--admin-accent);
         }
 
         #adminContent > [id$="-tab"] {
             grid-column: 2;
             padding: 30px 34px;
             min-width: 0;
-            background: #10192b;
-            color: #ffffff;
+            background: var(--admin-bg);
+            color: var(--admin-text);
         }
 
         #adminContent > [id$="-tab"] > h3 {
-            color: #ffffff !important;
+            color: var(--admin-text) !important;
             font-size: 1.7rem !important;
             letter-spacing: -0.03em;
         }
@@ -2120,28 +2134,28 @@
 
         .admin-card {
             padding: 20px;
-            border: 1px solid #2b3850;
+            border: 1px solid var(--admin-border);
             border-radius: 10px;
-            background: #121d31 !important;
-            color: #ffffff;
-            box-shadow: none;
+            background: linear-gradient(180deg, #121d31 0%, #0f1a2b 100%) !important;
+            color: var(--admin-text);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
             animation: none;
         }
 
         .admin-card:hover {
             transform: none;
-            border-color: #405473;
-            background: #121d31;
-            box-shadow: none;
+            border-color: var(--admin-border-strong);
+            background: linear-gradient(180deg, #152238 0%, #111d32 100%);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
         }
 
         .admin-card h3,
         .admin-card h4,
-        .admin-card p { color: #ffffff !important; }
+        .admin-card p { color: var(--admin-text) !important; }
 
         .admin-card h3,
         .admin-card h4 {
-            border-bottom-color: #2b3850;
+            border-bottom-color: var(--admin-border);
             font-size: 0.96rem;
             letter-spacing: 0.01em;
             text-transform: none;
@@ -2151,29 +2165,29 @@
 
         .admin-input-group label {
             margin-bottom: 7px;
-            color: #ffffff;
+            color: var(--admin-text-soft);
             font-size: 0.72rem;
             letter-spacing: 0.06em;
         }
 
         .admin-input {
             padding: 11px 12px;
-            border: 1px solid #34435d;
+            border: 1px solid var(--admin-border-strong);
             border-radius: 7px;
-            background: #0d1627;
-            color: #edf4ff;
+            background: var(--admin-input);
+            color: var(--admin-text);
             font-size: 0.9rem;
             box-shadow: none;
         }
 
-        .admin-input::placeholder { color: #71839c; font-style: normal; }
-        .admin-input:hover { border-color: #4b668e; background: #0d1627; box-shadow: none; }
+        .admin-input::placeholder { color: #8da4c2; font-style: normal; }
+        .admin-input:hover { border-color: var(--admin-accent-strong); background: #0f1d32; box-shadow: none; }
 
         .admin-input:focus {
             transform: none;
-            border-color: #4f8cf7;
-            background: #0d1627;
-            box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.16);
+            border-color: var(--admin-accent-strong);
+            background: #0f1d32;
+            box-shadow: 0 0 0 3px rgba(79, 140, 247, 0.18);
         }
 
         .admin-btn-primary,
@@ -2181,10 +2195,10 @@
         .admin-btn-danger {
             min-width: auto;
             padding: 10px 14px;
-            border: 1px solid #3b4d69;
+            border: 1px solid var(--admin-border-strong);
             border-radius: 7px;
-            background: #192842;
-            color: #c9d8eb;
+            background: var(--admin-btn);
+            color: var(--admin-text);
             font-size: 0.78rem;
             letter-spacing: 0;
             text-transform: none;
@@ -2199,23 +2213,23 @@
         .admin-btn-success:hover,
         .admin-btn-danger:hover {
             transform: none;
-            border-color: #4f8cf7;
-            background: #203b68;
+            border-color: var(--admin-accent-strong);
+            background: var(--admin-btn-hover);
             color: #fff;
             box-shadow: none;
         }
 
         .admin-btn-success {
-            border-color: #336bd1;
-            background: #2b5fbe;
+            border-color: rgba(110, 168, 255, 0.6);
+            background: linear-gradient(180deg, #2d5db3 0%, #25529e 100%);
             color: #fff;
         }
 
-        .admin-btn-success:hover { background: #3474dc; }
+        .admin-btn-success:hover { background: linear-gradient(180deg, #3675dc 0%, #295fb3 100%); }
 
         #adminCeremonyList article,
         #adminCeremonyGuestsList > div,
-        #adminGuestsTable table { background: #121d31 !important; border-color: #2b3850 !important; color: #d9e4f5 !important; }
+        #adminGuestsTable table { background: linear-gradient(180deg, #121d31 0%, #0f1a2b 100%) !important; border-color: var(--admin-border) !important; color: var(--admin-text) !important; }
 
         @media (max-width: 800px) {
             #adminModal > div { width: calc(100% - 12px); min-height: calc(100vh - 12px); margin: 6px auto !important; }
