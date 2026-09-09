@@ -2281,6 +2281,48 @@
             #adminContent { height: calc(100vh - 79px); max-height: calc(100vh - 79px) !important; overflow-y: auto !important; }
             #adminContent > [id$="-tab"] { height: auto; min-height: calc(100vh - 200px); overflow: visible; }
         }
+        /* Lisibilité forte : le mode sombre utilise des textes clairs. */
+        #adminModal:not(.admin-light) #adminContent :is(h3, h4, h5, p, span, label, td, th, li, strong, small) {
+            color: #dbe7f7 !important;
+        }
+
+        #adminModal:not(.admin-light) #adminContent :is(select, option) { color: #edf4ff; }
+
+        .admin-theme-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #35435d;
+            border-radius: 8px;
+            background: #17233a;
+            color: #facc15;
+            cursor: pointer;
+            font-size: 1.05rem;
+            transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+        }
+
+        .admin-theme-btn:hover { background: #213552; border-color: #4f8cf7; transform: translateY(-1px); }
+
+        /* Mode jour : contenu clair, encre bleu-gris et barre latérale conservée. */
+        #adminModal.admin-light > div,
+        #adminModal.admin-light #adminContent,
+        #adminModal.admin-light #adminContent > [id$="-tab"] { background: #f6f8fc !important; }
+
+        #adminModal.admin-light .admin-card,
+        #adminModal.admin-light #adminCeremonyList article,
+        #adminModal.admin-light #adminCeremonyGuestsList > div,
+        #adminModal.admin-light #adminGuestsTable table { background: #fff !important; border-color: #d7e0eb !important; }
+
+        #adminModal.admin-light #adminContent :is(h3, h4, h5, p, span, label, td, th, li, strong, small) { color: #334155 !important; }
+        #adminModal.admin-light .admin-card h3,
+        #adminModal.admin-light .admin-card h4,
+        #adminModal.admin-light #adminContent > [id$="-tab"] > h3 { color: #14233a !important; }
+
+        #adminModal.admin-light .admin-input { background: #fff; border-color: #cbd5e1; color: #1e293b; }
+        #adminModal.admin-light .admin-input::placeholder { color: #94a3b8; }
+        #adminModal.admin-light .admin-btn-primary { background: #fff; border-color: #cbd5e1; color: #294560; }
+        #adminModal.admin-light .admin-btn-primary:hover { background: #edf6ff; color: #0d4f85; }
+        #adminModal.admin-light .admin-theme-btn { color: #cbd5e1; }
+
         /* FOOTER */
         footer {
             background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 50%, #0f0f0f 100%);
@@ -3491,6 +3533,7 @@
                 <div class="admin-header">
                     <h2>📋 Admin</h2>
                     <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" onclick="toggleAdminTheme()" id="adminThemeToggle" class="admin-theme-btn" aria-label="Activer le mode jour" title="Mode jour">☀</button>
                         <button onclick="toggleAdminTabs()" class="admin-toggle-btn" aria-expanded="false" title="Afficher/Masquer les onglets">☰</button>
                         <button onclick="closeAdminModal()" class="admin-close-btn">✕</button>
                     </div>
@@ -3686,7 +3729,8 @@
                             <label>👨 Premier Prénom</label>
                             <input type="text" id="adminName1" placeholder="Ex: Catherine" class="admin-input">
                         </div>
-                        <div class="admin-input-group">
+                        <label style="display:flex; align-items:center; gap:9px; margin:-2px 0 16px; color:#9aacc5; font-size:.82rem; cursor:pointer;"><input type="checkbox" id="adminSingleNameMode" onchange="setSingleNameMode(this.checked)" style="width:16px; height:16px; accent-color:#4f8cf7;"> Utiliser un seul nom</label>
+                        <div class="admin-input-group" id="adminName2Group">
                             <label>👩 Deuxième Prénom</label>
                             <input type="text" id="adminName2" placeholder="Ex: Nicolas" class="admin-input">
                         </div>
@@ -3702,7 +3746,7 @@
                     <div class="admin-card">
                         <div class="admin-input-group">
                             <label>👤 Nom de l'Invité</label>
-                            <input type="text" id="adminGuestName" placeholder="Ex: Marie Dupont" class="admin-input">
+                            <input type="text" id="adminGuestName" placeholder="Ex: Benito" class="admin-input">
                         </div>
                         <div class="admin-input-group">
                             <label>📱 URL du Code QR</label>
@@ -3924,7 +3968,7 @@
                         <input type="hidden" id="adminGuestId">
                         <div class="admin-input-group">
                             <label>Nom complet</label>
-                            <input type="text" id="adminInviteFullName" placeholder="Ex: Jean Dupont" class="admin-input">
+                            <input type="text" id="adminInviteFullName" placeholder="Ex: Benito" class="admin-input">
                         </div>
                         <div class="admin-input-group">
                             <label>Numéro de téléphone</label>
@@ -5370,12 +5414,31 @@
         const ADMIN_PASSWORD = 'Benito2003';
         let adminLoggedIn = false;
 
+        function setAdminTheme(theme) {
+            const modal = document.getElementById('adminModal');
+            const button = document.getElementById('adminThemeToggle');
+            const isLight = theme === 'light';
+            if (modal) modal.classList.toggle('admin-light', isLight);
+            if (button) {
+                button.textContent = isLight ? '☾' : '☀';
+                button.title = isLight ? 'Mode nuit' : 'Mode jour';
+                button.setAttribute('aria-label', isLight ? 'Activer le mode nuit' : 'Activer le mode jour');
+            }
+            try { localStorage.setItem('adminTheme', isLight ? 'light' : 'dark'); } catch (error) {}
+        }
+
+        function toggleAdminTheme() {
+            const modal = document.getElementById('adminModal');
+            setAdminTheme(modal?.classList.contains('admin-light') ? 'dark' : 'light');
+        }
+
         function openAdminModal() {
             if (!(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) {
                 return;
             }
             console.log('🔓 Ouverture du modal admin');
             document.getElementById('adminModal').style.display = 'block';
+            try { setAdminTheme(localStorage.getItem('adminTheme') || 'dark'); } catch (error) { setAdminTheme('dark'); }
 
             const loginForm = document.getElementById('adminLoginForm');
             const adminContent = document.getElementById('adminContent');
@@ -5807,6 +5870,7 @@
 
             try {
                 await postGuestAction({ action: id ? 'update' : 'create', id, fullName, phone });
+                syncGuestNameToHero(fullName);
                 adminClearGuestForm();
                 adminShowMessage(id ? 'Invité modifié.' : 'Lien invité généré.', 'success');
             } catch (e) {
@@ -6629,6 +6693,8 @@
             const couples = JSON.parse(localStorage.getItem('weddingCouple') || JSON.stringify({name1: 'Catherine', name2: 'Nicolas'}));
             document.getElementById('adminName1').value = couples.name1;
             document.getElementById('adminName2').value = couples.name2;
+            document.getElementById('adminSingleNameMode').checked = Boolean(couples.singleName);
+            setSingleNameMode(Boolean(couples.singleName), true);
             updateCoupleNamePreview();
         }
 
@@ -7158,13 +7224,14 @@
         function adminSaveNames() {
             const name1 = document.getElementById('adminName1').value.trim();
             const name2 = document.getElementById('adminName2').value.trim();
+            const singleName = Boolean(document.getElementById('adminSingleNameMode').checked);
 
-            if (!name1 || !name2) {
-                adminShowMessage('Remplissez les deux prénoms', 'error');
+            if (!name1 || (!singleName && !name2)) {
+                adminShowMessage(singleName ? 'Remplissez le nom.' : 'Remplissez les deux noms ou cochez « Utiliser un seul nom ».', 'error');
                 return;
             }
 
-            const coupleData = { name1, name2 };
+            const coupleData = { name1, name2: singleName ? '' : name2, singleName };
             localStorage.setItem('weddingCouple', JSON.stringify(coupleData));
             adminShowMessage('✅ Noms sauvegardés !', 'success');
             updateWeddingNames();
@@ -7173,11 +7240,15 @@
 
         function updateWeddingNames() {
             const couples = JSON.parse(localStorage.getItem('weddingCouple') || JSON.stringify({name1: 'Catherine', name2: 'Nicolas'}));
+            const name1 = String(couples.name1 || '').trim() || 'Catherine';
+            const name2 = String(couples.name2 || '').trim();
+            const singleName = Boolean(couples.singleName) || !name2;
+            const displayName = singleName ? name1 : `${name1} & ${name2}`;
             
             // Mettre à jour le LOGO NAVBAR
             const navbarLogo = document.getElementById('navbarLogo');
             if (navbarLogo) {
-                const initials = `${couples.name1.charAt(0)}${couples.name2.charAt(0)}`.toUpperCase();
+                const initials = `${name1.charAt(0)}${singleName ? '' : name2.charAt(0)}`.toUpperCase();
                 navbarLogo.textContent = `💍 ${initials}`;
                 // Animation d'update du logo
                 navbarLogo.style.animation = 'none';
@@ -7189,15 +7260,51 @@
             // Mettre à jour le titre du hero
             const heroTitle = document.querySelector('.hero-content h1');
             if (heroTitle) {
-                heroTitle.textContent = `${couples.name1} & ${couples.name2}`;
+                heroTitle.textContent = displayName;
             }
 
             // Mettre à jour le footer
             const footer = document.querySelector('footer p');
             if (footer) {
-                footer.textContent = `© 2026 ${couples.name1} & ${couples.name2} | Heureux Mariage`;
+                footer.textContent = `© 2026 ${displayName} | Heureux Mariage`;
             }
             console.log('✅ Noms affichés sur le site:', couples);
+        }
+
+        function setSingleNameMode(enabled, preserveSecondName = false) {
+            const secondName = document.getElementById('adminName2');
+            const group = document.getElementById('adminName2Group');
+            if (!secondName || !group) return;
+            secondName.disabled = enabled;
+            secondName.required = !enabled;
+            group.style.opacity = enabled ? '0.48' : '1';
+            group.style.pointerEvents = enabled ? 'none' : 'auto';
+            if (enabled && !preserveSecondName) secondName.value = '';
+            updateCoupleNamePreview();
+        }
+
+        function updateCoupleNamePreview() {
+            const preview = document.getElementById('coupleNamePreview');
+            const name1 = document.getElementById('adminName1')?.value.trim() || 'Premier nom';
+            const name2 = document.getElementById('adminName2')?.value.trim() || '';
+            const singleName = Boolean(document.getElementById('adminSingleNameMode')?.checked);
+            if (preview) preview.textContent = singleName || !name2 ? name1 : `${name1} & ${name2}`;
+        }
+
+        function syncGuestNameToHero(fullName) {
+            const guestName = String(fullName || '').trim();
+            if (!guestName) return;
+            try {
+                const heroData = JSON.parse(localStorage.getItem('heroGuest') || '{}');
+                heroData.guestName = guestName;
+                localStorage.setItem('heroGuest', JSON.stringify(heroData));
+                const input = document.getElementById('adminGuestName');
+                if (input) input.value = guestName;
+                updateHeroGuest();
+                if (typeof publishSiteDataSoon === 'function') publishSiteDataSoon();
+            } catch (error) {
+                console.warn('Mise à jour du nom invité dans Accueil impossible', error);
+            }
         }
 
         function loadAdminHero() {
