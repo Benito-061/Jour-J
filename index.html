@@ -3654,7 +3654,7 @@
                     <div id="adminCeremonyEditor" class="admin-card" style="display:none; margin-top:18px;">
                         <h4 id="adminCeremonyEditorTitle" style="margin:0 0 16px; color:#5e72e4;">Nouvelle cérémonie</h4>
                         <input id="adminCeremonyId" type="hidden">
-                        <div class="admin-input-group"><label>Nom de la cérémonie</label><input id="adminCeremonyName" class="admin-input" placeholder="Ex : Mariage de Josue & Aurelie"></div>
+                        <div class="admin-input-group"><label>Nom de la cérémonie</label><input id="adminCeremonyName" class="admin-input" placeholder="Ex : Mariage de Benito & Alexa"></div>
                         <div class="admin-input-group"><label>Date</label><input id="adminCeremonyDate" class="admin-input" type="date"></div>
                         <div class="admin-input-group"><label>Informations générales</label><textarea id="adminCeremonyDetails" class="admin-input" style="min-height:80px;" placeholder="Lieu, thème, notes d'organisation..."></textarea></div>
                         <div class="admin-input-group"><label>Statut</label><select id="adminCeremonyStatus" class="admin-input"><option value="draft">Brouillon</option><option value="active">Active</option><option value="archived">Archivée</option></select></div>
@@ -5697,6 +5697,77 @@
 
         let adminCeremoniesCache = [];
         let adminCeremoniesVisibleCount = 100;
+        const WEDDING_CEREMONIES_KEY = 'weddingCeremonies';
+        const WEDDING_GUESTS_KEY = 'weddingGuests';
+
+        function generateId(prefix = 'id') {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return `${prefix}-${window.crypto.randomUUID()}`;
+            }
+            return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function normalizeCeremony(item) {
+            const id = item && item.id ? item.id : generateId('ceremony');
+            return {
+                id,
+                name: item && item.name ? String(item.name).trim() : 'Nouvelle cérémonie',
+                date: item && item.date ? String(item.date) : '',
+                details: item && item.details ? String(item.details) : '',
+                status: item && item.status ? String(item.status) : 'draft',
+                guestCount: Number(item && item.guestCount ? item.guestCount : 0),
+                createdAt: item && item.createdAt ? String(item.createdAt) : new Date().toISOString(),
+                updatedAt: item && item.updatedAt ? String(item.updatedAt) : new Date().toISOString()
+            };
+        }
+
+        function getStoredCeremonies() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(WEDDING_CEREMONIES_KEY) || '[]');
+                const list = Array.isArray(raw) ? raw.map(normalizeCeremony) : [];
+                return list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveStoredCeremonies(list) {
+            const safeList = Array.isArray(list) ? list.map(normalizeCeremony) : [];
+            localStorage.setItem(WEDDING_CEREMONIES_KEY, JSON.stringify(safeList));
+            adminCeremoniesCache = safeList.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+            return adminCeremoniesCache;
+        }
+
+        function normalizeGuest(item) {
+            const id = item && item.id ? item.id : generateId('guest');
+            return {
+                id,
+                ceremonyId: item && item.ceremonyId ? String(item.ceremonyId) : getActiveCeremonyId(),
+                fullName: item && item.fullName ? String(item.fullName).trim() : 'Invité',
+                phone: item && item.phone ? String(item.phone).trim() : '',
+                url: item && item.url ? String(item.url) : '',
+                active: item ? Boolean(item.active !== false) : true,
+                createdAt: item && item.createdAt ? String(item.createdAt) : new Date().toISOString(),
+                updatedAt: item && item.updatedAt ? String(item.updatedAt) : new Date().toISOString()
+            };
+        }
+
+        function getStoredGuests() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(WEDDING_GUESTS_KEY) || '[]');
+                const list = Array.isArray(raw) ? raw.map(normalizeGuest) : [];
+                return list.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveStoredGuests(list) {
+            const safeList = Array.isArray(list) ? list.map(normalizeGuest) : [];
+            localStorage.setItem(WEDDING_GUESTS_KEY, JSON.stringify(safeList));
+            adminGuestsCache = safeList.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));
+            return adminGuestsCache;
+        }
 
         function ceremonyAdminApiUrl() {
             const url = new URL('/api/ceremonies', window.location.origin);
@@ -5709,11 +5780,8 @@
             const container = document.getElementById('adminCeremonyList');
             if (container) container.innerHTML = '<p style="color:#64748b;">Chargement des cérémonies...</p>';
             try {
-                const response = await fetch(ceremonyAdminApiUrl(), { cache: 'no-store' });
-                const data = await response.json();
-                if (!response.ok || !data.ok) throw new Error(data.error || 'load-failed');
-                adminCeremoniesCache = Array.isArray(data.ceremonies) ? data.ceremonies : [];
-                if (data.activeCeremonyId) localStorage.setItem('activeCeremonyId', data.activeCeremonyId);
+                const ceremonies = getStoredCeremonies();
+                adminCeremoniesCache = ceremonies;
                 renderAdminCeremonies();
                 await loadAdminGuests();
             } catch (error) {
@@ -5735,8 +5803,9 @@
             container.innerHTML = visibleCeremonies.map(item => {
                 const active = item.id === activeId;
                 const status = item.status === 'active' ? 'Active' : item.status === 'archived' ? 'Archivée' : 'Brouillon';
+                const guestCount = (getStoredGuests().filter(guest => guest.ceremonyId === item.id || (!guest.ceremonyId && item.id === getActiveCeremonyId())).length);
                 return `<article style="padding:18px; border-radius:16px; border:1px solid ${active ? '#818cf8' : '#e2e8f0'}; background:${active ? 'linear-gradient(135deg,#eef2ff,#fff)' : '#fff'}; box-shadow:${active ? '0 10px 28px rgba(99,102,241,.14)' : 'none'};">
-                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${item.guestCount || 0} invité(s) · ${status}</p></div>
+                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${guestCount} invité(s) · ${status}</p></div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="admin-btn-primary" onclick="adminSelectCeremony('${item.id}')">Sélectionner</button><button type="button" class="admin-btn-primary" onclick="adminEditCeremony('${item.id}')">Modifier</button><button type="button" class="admin-btn-primary" style="background:#e74c3c;color:#fff;" onclick="adminDeleteCeremony('${item.id}')">Supprimer</button></div></div>
                 </article>`;
             }).join('') + (visibleCeremonies.length < ceremonies.length
@@ -5750,11 +5819,63 @@
         }
 
         async function postCeremonyAction(payload) {
-            const response = await fetch('/api/ceremonies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ...payload }) });
-            const data = await response.json();
-            if (!response.ok || !data.ok) throw new Error(data.error || 'ceremony-action-failed');
-            adminCeremoniesCache = Array.isArray(data.ceremonies) ? data.ceremonies : adminCeremoniesCache;
-            return data;
+            const action = payload && payload.action ? payload.action : 'list';
+            let ceremonies = getStoredCeremonies();
+            const now = new Date().toISOString();
+
+            if (action === 'create') {
+                const ceremony = normalizeCeremony({
+                    id: payload.id || generateId('ceremony'),
+                    name: payload.name,
+                    date: payload.date || '',
+                    details: payload.details || '',
+                    status: payload.status || 'draft',
+                    guestCount: 0,
+                    createdAt: now,
+                    updatedAt: now
+                });
+                ceremonies.push(ceremony);
+                saveStoredCeremonies(ceremonies);
+                localStorage.setItem('activeCeremonyId', ceremony.id);
+                return { ok: true, activeCeremonyId: ceremony.id, ceremonies: adminCeremoniesCache };
+            }
+
+            if (action === 'update') {
+                const index = ceremonies.findIndex(item => item.id === payload.id);
+                if (index === -1) throw new Error('ceremony-not-found');
+                ceremonies[index] = normalizeCeremony({
+                    ...ceremonies[index],
+                    name: payload.name || ceremonies[index].name,
+                    date: payload.date ?? ceremonies[index].date,
+                    details: payload.details ?? ceremonies[index].details,
+                    status: payload.status || ceremonies[index].status,
+                    updatedAt: now
+                });
+                saveStoredCeremonies(ceremonies);
+                localStorage.setItem('activeCeremonyId', ceremonies[index].id);
+                return { ok: true, activeCeremonyId: ceremonies[index].id, ceremonies: adminCeremoniesCache };
+            }
+
+            if (action === 'delete') {
+                const remaining = ceremonies.filter(item => item.id !== payload.id);
+                if (!remaining.length) {
+                    saveStoredCeremonies([]);
+                    localStorage.setItem('activeCeremonyId', 'default');
+                    return { ok: true, activeCeremonyId: 'default', ceremonies: [] };
+                }
+                saveStoredCeremonies(remaining);
+                const fallback = remaining[0].id;
+                localStorage.setItem('activeCeremonyId', fallback);
+                return { ok: true, activeCeremonyId: fallback, ceremonies: adminCeremoniesCache };
+            }
+
+            if (action === 'select') {
+                const selectedId = payload.id || getActiveCeremonyId();
+                localStorage.setItem('activeCeremonyId', selectedId);
+                return { ok: true, activeCeremonyId: selectedId, ceremonies: getStoredCeremonies() };
+            }
+
+            return { ok: true, ceremonies: ceremonies };
         }
 
         function adminNewCeremony() {
@@ -5838,9 +5959,7 @@
 
         async function loadAdminGuests() {
             try {
-                const response = await fetch(adminGuestApiUrl(), { method: 'GET', cache: 'no-store' });
-                const data = await response.json();
-                adminGuestsCache = data && Array.isArray(data.guests) ? data.guests : [];
+                adminGuestsCache = getStoredGuests();
                 renderAdminGuests();
                 renderCeremonyGuests();
             } catch (e) {
@@ -5852,10 +5971,11 @@
             const container = document.getElementById('adminGuestsTable');
             if (!container) return;
             const search = (document.getElementById('adminGuestSearch')?.value || '').trim().toLowerCase();
-            const guests = adminGuestsCache.filter((guest) => {
-                const haystack = `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase();
+            const guests = getStoredGuests().filter((guest) => {
+                const ceremonyName = (getStoredCeremonies().find(c => c.id === guest.ceremonyId)?.name || '').toLowerCase();
+                const haystack = `${guest.fullName || ''} ${guest.phone || ''} ${ceremonyName}`.toLowerCase();
                 return !search || haystack.includes(search);
-            });
+            }).sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));
 
             if (!guests.length) {
                 container.innerHTML = '<div style="padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">Aucun invité pour le moment.</div>';
@@ -5909,22 +6029,61 @@
         }
 
         async function postGuestAction(payload) {
-            if (typeof publishSiteDataNow === 'function') {
-                const saved = await publishSiteDataNow();
-                if (!saved) throw new Error('site-data-not-published');
+            const action = payload && payload.action ? payload.action : 'list';
+            const ceremonyId = payload && payload.ceremonyId ? payload.ceremonyId : getActiveCeremonyId();
+            let guests = getStoredGuests();
+            const now = new Date().toISOString();
+
+            if (action === 'create' || action === 'update') {
+                const normalized = normalizeGuest({
+                    id: payload.id || generateId('guest'),
+                    ceremonyId,
+                    fullName: payload.fullName,
+                    phone: payload.phone || '',
+                    url: payload.url || `${window.location.origin}${window.location.pathname}?ceremony=${encodeURIComponent(ceremonyId)}&guest=${encodeURIComponent(payload.id || generateId('guest'))}`,
+                    active: payload.active !== undefined ? Boolean(payload.active) : true,
+                    createdAt: payload.createdAt || now,
+                    updatedAt: now
+                });
+
+                const index = guests.findIndex(guest => guest.id === normalized.id);
+                if (index >= 0) {
+                    guests[index] = normalized;
+                } else {
+                    guests.push(normalized);
+                }
+                saveStoredGuests(guests);
+                return { ok: true, guests: adminGuestsCache, ceremonyId };
             }
 
-            const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
-            const response = await fetch('/api/guests', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminSecret: secret, ceremonyId: getActiveCeremonyId(), ...payload })
-            });
-            const data = await response.json();
-            if (!response.ok || !data.ok) throw new Error(data.error || 'guest-action-failed');
-            adminGuestsCache = Array.isArray(data.guests) ? data.guests : adminGuestsCache;
-            renderAdminGuests();
-            return data;
+            if (action === 'delete') {
+                const remaining = guests.filter(guest => guest.id !== payload.id);
+                saveStoredGuests(remaining);
+                return { ok: true, guests: adminGuestsCache, ceremonyId };
+            }
+
+            if (action === 'toggle') {
+                const index = guests.findIndex(guest => guest.id === payload.id);
+                if (index === -1) throw new Error('guest-not-found');
+                guests[index] = normalizeGuest({ ...guests[index], active: payload.active !== undefined ? Boolean(payload.active) : !guests[index].active, updatedAt: now });
+                saveStoredGuests(guests);
+                return { ok: true, guests: adminGuestsCache, ceremonyId };
+            }
+
+            if (action === 'regenerate') {
+                const index = guests.findIndex(guest => guest.id === payload.id);
+                if (index === -1) throw new Error('guest-not-found');
+                const updated = normalizeGuest({
+                    ...guests[index],
+                    url: `${window.location.origin}${window.location.pathname}?ceremony=${encodeURIComponent(guests[index].ceremonyId || ceremonyId)}&guest=${encodeURIComponent(guests[index].id)}`,
+                    updatedAt: now
+                });
+                guests[index] = updated;
+                saveStoredGuests(guests);
+                return { ok: true, guests: adminGuestsCache, ceremonyId };
+            }
+
+            return { ok: true, guests: guests, ceremonyId };
         }
 
         async function adminSaveGuest() {
@@ -5937,15 +6096,14 @@
             }
 
             try {
-                await postGuestAction({ action: id ? 'update' : 'create', id, fullName, phone });
+                const payload = { action: id ? 'update' : 'create', id, fullName, phone, ceremonyId: getActiveCeremonyId() };
+                await postGuestAction(payload);
                 syncGuestNameToHero(fullName);
                 adminClearGuestForm();
+                await loadAdminGuests();
                 adminShowMessage(id ? 'Invité modifié.' : 'Lien invité généré.', 'success');
             } catch (e) {
-                const text = e && e.message === 'site-data-not-published'
-                    ? 'Impossible de sauvegarder le modèle central avant de générer le lien.'
-                    : 'Impossible de sauvegarder cet invité.';
-                adminShowMessage(text, 'error');
+                adminShowMessage('Impossible de sauvegarder cet invité.', 'error');
             }
         }
 
@@ -6998,20 +7156,23 @@
             const title = document.getElementById('adminCeremonyGuestsTitle');
             const count = document.getElementById('adminCeremonyGuestsCount');
             if (!panel || !list) return;
-            const ceremony = adminCeremoniesCache.find(item => item.id === getActiveCeremonyId());
+            const ceremonyId = getActiveCeremonyId();
+            const ceremony = adminCeremoniesCache.find(item => item.id === ceremonyId) || getStoredCeremonies().find(item => item.id === ceremonyId);
             if (!ceremony) { panel.style.display = 'none'; return; }
 
             panel.style.display = 'block';
             if (title) title.textContent = `Invités — ${ceremony.name}`;
             const search = (document.getElementById('adminCeremonyGuestSearch')?.value || '').trim().toLowerCase();
-            const guests = adminGuestsCache.filter((guest) => `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase().includes(search));
-            if (count) count.textContent = `${adminGuestsCache.length} invité(s) dans cette cérémonie${search ? ` · ${guests.length} résultat(s)` : ''}`;
+            const guests = getStoredGuests()
+                .filter((guest) => (guest.ceremonyId === ceremonyId || (!guest.ceremonyId && ceremonyId === 'default')))
+                .filter((guest) => !search || `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase().includes(search))
+                .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));
+
+            if (count) count.textContent = `${guests.length} invité(s) dans cette cérémonie${search ? ` · ${guests.length} résultat(s)` : ''}`;
             if (!guests.length) {
                 list.innerHTML = '<div style="padding:14px; border:1px solid #e5e7eb; border-radius:10px; color:#64748b;">Aucun invité ne correspond à cette recherche.</div>';
                 return;
             }
-            // Le résultat est limité dans le navigateur pour garder une recherche fluide,
-            // y compris avec des listes très importantes.
             const shown = guests.slice(0, 100);
             list.innerHTML = shown.map(guest => `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;"><div><strong>${escapeAdminText(guest.fullName || 'Invité')}</strong><div style="margin-top:3px; color:#64748b; font-size:13px;">${escapeAdminText(guest.phone || 'Sans téléphone')} · ${guest.active ? 'Actif' : 'Inactif'}</div></div><button type="button" class="admin-btn-primary" onclick="adminEditGuest('${guest.id}'); switchAdminTab('invites')">Ouvrir</button></div>`).join('') + (guests.length > shown.length ? `<p style="margin:4px 0 0; color:#64748b; text-align:center;">Affichage des 100 premiers résultats sur ${guests.length}. Affinez votre recherche.</p>` : '');
         }
