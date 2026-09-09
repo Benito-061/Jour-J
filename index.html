@@ -6157,9 +6157,15 @@
             container.innerHTML = visibleCeremonies.map(item => {
                 const active = item.id === activeId;
                 const status = item.status === 'active' ? 'Active' : item.status === 'archived' ? 'Archivée' : 'Brouillon';
-                const guestCount = adminGuestsCache.filter(guest => guest.ceremonyId === item.id || (!guest.ceremonyId && item.id === getActiveCeremonyId())).length;
+                const ceremonyGuests = adminGuestsCache
+                    .filter(guest => guest.ceremonyId === item.id || (!guest.ceremonyId && item.id === getActiveCeremonyId()))
+                    .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));
+                const guestCount = ceremonyGuests.length;
+                const guestNames = ceremonyGuests.length
+                    ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">${ceremonyGuests.slice(0, 12).map(guest => `<span style="display:inline-flex; align-items:center; padding:5px 9px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; font-weight:600;">${escapeAdminText(guest.fullName || 'Invité')}</span>`).join('')}${ceremonyGuests.length > 12 ? `<span style="padding:5px 9px; color:#64748b; font-size:12px;">+${ceremonyGuests.length - 12} autre(s)</span>` : ''}</div>`
+                    : '<p style="margin:12px 0 0; color:#94a3b8; font-size:13px;">Aucun invité lié à cette cérémonie.</p>';
                 return `<article style="padding:18px; border-radius:16px; border:1px solid ${active ? '#818cf8' : '#e2e8f0'}; background:${active ? 'linear-gradient(135deg,#eef2ff,#fff)' : '#fff'}; box-shadow:${active ? '0 10px 28px rgba(99,102,241,.14)' : 'none'};">
-                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${guestCount} invité(s) · ${status}</p></div>
+                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;"><div style="flex:1; min-width:240px;"><div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><h4 style="margin:0; color:#1e293b;">${escapeAdminText(item.name)}</h4>${active ? '<span style="padding:4px 8px; border-radius:999px; background:#4f46e5; color:#fff; font-size:12px;">Cérémonie active</span>' : ''}</div><p style="margin:7px 0 0; color:#64748b; font-size:14px;">${escapeAdminText(item.date || 'Date à définir')} · ${guestCount} invité(s) · ${status}</p>${guestNames}</div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="admin-btn-primary" onclick="adminSelectCeremony('${item.id}')">Sélectionner</button><button type="button" class="admin-btn-primary" onclick="adminEditCeremony('${item.id}')">Modifier</button><button type="button" class="admin-btn-primary" style="background:#e74c3c;color:#fff;" onclick="adminDeleteCeremony('${item.id}')">Supprimer</button></div></div>
                 </article>`;
             }).join('') + (visibleCeremonies.length < ceremonies.length
@@ -6264,13 +6270,22 @@
             return url.toString();
         }
 
+        function adminAllGuestsApiUrl() {
+            const url = new URL('/api/guests', window.location.origin);
+            const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
+            if (secret) url.searchParams.set('adminSecret', secret);
+            url.searchParams.set('ceremony', 'all');
+            return url.toString();
+        }
+
         async function loadAdminGuests() {
             try {
-                const response = await fetch(adminGuestApiUrl(), { cache: 'no-store' });
+                const response = await fetch(adminAllGuestsApiUrl(), { cache: 'no-store' });
                 if (!response.ok) throw new Error('guests-load-failed');
                 const payload = await response.json();
                 adminGuestsCache = Array.isArray(payload.guests) ? payload.guests.map(normalizeGuest) : [];
                 renderAdminGuests();
+                renderAdminCeremonies();
                 renderCeremonyGuests();
             } catch (e) {
                 adminShowMessage('Impossible de charger les invités.', 'error');
@@ -7438,7 +7453,7 @@
             panel.style.display = 'block';
             if (title) title.textContent = `Invités — ${ceremony.name}`;
             const search = (document.getElementById('adminCeremonyGuestSearch')?.value || '').trim().toLowerCase();
-            const guests = getStoredGuests()
+            const guests = adminGuestsCache
                 .filter((guest) => (guest.ceremonyId === ceremonyId || (!guest.ceremonyId && ceremonyId === 'default')))
                 .filter((guest) => !search || `${guest.fullName || ''} ${guest.phone || ''}`.toLowerCase().includes(search))
                 .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'fr', { sensitivity: 'base' }));

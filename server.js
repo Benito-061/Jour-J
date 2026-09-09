@@ -662,6 +662,7 @@ function guestPublicView(invite, token, req, ceremonyId = '') {
   const origin = `${proto}://${req.headers.host}`;
   return {
     id: invite.id || token,
+    ceremonyId,
     fullName: invite.fullName || 'Invité',
     phone: invite.phone || '',
     token,
@@ -1050,7 +1051,15 @@ const server = http.createServer(async (req, res) => {
       json(res, 403, { ok: false, error: 'forbidden' });
       return;
     }
-    const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url));
+    const database = readJourJDatabase();
+    const requestedCeremonyId = url.searchParams.get('ceremony') || url.searchParams.get('ceremonyId') || '';
+    if (requestedCeremonyId === 'all') {
+      const guests = Object.values(database.ceremonies)
+        .flatMap(ceremony => guestList({ invites: ceremony.invitations }, req, ceremony.id));
+      json(res, 200, { ok: true, ceremonyId: 'all', guests });
+      return;
+    }
+    const ceremony = getCeremony(database, requestedCeremonyId);
     json(res, 200, { ok: true, ceremonyId: ceremony.id, guests: guestList({ invites: ceremony.invitations }, req, ceremony.id) });
     return;
   }
