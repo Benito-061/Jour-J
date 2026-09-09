@@ -985,7 +985,19 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname === '/api/guestbook' && req.method === 'GET') {
-    const ceremony = getCeremony(readJourJDatabase(), ceremonyIdFrom(url));
+    const database = readJourJDatabase();
+    const requestedCeremonyId = url.searchParams.get('ceremony') || url.searchParams.get('ceremonyId') || '';
+    if (requestedCeremonyId === 'all') {
+      if (!isAdminRequest(req, url)) {
+        json(res, 403, { ok: false, error: 'forbidden' });
+        return;
+      }
+      const messages = Object.values(database.ceremonies)
+        .flatMap(ceremony => listCeremonyGuestbookMessages(ceremony.id).map(message => ({ ...message, ceremonyId: message.ceremonyId || ceremony.id })));
+      json(res, 200, { ok: true, ceremonyId: 'all', messages });
+      return;
+    }
+    const ceremony = getCeremony(database, requestedCeremonyId);
     json(res, 200, { ok: true, ceremonyId: ceremony.id, messages: listCeremonyGuestbookMessages(ceremony.id) });
     return;
   }

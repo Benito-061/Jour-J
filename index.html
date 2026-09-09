@@ -3641,6 +3641,7 @@
                     <button onclick="switchAdminTab('invitation', this)" class="admin-tab-btn" data-tab="invitation">✉️ Mon invitation</button>
                     <button onclick="switchAdminTab('design', this)" class="admin-tab-btn" data-tab="design">🎨 Design</button>
                     <button onclick="switchAdminTab('invites', this)" class="admin-tab-btn" data-tab="invites">🔗 Liens invités</button>
+                    <button onclick="switchAdminTab('delegations', this)" class="admin-tab-btn" data-tab="delegations">🤝 Délégations</button>
                     <button onclick="switchAdminTab('privateMessages', this)" class="admin-tab-btn" data-tab="privateMessages">📩 Messages Privés</button>
                     <button onclick="switchAdminTab('logout', this)" class="admin-tab-btn" data-tab="logout" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; margin-left: auto;">🚪 Déconnexion</button>
                 </div>
@@ -4039,6 +4040,17 @@
                 <div id="admin-privateMessages-tab" style="display: none;">
                     <h3 style="color: #5e72e4; margin-bottom: 20px; font-size: 1.8rem;">📩 Messages Privés</h3>
                     <div id="adminPrivateMessagesList" style="display: grid; gap: 16px;"></div>
+                </div>
+
+                <div id="admin-delegations-tab" style="display: none;">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+                        <div><h3 style="color:#5e72e4; margin:0 0 6px; font-size:1.8rem;">🤝 Délégations</h3><p style="margin:0; color:#64748b;">Consultez les invités qui ont délégué leur invitation et les représentants désignés.</p></div>
+                        <button type="button" class="admin-btn-primary" onclick="loadAdminDelegations()">↻ Actualiser</button>
+                    </div>
+                    <div class="admin-card" style="padding:14px; margin-bottom:16px; background:#f8fafc;">
+                        <input id="adminDelegationSearch" class="admin-input" type="search" placeholder="Rechercher un invité, un représentant ou un téléphone..." oninput="renderAdminDelegations()">
+                    </div>
+                    <div id="adminDelegationsList"><p style="color:#64748b;">Chargement des délégations...</p></div>
                 </div>
 
                 <div id="admin-invites-tab" style="display: none;">
@@ -4711,7 +4723,11 @@
 
             const source = new EventSource(eventsUrl.toString());
             source.addEventListener('message', () => loadMessages());
-            source.addEventListener('guestbook-changed', () => loadMessages());
+            source.addEventListener('guestbook-changed', () => {
+                loadMessages();
+                const delegationTab = document.getElementById('admin-delegations-tab');
+                if (adminLoggedIn && delegationTab && delegationTab.style.display !== 'none') loadAdminDelegations();
+            });
             source.addEventListener('guest-changed', () => {
                 if (adminLoggedIn && typeof loadAdminGuests === 'function') loadAdminGuests();
             });
@@ -5956,6 +5972,7 @@
             const tabIds = [
                 'admin-photos-tab','admin-music-tab','admin-countdown-tab','admin-programmes-tab',
                 'admin-names-tab','admin-hero-tab','admin-invitation-tab','admin-design-tab','admin-invites-tab','admin-privateMessages-tab','admin-ceremonies-tab'
+                ,'admin-delegations-tab'
             ];
             // Cacher tous les tabs de façon sûre
             tabIds.forEach(id => {
@@ -6023,6 +6040,11 @@
                 case 'privateMessages': {
                     const el = document.getElementById('admin-privateMessages-tab'); if (el) el.style.display = 'block';
                     if (typeof loadAdminPrivateMessages === 'function') try { loadAdminPrivateMessages(); } catch (e) {}
+                    break;
+                }
+                case 'delegations': {
+                    const el = document.getElementById('admin-delegations-tab'); if (el) el.style.display = 'block';
+                    if (typeof loadAdminDelegations === 'function') try { loadAdminDelegations(); } catch (e) {}
                     break;
                 }
                 case 'logout': {
@@ -6619,6 +6641,70 @@
                 privateName.title = isLocked ? 'Nom verrouillé selon l’invitation.' : 'Votre nom';
             }
             modal.style.display = 'flex';
+        }
+
+        let adminDelegationsCache = [];
+
+        function adminGuestbookAllApiUrl() {
+            const url = new URL('/api/guestbook', window.location.origin);
+            const secret = typeof getAdminSecretFromPage === 'function' ? getAdminSecretFromPage() : '';
+            if (secret) url.searchParams.set('adminSecret', secret);
+            url.searchParams.set('ceremony', 'all');
+            return url.toString();
+        }
+
+        async function loadAdminDelegations() {
+            const container = document.getElementById('adminDelegationsList');
+            if (container) container.innerHTML = '<p style="color:#64748b;">Chargement des délégations...</p>';
+            try {
+                if (!adminCeremoniesCache.length && typeof loadAdminCeremonies === 'function') await loadAdminCeremonies();
+                const response = await fetch(adminGuestbookAllApiUrl(), { cache: 'no-store' });
+                if (!response.ok) throw new Error('delegations-load-failed');
+                const payload = await response.json();
+                adminDelegationsCache = Array.isArray(payload.messages)
+                    ? payload.messages.filter(message => message.status === 'delegated')
+                    : [];
+                renderAdminDelegations();
+            } catch (error) {
+                if (container) container.innerHTML = '<div style="padding:16px; border-radius:12px; background:#fff1f2; color:#be123c;">Impossible de charger les délégations.</div>';
+            }
+        }
+
+        function renderAdminDelegations() {
+            const container = document.getElementById('adminDelegationsList');
+            if (!container) return;
+            const search = (document.getElementById('adminDelegationSearch')?.value || '').trim().toLowerCase();
+            const ceremonies = Array.isArray(adminCeremoniesCache) ? adminCeremoniesCache : [];
+            const delegations = adminDelegationsCache.filter(message => {
+                const ceremony = ceremonies.find(item => item.id === message.ceremonyId);
+                const ceremonyName = ceremony?.name || message.ceremonyId || '';
+                return !search || `${message.name || ''} ${message.delegateName || ''} ${message.delegatePhone || ''} ${ceremonyName}`.toLowerCase().includes(search);
+            });
+
+            if (!delegations.length) {
+                container.innerHTML = '<div style="padding:22px; text-align:center; border:1px dashed #cbd5e1; border-radius:14px; color:#64748b;">Aucune délégation enregistrée.</div>';
+                return;
+            }
+
+            const rows = delegations.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))).map(message => {
+                const ceremony = ceremonies.find(item => item.id === message.ceremonyId);
+                return `<tr>
+                    <td style="padding:12px; border-bottom:1px solid #e5e7eb; font-weight:700;">${escapeAdminText(message.name || 'Invité')}</td>
+                    <td style="padding:12px; border-bottom:1px solid #e5e7eb; font-weight:700; color:#3730a3;">${escapeAdminText(message.delegateName || 'Non renseigné')}</td>
+                    <td style="padding:12px; border-bottom:1px solid #e5e7eb;">${escapeAdminText(message.delegatePhone || 'Non renseigné')}</td>
+                    <td style="padding:12px; border-bottom:1px solid #e5e7eb;">${escapeAdminText(ceremony?.name || message.ceremonyId || 'Cérémonie')}</td>
+                    <td style="padding:12px; border-bottom:1px solid #e5e7eb;">${message.created_at ? new Date(message.created_at).toLocaleString('fr-FR') : '-'}</td>
+                </tr>`;
+            }).join('');
+
+            container.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%; min-width:760px; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
+                <thead><tr style="background:#f3f4f6;">
+                    <th style="padding:12px; text-align:left;">Invité</th>
+                    <th style="padding:12px; text-align:left;">Représentant</th>
+                    <th style="padding:12px; text-align:left;">Téléphone</th>
+                    <th style="padding:12px; text-align:left;">Cérémonie</th>
+                    <th style="padding:12px; text-align:left;">Date</th>
+                </tr></thead><tbody>${rows}</tbody></table></div>`;
         }
 
         function closePrivateMessageDialog() {
