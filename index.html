@@ -3575,6 +3575,13 @@
                     <p id="privateMessageModalFeedback" style="display:none; margin-top:16px; padding:12px; border-radius:10px; font-weight:600;"></p>
                 </div>
             </div>
+
+            <div id="guestResponseModal" style="display:none; position:fixed; inset:0; z-index:10011; background: rgba(0,0,0,0.72); align-items:center; justify-content:center; padding:20px;">
+                <div style="background:#fff; border-radius:18px; width:100%; max-width:540px; padding:22px; box-shadow:0 30px 80px rgba(0,0,0,0.28);">
+                    <button type="button" onclick="closeGuestResponseModal()" style="position:absolute; right:18px; top:18px; border:none; background:transparent; font-size:22px; cursor:pointer; color:#111;">✕</button>
+                    <div id="guestResponseContent" style="margin-top:8px;"></div>
+                </div>
+            </div>
         </div>
 
         <div class="messages-container">
@@ -4242,6 +4249,165 @@
             charCount.style.color = this.value.length > 400 ? '#e74c3c' : '#999';
         });
 
+        let guestResponseDraft = null;
+
+        function openGuestResponseModal() {
+            const modal = document.getElementById('guestResponseModal');
+            const container = document.getElementById('guestResponseContent');
+            if (!modal || !container) return;
+            modal.style.display = 'flex';
+            container.innerHTML = `
+                <div style="position:relative;">
+                    <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Réponse à votre invitation</h3>
+                    <p style="margin:0 0 18px; color:#374151; line-height:1.6; font-size:1rem;">Êtes-vous sûr de ne pas vouloir confirmer votre présence ?</p>
+                    <div style="display:grid; gap:12px; margin-top:12px;">
+                        <button type="button" onclick="handleGuestResponseChoice('confirm-yes')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Oui</button>
+                        <button type="button" onclick="handleGuestResponseChoice('confirm-no')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Non</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGuestDelegateFlow(step) {
+            const container = document.getElementById('guestResponseContent');
+            if (!container) return;
+            if (step === 'delegate-question') {
+                container.innerHTML = `
+                    <div>
+                        <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Délégation de l'invitation</h3>
+                        <p style="margin:0 0 18px; color:#374151; line-height:1.6; font-size:1rem;">Souhaitez-vous déléguer votre invitation à quelqu'un ?</p>
+                        <div style="display:grid; gap:12px; margin-top:12px;">
+                            <button type="button" onclick="handleGuestResponseChoice('delegate-yes')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Oui, déléguer mon invitation</button>
+                            <button type="button" onclick="handleGuestResponseChoice('delegate-no')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Non, je ne souhaite pas déléguer</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (step === 'delegate-form') {
+                container.innerHTML = `
+                    <div>
+                        <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Informations du représentant</h3>
+                        <div style="display:grid; gap:14px;">
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:600; color:#111827;">Nom et prénom de la personne qui vous représentera</label>
+                                <input id="delegateNameInput" type="text" placeholder="Ex : Patrick Uwimana" style="width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; background:#fff; color:#111827;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:600; color:#111827;">Numéro de téléphone</label>
+                                <input id="delegatePhoneInput" type="tel" placeholder="Ex : +250 78 000 0000" style="width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; background:#fff; color:#111827;">
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                                <button type="button" onclick="submitDelegation()" class="cta-btn" style="flex:1;">Valider</button>
+                                <button type="button" onclick="closeGuestResponseModal()" class="cta-btn" style="flex:1; background:#ccc; color:#111;">Annuler</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (step === 'decline-confirmation') {
+                container.innerHTML = `
+                    <div>
+                        <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Décliner l'invitation</h3>
+                        <p style="margin:0 0 16px; color:#374151; line-height:1.6; font-size:1rem;">Confirmez-vous que vous souhaitez décliner l'invitation ?</p>
+                        <label style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid #d1d5db; border-radius:10px; background:#f8fafc; color:#111827; font-weight:600; margin-bottom:16px;">
+                            <input type="checkbox" id="declineInvitationCheckbox">
+                            <span>Je souhaite décliner l'invitation</span>
+                        </label>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" onclick="submitDeclineChoice()" class="cta-btn" style="flex:1;">Valider</button>
+                            <button type="button" onclick="closeGuestResponseModal()" class="cta-btn" style="flex:1; background:#ccc; color:#111;">Annuler</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function handleGuestResponseChoice(choice) {
+            if (choice === 'confirm-yes' || choice === 'confirm-no') {
+                guestResponseDraft = guestResponseDraft || {};
+                guestResponseDraft.attending = false;
+                guestResponseDraft.status = 'pending';
+                renderGuestDelegateFlow('delegate-question');
+                return;
+            }
+            if (choice === 'delegate-yes') {
+                renderGuestDelegateFlow('delegate-form');
+                return;
+            }
+            if (choice === 'delegate-no') {
+                renderGuestDelegateFlow('decline-confirmation');
+            }
+        }
+
+        function submitDelegation() {
+            const delegateName = document.getElementById('delegateNameInput')?.value.trim() || '';
+            const delegatePhone = document.getElementById('delegatePhoneInput')?.value.trim() || '';
+            if (!delegateName) {
+                alert('Veuillez renseigner le nom de la personne qui vous représentera.');
+                return;
+            }
+            guestResponseDraft = guestResponseDraft || {};
+            guestResponseDraft.attending = false;
+            guestResponseDraft.status = 'delegated';
+            guestResponseDraft.delegateName = delegateName;
+            guestResponseDraft.delegatePhone = delegatePhone;
+            saveGuestResponseAndClose(guestResponseDraft);
+        }
+
+        function submitDeclineChoice() {
+            const checked = document.getElementById('declineInvitationCheckbox')?.checked;
+            if (!checked) {
+                alert('Veuillez cocher la case pour confirmer le refus de l’invitation.');
+                return;
+            }
+            guestResponseDraft = guestResponseDraft || {};
+            guestResponseDraft.attending = false;
+            guestResponseDraft.status = 'declined';
+            guestResponseDraft.delegateName = '';
+            guestResponseDraft.delegatePhone = '';
+            saveGuestResponseAndClose(guestResponseDraft);
+        }
+
+        function closeGuestResponseModal() {
+            const modal = document.getElementById('guestResponseModal');
+            if (modal) modal.style.display = 'none';
+            guestResponseDraft = null;
+        }
+
+        function saveGuestResponseAndClose(payload) {
+            const draft = guestResponseDraft || {};
+            const finalData = {
+                ...draft,
+                ...payload,
+                attending: Boolean(payload.attending || payload.status === 'confirmed'),
+                status: payload.status || draft.status || 'pending',
+                delegateName: payload.delegateName || draft.delegateName || '',
+                delegatePhone: payload.delegatePhone || draft.delegatePhone || '',
+                created_at: new Date().toISOString()
+            };
+
+            const guestData = {
+                name: finalData.name,
+                message: finalData.message,
+                attending: finalData.attending,
+                status: finalData.status,
+                delegateName: finalData.delegateName,
+                delegatePhone: finalData.delegatePhone,
+                created_at: finalData.created_at
+            };
+
+            saveLocalGuestMessage(guestData);
+            showFormMsg('✓ Message envoyé avec succès !', '#d4edda', '#155724');
+            messageForm.reset();
+            charCount.textContent = '0 / 500';
+            closeGuestResponseModal();
+            loadMessages();
+        }
+
         messageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = guestName.value.trim();
@@ -4253,44 +4419,57 @@
                 return;
             }
 
-            submitBtn.style.opacity = '0.7';
-            submitBtn.disabled = true;
+            if (attending) {
+                submitBtn.style.opacity = '0.7';
+                submitBtn.disabled = true;
+                const guestData = {
+                    name,
+                    message,
+                    attending: true,
+                    status: 'confirmed',
+                    delegateName: '',
+                    delegatePhone: '',
+                    created_at: new Date().toISOString()
+                };
 
-            const guestData = {
-                name,
-                message,
-                attending,
-                created_at: new Date().toISOString()
-            };
+                try {
+                    const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...guestData, ceremonyId: getActiveCeremonyId() })
+                    });
 
-            try {
-                const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...guestData, ceremonyId: getActiveCeremonyId() })
-                });
-
-                if (response.ok) {
+                    if (response.ok) {
+                        saveLocalGuestMessage(guestData);
+                        showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
+                        messageForm.reset();
+                        charCount.textContent = '0 / 500';
+                        await loadMessages();
+                    } else {
+                        throw new Error('Erreur');
+                    }
+                } catch (error) {
                     saveLocalGuestMessage(guestData);
-                    showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
+                    showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
                     messageForm.reset();
                     charCount.textContent = '0 / 500';
                     await loadMessages();
-                } else {
-                    throw new Error('Erreur');
+                } finally {
+                    submitBtn.style.opacity = '1';
+                    submitBtn.disabled = false;
                 }
-            } catch (error) {
-                showFormMsg('Le message n’a pas été partagé. Vérifiez que le serveur Jour-J est bien démarré.', '#f8d7da', '#842029');
                 return;
-                saveLocalGuestMessage(guestData);
-                showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
-                messageForm.reset();
-                charCount.textContent = '0 / 500';
-                await loadMessages();
-            } finally {
-                submitBtn.style.opacity = '1';
-                submitBtn.disabled = false;
             }
+
+            guestResponseDraft = {
+                name,
+                message,
+                attending: false,
+                status: 'pending',
+                delegateName: '',
+                delegatePhone: ''
+            };
+            openGuestResponseModal();
         });
 
         function showFormMsg(text, bg, color) {
@@ -4304,13 +4483,50 @@
             }, 300);
         }
 
+        function getStorageGuestbookKey() {
+            return 'weddingGuestbookMessages';
+        }
+
+        function getGuestStatusLabel(message) {
+            if (!message) return 'En attente de réponse';
+            if (message.status === 'declined') return 'Invitation déclinée';
+            if (message.status === 'delegated') {
+                return message.delegateName ? `Présence déléguée à : ${message.delegateName}` : 'Présence déléguée';
+            }
+            if (message.attending) return 'Présence confirmée';
+            if (message.status === 'pending') return 'En attente de réponse';
+            return 'En attente de réponse';
+        }
+
         function saveLocalGuestMessage(guestData) {
-            // Les messages sont désormais centralisés dans la base locale du serveur.
-            return guestData;
+            try {
+                const key = getStorageGuestbookKey();
+                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                const safeEntry = {
+                    name: String(guestData.name || '').trim(),
+                    message: String(guestData.message || '').trim(),
+                    attending: Boolean(guestData.attending),
+                    status: guestData.status || (guestData.attending ? 'confirmed' : 'pending'),
+                    delegateName: guestData.delegateName || '',
+                    delegatePhone: guestData.delegatePhone || '',
+                    created_at: guestData.created_at || new Date().toISOString(),
+                    ceremonyId: guestData.ceremonyId || getActiveCeremonyId()
+                };
+                list.unshift(safeEntry);
+                localStorage.setItem(key, JSON.stringify(list.slice(0, 250)));
+                return safeEntry;
+            } catch (error) {
+                return guestData;
+            }
         }
 
         function getLocalGuestMessages() {
-            return [];
+            try {
+                const list = JSON.parse(localStorage.getItem(getStorageGuestbookKey()) || '[]');
+                return Array.isArray(list) ? list : [];
+            } catch (error) {
+                return [];
+            }
         }
 
         // ========================================
@@ -4318,13 +4534,13 @@
         // ========================================
         function renderMessageList(messages, target) {
             const html = messages.map((msg, index) => {
-                const attending = msg.attending ? 'yes' : '';
-                const status = msg.attending ? '✓ Je serai présent(e)' : '✗ Ne serai pas présent(e)';
+                const statusText = getGuestStatusLabel(msg);
+                const statusClass = msg.attending ? 'yes' : (msg.status === 'declined' ? 'no' : '');
                 return `
                     <div class="message-item" style="animation-delay: ${index * 0.05}s">
                         <div class="message-header">
                             <span class="message-name">${escapeHtml(msg.name)}</span>
-                            <span class="message-status ${attending}">${status}</span>
+                            <span class="message-status ${statusClass}">${escapeHtml(statusText)}</span>
                         </div>
                         <p class="message-text">"${escapeHtml(msg.message)}"</p>
                         <p class="message-date">${new Date(msg.created_at || msg.date || Date.now()).toLocaleDateString('fr-FR')}</p>
