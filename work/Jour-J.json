@@ -1,0 +1,24 @@
+{
+  "name": "Jour-J",
+  "version": 2,
+  "createdAt": "2026-09-08T22:58:51.763Z",
+  "updatedAt": "2026-09-09T01:14:51.061Z",
+  "invitations": {},
+  "guestbookMessages": [],
+  "activeCeremonyId": "default",
+  "ceremonies": {
+    "default": {
+      "id": "default",
+      "name": "Cérémonie principale",
+      "date": "",
+      "details": "",
+      "status": "active",
+      "createdAt": "2026-09-08T22:58:51.763Z",
+      "updatedAt": "2026-09-09T01:14:51.061Z",
+      "siteData": {},
+      "invitationImage": null,
+      "invitations": {},
+      "guestbookMessages": []
+    }
+  }
+}

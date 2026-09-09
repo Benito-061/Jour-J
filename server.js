@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
-const JOUR_J_DATABASE_FILE = path.join(ROOT, 'work', 'Jour-J.json');
+const JOUR_J_DATABASE_FILE = process.env.JOUR_J_DATABASE_FILE || path.join(ROOT, 'work', 'Jour-J.json');
 const UPLOADS_DIR = path.join(ROOT, 'work', 'uploads');
 const INVITATION_UPLOADS_DIR = path.join(UPLOADS_DIR, 'invitations');
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -30,6 +30,7 @@ const DEFAULT_JOUR_J_DATABASE = {
   updatedAt: '',
   invitations: {},
   guestbookMessages: [],
+  deletedGuestbookMessageIds: [],
   activeCeremonyId: 'default',
   ceremonies: {}
 };
@@ -54,6 +55,9 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
     ? database.invitations
     : (fallbackInvites && typeof fallbackInvites === 'object' ? fallbackInvites : {});
   const legacyMessages = Array.isArray(database?.guestbookMessages) ? database.guestbookMessages : [];
+  const deletedGuestbookMessageIds = Array.isArray(database?.deletedGuestbookMessageIds)
+    ? database.deletedGuestbookMessageIds.map(id => String(id)).filter(Boolean)
+    : [];
   const ceremonies = database?.ceremonies && typeof database.ceremonies === 'object'
     ? database.ceremonies
     : {};
@@ -69,7 +73,8 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
       siteData: {},
       invitationImage: null,
       invitations: legacyInvitations,
-      guestbookMessages: legacyMessages
+      guestbookMessages: legacyMessages,
+      deletedGuestbookMessageIds
     };
   }
   Object.entries(ceremonies).forEach(([id, ceremony]) => {
@@ -84,7 +89,8 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
       siteData: ceremony?.siteData && typeof ceremony.siteData === 'object' ? ceremony.siteData : {},
       invitationImage: cleanInvitationImage(ceremony?.invitationImage),
       invitations: ceremony?.invitations && typeof ceremony.invitations === 'object' ? ceremony.invitations : {},
-      guestbookMessages: Array.isArray(ceremony?.guestbookMessages) ? ceremony.guestbookMessages : []
+      guestbookMessages: Array.isArray(ceremony?.guestbookMessages) ? ceremony.guestbookMessages : [],
+      deletedGuestbookMessageIds
     };
   });
   const activeCeremonyId = ceremonies[database?.activeCeremonyId] ? database.activeCeremonyId : Object.keys(ceremonies)[0];
@@ -99,6 +105,7 @@ function cleanInvitationDatabase(database, fallbackInvites = {}) {
     // liens créés avant le passage au multi-cérémonies.
     invitations: defaultCeremony?.invitations || legacyInvitations,
     guestbookMessages: defaultCeremony?.guestbookMessages || legacyMessages,
+    deletedGuestbookMessageIds,
     activeCeremonyId,
     ceremonies
   };
@@ -176,7 +183,10 @@ function writeJourJDatabase(invitations, guestbookMessages) {
 }
 
 function listGuestbookMessages() {
-  return readJourJDatabase().guestbookMessages
+  const database = readJourJDatabase();
+  const deletedIds = new Set(database.deletedGuestbookMessageIds || []);
+  return database.guestbookMessages
+    .filter(message => !deletedIds.has(String(message.id)))
     .slice()
     .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 }
@@ -200,8 +210,13 @@ function addGuestbookMessage(input) {
 }
 
 function listCeremonyGuestbookMessages(ceremonyId = '') {
-  const ceremony = getCeremony(readJourJDatabase(), ceremonyId);
-  return (ceremony?.guestbookMessages || []).slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  const database = readJourJDatabase();
+  const ceremony = getCeremony(database, ceremonyId);
+  const deletedIds = new Set(database.deletedGuestbookMessageIds || []);
+  return (ceremony?.guestbookMessages || [])
+    .filter(message => !deletedIds.has(String(message.id)))
+    .slice()
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 }
 
 function addCeremonyGuestbookMessage(ceremonyId, input) {
@@ -1044,16 +1059,29 @@ const server = http.createServer(async (req, res) => {
       const database = readJourJDatabase();
       const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
       const messageId = String(body.id || '').trim();
-      const before = ceremony.guestbookMessages.length;
-      ceremony.guestbookMessages = ceremony.guestbookMessages.filter(message => String(message.id) !== messageId);
-      if (before === ceremony.guestbookMessages.length) {
+      if (!messageId) {
+        json(res, 400, { ok: false, error: 'message-id-required' });
+        return;
+      }
+      const matchingMessage = Object.values(database.ceremonies)
+        .flatMap(item => item.guestbookMessages || [])
+        .find(message => String(message.id) === messageId);
+      if (!matchingMessage) {
         json(res, 404, { ok: false, error: 'message-not-found' });
         return;
       }
-      ceremony.updatedAt = new Date().toISOString();
+      const deletedAt = new Date().toISOString();
+      database.deletedGuestbookMessageIds = Array.from(new Set([
+        ...(database.deletedGuestbookMessageIds || []),
+        messageId
+      ])).slice(-2000);
+      Object.values(database.ceremonies).forEach(item => {
+        item.guestbookMessages = (item.guestbookMessages || []).filter(message => String(message.id) !== messageId);
+        item.updatedAt = deletedAt;
+      });
       writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
-      publishDataEvent('guestbook-changed', ceremony.id, { deletedId: messageId });
-      json(res, 200, { ok: true, ceremonyId: ceremony.id, messages: listCeremonyGuestbookMessages(ceremony.id) });
+      publishDataEvent('guestbook-changed', matchingMessage.ceremonyId || ceremony.id, { deletedId: messageId });
+      json(res, 200, { ok: true, ceremonyId: matchingMessage.ceremonyId || ceremony.id, messages: listCeremonyGuestbookMessages(matchingMessage.ceremonyId || ceremony.id) });
     } catch (e) { json(res, 400, { ok: false, error: 'bad-request' }); }
     return;
   }

@@ -1,3 +1,5 @@
 # Runtime files created by the local image service.
 work/uploads/
-work/Jour-J.json
+# La base Jour-J contient les cérémonies, invités et messages persistants.
+# Elle doit être conservée lors des commits. En production, utiliser
+# JOUR_J_DATABASE_FILE pour la placer sur un volume persistant externe.
