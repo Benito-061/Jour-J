@@ -3536,7 +3536,11 @@
         <div class="form-container">
             <h3 style="text-align: center; margin-bottom: 30px; color: #1a1a1a; font-size: 1.3rem;">Formulaire de Message</h3>
             <form id="messageForm">
-                <div class="form-group">
+                <div id="guestIdentityBadge" class="form-group" style="display:none;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#2c2c2c;">Invité</label>
+                    <div id="guestIdentityValue" style="padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; background:#f8fafc; color:#111827; font-weight:600; min-height:46px; display:flex; align-items:center;"> </div>
+                </div>
+                <div class="form-group" id="guestNameGroup">
                     <label for="guestName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c2c2c;">Votre nom</label>
                     <input type="text" id="guestName" placeholder="Entrez votre nom" required maxlength="100">
                 </div>
@@ -4230,10 +4234,65 @@
         // ========================================
         const messageForm = document.getElementById('messageForm');
         const guestName = document.getElementById('guestName');
+        const guestNameGroup = document.getElementById('guestNameGroup');
+        const guestIdentityBadge = document.getElementById('guestIdentityBadge');
+        const guestIdentityValue = document.getElementById('guestIdentityValue');
         const guestMessage = document.getElementById('guestMessage');
         const charCount = document.getElementById('charCount');
         const formMsg = document.getElementById('formMsg');
         const submitBtn = messageForm.querySelector('button[type="submit"]');
+
+        function getGuestFromCurrentLink() {
+            const guestFromWindow = window.currentInvitationGuest && window.currentInvitationGuest.fullName ? window.currentInvitationGuest : null;
+            if (guestFromWindow) return guestFromWindow;
+
+            const params = new URLSearchParams(window.location.search);
+            const guestId = params.get('guest') || params.get('invite') || '';
+            if (!guestId) return null;
+
+            const guests = getStoredGuests();
+            const found = guests.find((guest) => guest.id === guestId || guest.url.includes(encodeURIComponent(guestId)) || guest.url.includes(`guest=${guestId}`));
+            return found || null;
+        }
+
+        function syncGuestIdentityField() {
+            const params = new URLSearchParams(window.location.search);
+            const guestIdFromUrl = params.get('guest') || params.get('invite') || '';
+            const hasInvitationLink = Boolean(guestIdFromUrl);
+            const guest = getGuestFromCurrentLink();
+
+            if (guest && guest.fullName) {
+                guestName.value = guest.fullName;
+                guestName.readOnly = true;
+                guestName.setAttribute('aria-readonly', 'true');
+                guestName.dataset.locked = '1';
+                guestNameGroup.style.display = 'none';
+                guestIdentityBadge.style.display = 'block';
+                guestIdentityValue.textContent = `Invité : ${guest.fullName}`;
+                return guest;
+            }
+
+            if (hasInvitationLink) {
+                guestName.value = guestIdFromUrl;
+                guestName.readOnly = true;
+                guestName.setAttribute('aria-readonly', 'true');
+                guestName.dataset.locked = '1';
+                guestNameGroup.style.display = 'none';
+                guestIdentityBadge.style.display = 'block';
+                guestIdentityValue.textContent = 'Invité : lien personnel';
+                return { id: guestIdFromUrl, fullName: guestIdFromUrl };
+            }
+
+            guestName.readOnly = false;
+            guestName.removeAttribute('aria-readonly');
+            delete guestName.dataset.locked;
+            guestNameGroup.style.display = 'block';
+            guestIdentityBadge.style.display = 'none';
+            if (!guestName.value.trim()) guestName.value = '';
+            return null;
+        }
+
+        syncGuestIdentityField();
 
         guestName.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary)';
@@ -4258,11 +4317,11 @@
             modal.style.display = 'flex';
             container.innerHTML = `
                 <div style="position:relative;">
-                    <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Réponse à votre invitation</h3>
-                    <p style="margin:0 0 18px; color:#374151; line-height:1.6; font-size:1rem;">Êtes-vous sûr de ne pas vouloir confirmer votre présence ?</p>
+                    <h3 style="margin:0 0 18px; color:#111827; font-size:1.4rem;">Êtes-vous sûr de vouloir ignorer cette invitation ?</h3>
                     <div style="display:grid; gap:12px; margin-top:12px;">
-                        <button type="button" onclick="handleGuestResponseChoice('confirm-yes')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Oui</button>
-                        <button type="button" onclick="handleGuestResponseChoice('confirm-no')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Non</button>
+                        <button type="button" onclick="handleGuestResponseChoice('ignore-absence')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Oui, je ne serai pas présent</button>
+                        <button type="button" onclick="handleGuestResponseChoice('confirm-presence')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Je souhaite être là</button>
+                        <button type="button" onclick="handleGuestResponseChoice('decline-invitation')" style="padding:14px 16px; border-radius:12px; border:1px solid #d1d5db; background:#f8fafc; color:#111827; text-align:left; font-weight:600; cursor:pointer;">Je souhaite décliner l'invitation</button>
                     </div>
                 </div>
             `;
@@ -4327,13 +4386,27 @@
         }
 
         function handleGuestResponseChoice(choice) {
-            if (choice === 'confirm-yes' || choice === 'confirm-no') {
+            if (choice === 'ignore-absence') {
                 guestResponseDraft = guestResponseDraft || {};
                 guestResponseDraft.attending = false;
                 guestResponseDraft.status = 'pending';
                 renderGuestDelegateFlow('delegate-question');
                 return;
             }
+
+            if (choice === 'confirm-presence') {
+                const attendingInput = document.getElementById('attending');
+                if (attendingInput) attendingInput.checked = true;
+                closeGuestResponseModal();
+                showFormMsg('✓ Présence confirmée. Vous pouvez maintenant valider votre message.', '#d4edda', '#155724');
+                return;
+            }
+
+            if (choice === 'decline-invitation') {
+                renderGuestDelegateFlow('decline-confirmation');
+                return;
+            }
+
             if (choice === 'delegate-yes') {
                 renderGuestDelegateFlow('delegate-form');
                 return;
@@ -4380,6 +4453,7 @@
 
         function saveGuestResponseAndClose(payload) {
             const draft = guestResponseDraft || {};
+            const guest = getGuestFromCurrentLink();
             const finalData = {
                 ...draft,
                 ...payload,
@@ -4387,7 +4461,10 @@
                 status: payload.status || draft.status || 'pending',
                 delegateName: payload.delegateName || draft.delegateName || '',
                 delegatePhone: payload.delegatePhone || draft.delegatePhone || '',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                ceremonyId: getActiveCeremonyId(),
+                guestId: guest ? guest.id : (payload.guestId || draft.guestId || ''),
+                name: guest && guest.fullName ? guest.fullName : (payload.name || draft.name || '')
             };
 
             const guestData = {
@@ -4397,12 +4474,15 @@
                 status: finalData.status,
                 delegateName: finalData.delegateName,
                 delegatePhone: finalData.delegatePhone,
-                created_at: finalData.created_at
+                created_at: finalData.created_at,
+                ceremonyId: finalData.ceremonyId,
+                guestId: finalData.guestId
             };
 
             saveLocalGuestMessage(guestData);
             showFormMsg('✓ Message envoyé avec succès !', '#d4edda', '#155724');
             messageForm.reset();
+            syncGuestIdentityField();
             charCount.textContent = '0 / 500';
             closeGuestResponseModal();
             loadMessages();
@@ -4410,7 +4490,8 @@
 
         messageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = guestName.value.trim();
+            const guest = getGuestFromCurrentLink();
+            const name = (guest && guest.fullName ? guest.fullName : guestName.value.trim());
             const message = guestMessage.value.trim();
             const attending = document.getElementById('attending').checked;
 
@@ -4429,7 +4510,9 @@
                     status: 'confirmed',
                     delegateName: '',
                     delegatePhone: '',
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    ceremonyId: getActiveCeremonyId(),
+                    guestId: guest ? guest.id : ''
                 };
 
                 try {
@@ -4443,6 +4526,7 @@
                         saveLocalGuestMessage(guestData);
                         showFormMsg('✓ Message envoyé avec succès!', '#d4edda', '#155724');
                         messageForm.reset();
+                        syncGuestIdentityField();
                         charCount.textContent = '0 / 500';
                         await loadMessages();
                     } else {
@@ -4452,6 +4536,7 @@
                     saveLocalGuestMessage(guestData);
                     showFormMsg('✓ Message enregistré localement et affiché.', '#d4edda', '#155724');
                     messageForm.reset();
+                    syncGuestIdentityField();
                     charCount.textContent = '0 / 500';
                     await loadMessages();
                 } finally {
@@ -4467,7 +4552,9 @@
                 attending: false,
                 status: 'pending',
                 delegateName: '',
-                delegatePhone: ''
+                delegatePhone: '',
+                guestId: guest ? guest.id : '',
+                ceremonyId: getActiveCeremonyId()
             };
             openGuestResponseModal();
         });
@@ -4487,6 +4574,12 @@
             return 'weddingGuestbookMessages';
         }
 
+        function buildGuestbookItemId(item) {
+            if (item && item.id) return String(item.id);
+            const seed = `${item && item.name ? item.name : 'guest'}-${item && item.created_at ? item.created_at : Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+            return seed;
+        }
+
         function getGuestStatusLabel(message) {
             if (!message) return 'En attente de réponse';
             if (message.status === 'declined') return 'Invitation déclinée';
@@ -4503,6 +4596,7 @@
                 const key = getStorageGuestbookKey();
                 const list = JSON.parse(localStorage.getItem(key) || '[]');
                 const safeEntry = {
+                    id: guestData.id || buildGuestbookItemId(guestData),
                     name: String(guestData.name || '').trim(),
                     message: String(guestData.message || '').trim(),
                     attending: Boolean(guestData.attending),
@@ -4510,7 +4604,8 @@
                     delegateName: guestData.delegateName || '',
                     delegatePhone: guestData.delegatePhone || '',
                     created_at: guestData.created_at || new Date().toISOString(),
-                    ceremonyId: guestData.ceremonyId || getActiveCeremonyId()
+                    ceremonyId: guestData.ceremonyId || getActiveCeremonyId(),
+                    guestId: guestData.guestId || ''
                 };
                 list.unshift(safeEntry);
                 localStorage.setItem(key, JSON.stringify(list.slice(0, 250)));
@@ -4523,24 +4618,51 @@
         function getLocalGuestMessages() {
             try {
                 const list = JSON.parse(localStorage.getItem(getStorageGuestbookKey()) || '[]');
-                return Array.isArray(list) ? list : [];
+                if (!Array.isArray(list)) return [];
+                return list.map((msg, index) => ({
+                    id: buildGuestbookItemId(msg || { created_at: new Date().toISOString(), name: 'guest', index }),
+                    ...msg,
+                    name: String(msg.name || '').trim() || 'Invité',
+                    status: msg.status || (msg.attending ? 'confirmed' : 'pending'),
+                    ceremonyId: msg.ceremonyId || getActiveCeremonyId(),
+                    guestId: msg.guestId || ''
+                }));
             } catch (error) {
                 return [];
             }
+        }
+
+        function deleteGuestbookMessage(id) {
+            if (!adminLoggedIn || !(typeof isAdminLinkMode === 'function' && isAdminLinkMode())) {
+                return;
+            }
+            if (!confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
+                return;
+            }
+
+            const messages = getLocalGuestMessages().filter((message) => String(message.id || buildGuestbookItemId(message)) !== String(id));
+            localStorage.setItem(getStorageGuestbookKey(), JSON.stringify(messages));
+            if (typeof adminShowMessage === 'function') {
+                adminShowMessage('Commentaire supprimé.', 'success');
+            }
+            loadMessages();
         }
 
         // ========================================
         // LOAD MESSAGES WITH ANIMATIONS
         // ========================================
         function renderMessageList(messages, target) {
+            const isAdminContext = Boolean(adminLoggedIn && typeof isAdminLinkMode === 'function' && isAdminLinkMode());
             const html = messages.map((msg, index) => {
                 const statusText = getGuestStatusLabel(msg);
                 const statusClass = msg.attending ? 'yes' : (msg.status === 'declined' ? 'no' : '');
+                const deleteControl = isAdminContext ? `<button type="button" aria-label="Supprimer ce message" title="Supprimer" onclick="deleteGuestbookMessage('${String(msg.id || buildGuestbookItemId(msg))}')" style="background:transparent; border:none; color:#c0392b; font-size:20px; cursor:pointer; margin-left:auto; padding:0 4px;">✕</button>` : '';
                 return `
                     <div class="message-item" style="animation-delay: ${index * 0.05}s">
                         <div class="message-header">
                             <span class="message-name">${escapeHtml(msg.name)}</span>
                             <span class="message-status ${statusClass}">${escapeHtml(statusText)}</span>
+                            ${deleteControl}
                         </div>
                         <p class="message-text">"${escapeHtml(msg.message)}"</p>
                         <p class="message-date">${new Date(msg.created_at || msg.date || Date.now()).toLocaleDateString('fr-FR')}</p>
@@ -6539,12 +6661,21 @@
         }
 
         function openPrivateMessageDialog() {
-            const guestNameValue = document.getElementById('guestName')?.value.trim();
+            const guest = getGuestFromCurrentLink();
+            const guestNameValue = guest && guest.fullName ? guest.fullName : (document.getElementById('guestName')?.value.trim() || '');
+            const hasInvitationLink = Boolean((new URLSearchParams(window.location.search)).get('guest') || (new URLSearchParams(window.location.search)).get('invite'));
             const modal = document.getElementById('privateMessageModal');
             if (!modal) return;
             const privateName = document.getElementById('privateGuestName');
-            if (privateName && guestNameValue) {
-                privateName.value = guestNameValue;
+            if (privateName) {
+                const lockedIdentity = guest && guest.fullName ? guest.fullName : (hasInvitationLink ? (guestNameValue || 'Invité') : guestNameValue);
+                privateName.value = lockedIdentity;
+                const isLocked = Boolean(guest && guest.fullName) || hasInvitationLink;
+                privateName.readOnly = isLocked;
+                privateName.disabled = isLocked;
+                privateName.setAttribute('aria-readonly', String(isLocked));
+                privateName.style.background = isLocked ? '#f8fafc' : '#fff';
+                privateName.title = isLocked ? 'Nom verrouillé selon l’invitation.' : 'Votre nom';
             }
             modal.style.display = 'flex';
         }
@@ -6563,7 +6694,9 @@
         }
 
         function savePrivateMessage() {
-            const name = document.getElementById('privateGuestName')?.value.trim();
+            const guest = getGuestFromCurrentLink();
+            const rawName = document.getElementById('privateGuestName')?.value.trim();
+            const name = guest && guest.fullName ? guest.fullName : rawName;
             const message = document.getElementById('privateGuestMessage')?.value.trim();
             const feedback = document.getElementById('privateMessageModalFeedback');
             if (!feedback) return;
