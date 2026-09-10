@@ -880,8 +880,10 @@
 
         .timeline-marker {
             position: absolute;
-            width: 80px;
+            width: max-content;
+            min-width: 80px;
             height: 80px;
+            padding: 0 12px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             color: #000;
             border-radius: 50%;
@@ -896,6 +898,8 @@
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 3px solid white;
             font-size: 1.2rem;
+            line-height: 1;
+            white-space: nowrap;
         }
 
         .timeline-item:hover .timeline-marker {
@@ -2572,8 +2576,9 @@
             }
 
             .timeline-marker {
-                width: 60px;
+                min-width: 60px;
                 height: 60px;
+                padding: 0 8px;
                 font-size: 0.9rem;
             }
 
@@ -3341,6 +3346,36 @@
             .nav-overflow-menu a:hover, .nav-overflow-menu button:hover { background: #2a2a2a; }
         }
         @keyframes nav-menu-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+
+        /* Empiler les rendez-vous quand la largeur ne permet plus d'afficher
+           correctement les marqueurs de chaque cote. */
+        @media (max-width: 1400px) {
+            #programme .timeline {
+                max-width: 760px;
+            }
+
+            #programme .timeline::before {
+                display: none;
+            }
+
+            #programme .timeline-item,
+            #programme .timeline-item:nth-child(odd),
+            #programme .timeline-item:nth-child(even) {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                text-align: left !important;
+            }
+
+            #programme .timeline-marker,
+            #programme .timeline-item:nth-child(even) .timeline-marker {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                margin-bottom: 15px;
+            }
+        }
     </style>
 
 </head>
@@ -4095,7 +4130,7 @@
 
             <!-- FOOTER -->
     <footer>
-        <p>&copy; 2025 Catherine & Nicolas | Heureux Mariage </p>
+        <p> 2025 Catherine & Nicolas | Heureux Mariage </p>
     </footer>
 
     <script>
@@ -6897,7 +6932,7 @@
                 };
 
                 div.innerHTML = `
-                    <div style="display: grid; grid-template-columns: 120px 1.5fr 2fr auto; gap: 12px; align-items: flex-end;">
+                    <div style="display: grid; grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1.5fr) minmax(220px, 2fr) auto; gap: 12px; align-items: flex-end;">
                         <div>
                             <label style="display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #000;">⏰ Heure</label>
                             <input type="text" id="prog${idx}-heure" value="${prog.heure}" placeholder="09:30" 
@@ -6971,14 +7006,20 @@
 
         function deleteProgram(idx) {
             if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
-                const programmes = JSON.parse(localStorage.getItem('weddingProgrammes') || JSON.stringify([
-                    { heure: '09:30', titre: 'Mariage Civil', description: 'Cérémonie civile à la mairie' },
-                    { heure: '11:00', titre: 'Cérémonie Religieuse', description: 'Célébration à l\'église' },
-                    { heure: '12:30', titre: 'Photos', description: 'Séance photos famille et amis' },
-                    { heure: '19:00', titre: 'Repas & Festivités', description: 'Dîner, danse et réjouissances' }
-                ]));
-                programmes.splice(idx, 1);
-                localStorage.setItem('weddingProgrammes', JSON.stringify(programmes));
+                const container = document.getElementById('adminProgrammesContainer');
+                const programmes = Array.from(container.querySelectorAll('input[id$="-heure"]')).map((input) => {
+                    const index = input.id.match(/^prog(\d+)-heure$/)?.[1];
+                    return {
+                        index: Number(index),
+                        heure: input.value.trim(),
+                        titre: document.getElementById(`prog${index}-titre`)?.value.trim() || '',
+                        description: document.getElementById(`prog${index}-desc`)?.value.trim() || ''
+                    };
+                }).filter((prog) => prog.heure && prog.titre && prog.description);
+
+                const programmeIndex = programmes.findIndex((prog) => prog.index === idx);
+                if (programmeIndex !== -1) programmes.splice(programmeIndex, 1);
+                localStorage.setItem('weddingProgrammes', JSON.stringify(programmes.map(({ index, ...prog }) => prog)));
                 adminShowMessage('✅ Événement supprimé !', 'success');
                 loadAdminProgrammes();
                 updateTimelineDisplay();
