@@ -8,6 +8,7 @@ const ROOT = __dirname;
 const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
 const JOUR_J_DATABASE_FILE = process.env.JOUR_J_DATABASE_FILE || path.join(ROOT, 'work', 'Jour-J.json');
+const JOUR_J_DATABASE_BACKUP_FILE = `${JOUR_J_DATABASE_FILE}.backup`;
 const UPLOADS_DIR = path.join(ROOT, 'work', 'uploads');
 const INVITATION_UPLOADS_DIR = path.join(UPLOADS_DIR, 'invitations');
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -149,6 +150,9 @@ function publicCeremony(ceremony) {
 
 function writeJsonAtomically(file, value) {
   ensureStateDir();
+  if (file === JOUR_J_DATABASE_FILE && fs.existsSync(file)) {
+    fs.copyFileSync(file, JOUR_J_DATABASE_BACKUP_FILE);
+  }
   const temporaryFile = `${file}.${process.pid}.${Date.now()}.tmp`;
   fs.writeFileSync(temporaryFile, JSON.stringify(value, null, 2));
   fs.renameSync(temporaryFile, file);
@@ -159,9 +163,19 @@ function readJourJDatabase(fallbackInvites = {}) {
     const database = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_FILE, 'utf8'));
     return cleanInvitationDatabase(database, fallbackInvites);
   } catch (e) {
-    const database = cleanInvitationDatabase(DEFAULT_JOUR_J_DATABASE, fallbackInvites);
-    writeJsonAtomically(JOUR_J_DATABASE_FILE, database);
-    return database;
+    try {
+      const backup = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_BACKUP_FILE, 'utf8'));
+      const database = cleanInvitationDatabase(backup, fallbackInvites);
+      ensureStateDir();
+      const temporaryFile = `${JOUR_J_DATABASE_FILE}.${process.pid}.${Date.now()}.restore.tmp`;
+      fs.writeFileSync(temporaryFile, JSON.stringify(database, null, 2));
+      fs.renameSync(temporaryFile, JOUR_J_DATABASE_FILE);
+      return database;
+    } catch (backupError) {
+      const database = cleanInvitationDatabase(DEFAULT_JOUR_J_DATABASE, fallbackInvites);
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, database);
+      return database;
+    }
   }
 }
 

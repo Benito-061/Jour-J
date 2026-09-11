@@ -5613,6 +5613,25 @@
             'heroGuest',
             'locationData'
         ];
+        const PROTECTED_CMS_KEYS = new Set(['weddingInvitation']);
+        const CEREMONIES_BACKUP_KEY = 'jourJCeremoniesBackup';
+
+        function backupProtectedSiteData() {
+            PROTECTED_CMS_KEYS.forEach((key) => {
+                const value = localStorage.getItem(key);
+                if (value !== null) {
+                    try { localStorage.setItem(`${key}Backup`, value); } catch (e) { console.warn('Sauvegarde locale impossible', key, e); }
+                }
+            });
+        }
+
+        function restoreProtectedSiteData() {
+            PROTECTED_CMS_KEYS.forEach((key) => {
+                if (localStorage.getItem(key) !== null) return;
+                const backup = localStorage.getItem(`${key}Backup`);
+                if (backup !== null) localStorage.setItem(key, backup);
+            });
+        }
 
         function getAdminSecretFromPage() {
             try {
@@ -5710,6 +5729,7 @@
 
         async function loadRemoteSiteData() {
             try {
+                backupProtectedSiteData();
                 const response = await fetch(ceremonyApiUrl('/api/site-data'), { method: 'GET', cache: 'no-store' });
                 if (!response.ok) return;
                 const payload = await response.json();
@@ -5718,17 +5738,19 @@
                 window.__cmsSyncInProgress = true;
                 CMS_STORAGE_KEYS.forEach((key) => {
                     if (Object.prototype.hasOwnProperty.call(data, key)) {
-                        if (data[key] === null || typeof data[key] === 'undefined') {
+                        if ((data[key] === null || typeof data[key] === 'undefined') && !PROTECTED_CMS_KEYS.has(key)) {
                             localStorage.removeItem(key);
-                        } else {
+                        } else if (data[key] !== null && typeof data[key] !== 'undefined') {
                             localStorage.setItem(key, String(data[key]));
                         }
-                    } else {
+                    } else if (!PROTECTED_CMS_KEYS.has(key)) {
                         localStorage.removeItem(key);
                     }
                 });
+                restoreProtectedSiteData();
             } catch (e) {
                 console.warn('Chargement des donnees admin impossible', e);
+                restoreProtectedSiteData();
             } finally {
                 window.__cmsSyncInProgress = false;
             }
@@ -6141,6 +6163,7 @@
         function saveStoredCeremonies(list) {
             const safeList = Array.isArray(list) ? list.map(normalizeCeremony) : [];
             localStorage.setItem(WEDDING_CEREMONIES_KEY, JSON.stringify(safeList));
+            localStorage.setItem(CEREMONIES_BACKUP_KEY, JSON.stringify(safeList));
             adminCeremoniesCache = safeList.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
             return adminCeremoniesCache;
         }
@@ -6192,11 +6215,22 @@
                 const payload = await response.json();
                 const ceremonies = Array.isArray(payload.ceremonies) ? payload.ceremonies.map(normalizeCeremony) : [];
                 if (payload.activeCeremonyId) localStorage.setItem('activeCeremonyId', payload.activeCeremonyId);
-                adminCeremoniesCache = ceremonies;
+                if (ceremonies.length) {
+                    saveStoredCeremonies(ceremonies);
+                } else {
+                    const backup = JSON.parse(localStorage.getItem(CEREMONIES_BACKUP_KEY) || '[]');
+                    adminCeremoniesCache = Array.isArray(backup) ? backup.map(normalizeCeremony) : [];
+                }
                 renderAdminCeremonies();
                 await loadAdminGuests();
             } catch (error) {
-                if (container) container.innerHTML = '<div style="padding:16px; border-radius:12px; background:#fff1f2; color:#be123c;">Impossible de charger les cérémonies.</div>';
+                const backup = getStoredCeremonies();
+                adminCeremoniesCache = backup.length ? backup : (() => {
+                    try { return JSON.parse(localStorage.getItem(CEREMONIES_BACKUP_KEY) || '[]').map(normalizeCeremony); }
+                    catch (e) { return []; }
+                })();
+                if (adminCeremoniesCache.length) renderAdminCeremonies();
+                else if (container) container.innerHTML = '<div style="padding:16px; border-radius:12px; background:#fff1f2; color:#be123c;">Impossible de charger les cérémonies.</div>';
             }
         }
 
