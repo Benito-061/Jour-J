@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { DatabaseSync } = require('node:sqlite');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -9,6 +10,7 @@ const STATE_FILE = path.join(ROOT, 'work', 'site-lock-state.json');
 const SITE_DATA_FILE = path.join(ROOT, 'work', 'site-data.json');
 const JOUR_J_DATABASE_FILE = process.env.JOUR_J_DATABASE_FILE || path.join(ROOT, 'work', 'Jour-J.json');
 const JOUR_J_DATABASE_BACKUP_FILE = `${JOUR_J_DATABASE_FILE}.backup`;
+const SQLITE_DATABASE_FILE = process.env.JOUR_J_SQLITE_FILE || path.join(ROOT, 'work', 'Jour-J.sqlite');
 const UPLOADS_DIR = path.join(ROOT, 'work', 'uploads');
 const INVITATION_UPLOADS_DIR = path.join(UPLOADS_DIR, 'invitations');
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -38,6 +40,38 @@ const DEFAULT_JOUR_J_DATABASE = {
 
 function ensureStateDir() {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+}
+
+let sqliteDatabase;
+
+function getSqliteDatabase() {
+  if (sqliteDatabase) return sqliteDatabase;
+  ensureStateDir();
+  sqliteDatabase = new DatabaseSync(SQLITE_DATABASE_FILE);
+  sqliteDatabase.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA synchronous = FULL;
+    CREATE TABLE IF NOT EXISTS jour_j_state (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `);
+  return sqliteDatabase;
+}
+
+function readSqliteDatabase() {
+  const row = getSqliteDatabase().prepare('SELECT payload FROM jour_j_state WHERE id = 1').get();
+  if (!row) return null;
+  try { return JSON.parse(row.payload); } catch (error) { throw new Error('sqlite-database-corrupted'); }
+}
+
+function writeSqliteDatabase(value) {
+  const database = getSqliteDatabase();
+  database.prepare(`
+    INSERT INTO jour_j_state (id, payload, updated_at) VALUES (1, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at
+  `).run(JSON.stringify(value), new Date().toISOString());
 }
 
 function cleanState(state) {
@@ -148,8 +182,31 @@ function publicCeremony(ceremony) {
   };
 }
 
-function writeJsonAtomically(file, value) {
+function assertDatabaseDataPreserved(value, allowDataLoss = false) {
+  if (allowDataLoss || !fs.existsSync(JOUR_J_DATABASE_FILE)) return;
+  let current;
+  try {
+    current = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_FILE, 'utf8'));
+  } catch (error) {
+    return;
+  }
+  const currentCeremonies = current.ceremonies && typeof current.ceremonies === 'object' ? current.ceremonies : {};
+  const nextCeremonies = value.ceremonies && typeof value.ceremonies === 'object' ? value.ceremonies : {};
+  const lostCeremony = Object.keys(currentCeremonies).some(id => !Object.prototype.hasOwnProperty.call(nextCeremonies, id));
+  const lostInvitation = Object.keys(currentCeremonies).some(id => {
+    const currentInvites = currentCeremonies[id]?.invitations || {};
+    const nextInvites = nextCeremonies[id]?.invitations || {};
+    return Object.keys(currentInvites).some(token => !Object.prototype.hasOwnProperty.call(nextInvites, token));
+  });
+  if (lostCeremony || lostInvitation) throw new Error('destructive-database-write-blocked');
+}
+
+function writeJsonAtomically(file, value, options = {}) {
   ensureStateDir();
+  if (file === JOUR_J_DATABASE_FILE) {
+    assertDatabaseDataPreserved(value, options.allowDataLoss === true);
+    writeSqliteDatabase(value);
+  }
   if (file === JOUR_J_DATABASE_FILE && fs.existsSync(file)) {
     fs.copyFileSync(file, JOUR_J_DATABASE_BACKUP_FILE);
   }
@@ -160,8 +217,17 @@ function writeJsonAtomically(file, value) {
 
 function readJourJDatabase(fallbackInvites = {}) {
   try {
+    const sqliteValue = readSqliteDatabase();
+    if (sqliteValue) return cleanInvitationDatabase(sqliteValue, fallbackInvites);
+  } catch (sqliteError) {
+    console.error('Base SQLite illisible, tentative de migration depuis le JSON:', sqliteError.message);
+  }
+
+  try {
     const database = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_FILE, 'utf8'));
-    return cleanInvitationDatabase(database, fallbackInvites);
+    const cleaned = cleanInvitationDatabase(database, fallbackInvites);
+    writeSqliteDatabase(cleaned);
+    return cleaned;
   } catch (e) {
     try {
       const backup = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_BACKUP_FILE, 'utf8'));
@@ -170,6 +236,7 @@ function readJourJDatabase(fallbackInvites = {}) {
       const temporaryFile = `${JOUR_J_DATABASE_FILE}.${process.pid}.${Date.now()}.restore.tmp`;
       fs.writeFileSync(temporaryFile, JSON.stringify(database, null, 2));
       fs.renameSync(temporaryFile, JOUR_J_DATABASE_FILE);
+      writeSqliteDatabase(database);
       return database;
     } catch (backupError) {
       const database = cleanInvitationDatabase(DEFAULT_JOUR_J_DATABASE, fallbackInvites);
@@ -1005,15 +1072,14 @@ const server = http.createServer(async (req, res) => {
           json(res, 400, { ok: false, error: 'last-ceremony' });
           return;
         }
-        const imageToRemove = database.ceremonies[id].invitationImage;
-        delete database.ceremonies[id];
+        database.ceremonies[id].status = 'archived';
+        database.ceremonies[id].updatedAt = now;
         if (database.activeCeremonyId === id) database.activeCeremonyId = Object.keys(database.ceremonies)[0];
-        try { removeInvitationImage(imageToRemove); } catch (e) { console.warn('Image de cérémonie non supprimée', e.message); }
       } else {
         json(res, 400, { ok: false, error: 'invalid-action' });
         return;
       }
-      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database), { allowDataLoss: action === 'delete' });
       publishDataEvent('ceremony-changed', database.activeCeremonyId, { ceremonies: Object.values(database.ceremonies).map(publicCeremony) });
       json(res, 200, { ok: true, activeCeremonyId: database.activeCeremonyId, ceremonies: Object.values(database.ceremonies).map(publicCeremony) });
     } catch (e) {
@@ -1106,7 +1172,7 @@ const server = http.createServer(async (req, res) => {
         item.guestbookMessages = (item.guestbookMessages || []).filter(message => String(message.id) !== messageId);
         item.updatedAt = deletedAt;
       });
-      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
+      writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database), { allowDataLoss: action === 'delete' || action === 'regenerate' });
       publishDataEvent('guestbook-changed', matchingMessage.ceremonyId || ceremony.id, { deletedId: messageId });
       json(res, 200, { ok: true, ceremonyId: matchingMessage.ceremonyId || ceremony.id, messages: listCeremonyGuestbookMessages(matchingMessage.ceremonyId || ceremony.id) });
     } catch (e) { json(res, 400, { ok: false, error: 'bad-request' }); }
