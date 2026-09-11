@@ -183,13 +183,17 @@ function publicCeremony(ceremony) {
 }
 
 function assertDatabaseDataPreserved(value, allowDataLoss = false) {
-  if (allowDataLoss || !fs.existsSync(JOUR_J_DATABASE_FILE)) return;
+  if (allowDataLoss) return value;
   let current;
   try {
-    current = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_FILE, 'utf8'));
+    current = readSqliteDatabase();
+    if (!current && fs.existsSync(JOUR_J_DATABASE_FILE)) {
+      current = JSON.parse(fs.readFileSync(JOUR_J_DATABASE_FILE, 'utf8'));
+    }
   } catch (error) {
-    return;
+    return value;
   }
+  if (!current) return value;
   const currentCeremonies = current.ceremonies && typeof current.ceremonies === 'object' ? current.ceremonies : {};
   const nextCeremonies = value.ceremonies && typeof value.ceremonies === 'object' ? value.ceremonies : {};
   const lostCeremony = Object.keys(currentCeremonies).some(id => !Object.prototype.hasOwnProperty.call(nextCeremonies, id));
@@ -198,13 +202,40 @@ function assertDatabaseDataPreserved(value, allowDataLoss = false) {
     const nextInvites = nextCeremonies[id]?.invitations || {};
     return Object.keys(currentInvites).some(token => !Object.prototype.hasOwnProperty.call(nextInvites, token));
   });
-  if (lostCeremony || lostInvitation) throw new Error('destructive-database-write-blocked');
+  if (lostCeremony || lostInvitation) return mergeDatabaseWithoutLoss(current, value);
+  return value;
+}
+
+function mergeDatabaseWithoutLoss(current, next) {
+  const mergedCeremonies = { ...(current.ceremonies || {}) };
+  Object.entries(next.ceremonies || {}).forEach(([id, ceremony]) => {
+    const previous = mergedCeremonies[id] || {};
+    mergedCeremonies[id] = {
+      ...previous,
+      ...ceremony,
+      invitations: { ...(previous.invitations || {}), ...(ceremony.invitations || {}) },
+      guestbookMessages: [
+        ...(previous.guestbookMessages || []),
+        ...(ceremony.guestbookMessages || [])
+      ].filter((message, index, list) => list.findIndex(item => String(item.id) === String(message.id)) === index)
+    };
+  });
+  return cleanInvitationDatabase({
+    ...current,
+    ...next,
+    ceremonies: mergedCeremonies,
+    invitations: { ...(current.invitations || {}), ...(next.invitations || {}) },
+    guestbookMessages: [
+      ...(current.guestbookMessages || []),
+      ...(next.guestbookMessages || [])
+    ].filter((message, index, list) => list.findIndex(item => String(item.id) === String(message.id)) === index)
+  });
 }
 
 function writeJsonAtomically(file, value, options = {}) {
   ensureStateDir();
   if (file === JOUR_J_DATABASE_FILE) {
-    assertDatabaseDataPreserved(value, options.allowDataLoss === true);
+    value = assertDatabaseDataPreserved(value, options.allowDataLoss === true);
     writeSqliteDatabase(value);
   }
   if (file === JOUR_J_DATABASE_FILE && fs.existsSync(file)) {
@@ -1072,9 +1103,10 @@ const server = http.createServer(async (req, res) => {
           json(res, 400, { ok: false, error: 'last-ceremony' });
           return;
         }
-        database.ceremonies[id].status = 'archived';
-        database.ceremonies[id].updatedAt = now;
+        const imageToRemove = database.ceremonies[id].invitationImage;
+        delete database.ceremonies[id];
         if (database.activeCeremonyId === id) database.activeCeremonyId = Object.keys(database.ceremonies)[0];
+        try { removeInvitationImage(imageToRemove); } catch (e) { console.warn('Image de cérémonie non supprimée', e.message); }
       } else {
         json(res, 400, { ok: false, error: 'invalid-action' });
         return;
