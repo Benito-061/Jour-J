@@ -275,7 +275,10 @@ function writeCeremonySiteData(ceremonyId, data) {
   const database = readJourJDatabase();
   const ceremony = getCeremony(database, ceremonyId);
   if (!ceremony) throw new Error('ceremony-not-found');
-  ceremony.siteData = data && typeof data === 'object' ? data : {};
+  ceremony.siteData = {
+    ...(ceremony.siteData && typeof ceremony.siteData === 'object' ? ceremony.siteData : {}),
+    ...(data && typeof data === 'object' ? data : {})
+  };
   ceremony.updatedAt = new Date().toISOString();
   if (ceremony.id === 'default') writeSiteData(ceremony.siteData);
   writeJsonAtomically(JOUR_J_DATABASE_FILE, cleanInvitationDatabase(database));
@@ -892,6 +895,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await getBody(req);
       if (!isAdminRequest(req, url, body)) { json(res, 403, { ok: false, error: 'forbidden' }); return; }
+      if (body.confirmed !== true) { json(res, 400, { ok: false, error: 'explicit-confirmation-required' }); return; }
       const database = readJourJDatabase();
       const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
       const previousImage = ceremony.invitationImage;
@@ -961,6 +965,11 @@ const server = http.createServer(async (req, res) => {
       const action = String(body.action || '').trim();
       const now = new Date().toISOString();
       const id = String(body.id || '').trim();
+
+      if (action === 'delete' && body.confirmed !== true) {
+        json(res, 400, { ok: false, error: 'explicit-confirmation-required' });
+        return;
+      }
 
       if (action === 'create') {
         const name = String(body.name || '').trim().slice(0, 160);
@@ -1070,6 +1079,10 @@ const server = http.createServer(async (req, res) => {
         json(res, 403, { ok: false, error: 'forbidden' });
         return;
       }
+      if (body.confirmed !== true) {
+        json(res, 400, { ok: false, error: 'explicit-confirmation-required' });
+        return;
+      }
       const database = readJourJDatabase();
       const ceremony = getCeremony(database, ceremonyIdFrom(url, body));
       const messageId = String(body.id || '').trim();
@@ -1173,6 +1186,10 @@ const server = http.createServer(async (req, res) => {
         state.invites[token].revoked = !active;
         state.invites[token].updatedAt = now;
       } else if (action === 'delete') {
+        if (body.confirmed !== true) {
+          json(res, 400, { ok: false, error: 'explicit-confirmation-required' });
+          return;
+        }
         delete state.invites[token];
       } else if (action === 'regenerate') {
         const guest = { ...state.invites[token], id: '' };

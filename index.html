@@ -4679,7 +4679,7 @@
                 const response = await fetch(ceremonyApiUrl('/api/guestbook'), {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, ceremonyId: getActiveCeremonyId() })
+                    body: JSON.stringify({ id, ceremonyId: getActiveCeremonyId(), confirmed: true })
                 });
                 if (!response.ok) throw new Error('delete-failed');
                 if (typeof adminShowMessage === 'function') adminShowMessage('Commentaire supprimé.', 'success');
@@ -5613,24 +5613,30 @@
             'heroGuest',
             'locationData'
         ];
-        const PROTECTED_CMS_KEYS = new Set(['weddingInvitation']);
+        const CMS_BACKUP_KEY = 'jourJCmsDataBackup';
         const CEREMONIES_BACKUP_KEY = 'jourJCeremoniesBackup';
 
-        function backupProtectedSiteData() {
-            PROTECTED_CMS_KEYS.forEach((key) => {
+        function backupSiteData() {
+            const backup = {};
+            CMS_STORAGE_KEYS.forEach((key) => {
                 const value = localStorage.getItem(key);
-                if (value !== null) {
-                    try { localStorage.setItem(`${key}Backup`, value); } catch (e) { console.warn('Sauvegarde locale impossible', key, e); }
-                }
+                if (value !== null) backup[key] = value;
             });
+            if (Object.keys(backup).length) {
+                try { localStorage.setItem(CMS_BACKUP_KEY, JSON.stringify(backup)); }
+                catch (e) { console.warn('Sauvegarde locale du site impossible', e); }
+            }
         }
 
-        function restoreProtectedSiteData() {
-            PROTECTED_CMS_KEYS.forEach((key) => {
-                if (localStorage.getItem(key) !== null) return;
-                const backup = localStorage.getItem(`${key}Backup`);
-                if (backup !== null) localStorage.setItem(key, backup);
-            });
+        function restoreSiteData() {
+            try {
+                const backup = JSON.parse(localStorage.getItem(CMS_BACKUP_KEY) || '{}');
+                CMS_STORAGE_KEYS.forEach((key) => {
+                    if (localStorage.getItem(key) === null && Object.prototype.hasOwnProperty.call(backup, key)) {
+                        localStorage.setItem(key, backup[key]);
+                    }
+                });
+            } catch (e) { console.warn('Restauration locale du site impossible', e); }
         }
 
         function getAdminSecretFromPage() {
@@ -5729,7 +5735,7 @@
 
         async function loadRemoteSiteData() {
             try {
-                backupProtectedSiteData();
+                backupSiteData();
                 const response = await fetch(ceremonyApiUrl('/api/site-data'), { method: 'GET', cache: 'no-store' });
                 if (!response.ok) return;
                 const payload = await response.json();
@@ -5738,19 +5744,15 @@
                 window.__cmsSyncInProgress = true;
                 CMS_STORAGE_KEYS.forEach((key) => {
                     if (Object.prototype.hasOwnProperty.call(data, key)) {
-                        if ((data[key] === null || typeof data[key] === 'undefined') && !PROTECTED_CMS_KEYS.has(key)) {
-                            localStorage.removeItem(key);
-                        } else if (data[key] !== null && typeof data[key] !== 'undefined') {
+                        if (data[key] !== null && typeof data[key] !== 'undefined') {
                             localStorage.setItem(key, String(data[key]));
                         }
-                    } else if (!PROTECTED_CMS_KEYS.has(key)) {
-                        localStorage.removeItem(key);
                     }
                 });
-                restoreProtectedSiteData();
+                restoreSiteData();
             } catch (e) {
                 console.warn('Chargement des donnees admin impossible', e);
-                restoreProtectedSiteData();
+                restoreSiteData();
             } finally {
                 window.__cmsSyncInProgress = false;
             }
@@ -5820,13 +5822,26 @@
         (function watchCmsStorageChanges() {
             const originalSetItem = localStorage.setItem.bind(localStorage);
             const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+            let explicitStorageDeletion = false;
+
+            window.runExplicitStorageDeletion = function (callback) {
+                explicitStorageDeletion = true;
+                try { callback(); } finally { explicitStorageDeletion = false; }
+            };
 
             localStorage.setItem = function patchedSetItem(key, value) {
                 originalSetItem(key, value);
-                if (CMS_STORAGE_KEYS.includes(key)) publishSiteDataSoon();
+                if (CMS_STORAGE_KEYS.includes(key)) {
+                    backupSiteData();
+                    publishSiteDataSoon();
+                }
             };
 
             localStorage.removeItem = function patchedRemoveItem(key) {
+                if (!explicitStorageDeletion) {
+                    console.warn('Suppression locale bloquée sans action explicite:', key);
+                    return;
+                }
                 originalRemoveItem(key);
                 if (CMS_STORAGE_KEYS.includes(key)) publishSiteDataSoon();
             };
@@ -6337,7 +6352,7 @@
         async function adminDeleteCeremony(id) {
             const ceremony = adminCeremoniesCache.find(item => item.id === id);
             if (!ceremony || !confirm(`Supprimer définitivement « ${ceremony.name} » et ses invités ?`)) return;
-            try { await postCeremonyAction({ action: 'delete', id }); await loadAdminCeremonies(); adminShowMessage('Cérémonie supprimée.', 'success'); }
+            try { await postCeremonyAction({ action: 'delete', id, confirmed: true }); await loadAdminCeremonies(); adminShowMessage('Cérémonie supprimée.', 'success'); }
             catch (error) { adminShowMessage('Impossible de supprimer cette cérémonie. La dernière cérémonie est protégée.', 'error'); }
         }
 
@@ -6543,7 +6558,7 @@
         async function adminDeleteGuest(id) {
             if (!confirm('Supprimer cet invité et son lien ?')) return;
             try {
-                await postGuestAction({ action: 'delete', id });
+                await postGuestAction({ action: 'delete', id, confirmed: true });
                 adminShowMessage('Invité supprimé.', 'success');
             } catch (e) {
                 adminShowMessage('Impossible de supprimer cet invité.', 'error');
@@ -7179,8 +7194,10 @@
 
         function adminResetProgrammeBackground() {
             if (confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser le background ?')) {
-                localStorage.removeItem('programmeBackgroundUrl');
-                localStorage.removeItem('programmeBackgroundSettings');
+                runExplicitStorageDeletion(() => {
+                    localStorage.removeItem('programmeBackgroundUrl');
+                    localStorage.removeItem('programmeBackgroundSettings');
+                });
                 document.getElementById('adminProgrammeBgFileProg').value = '';
                 document.getElementById('adminProgrammeBgOpacity').value = 60;
                 document.getElementById('adminProgrammeBgOpacityValue').textContent = '60%';
@@ -7805,7 +7822,7 @@
         async function deleteInvitationImage() {
             if (!invitationImageState.image || !confirm('Supprimer cette image de l’invitation ?')) return;
             try {
-                const response = await fetch('/api/invitation-image', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId() }) });
+                const response = await fetch('/api/invitation-image', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminSecret: getAdminSecretFromPage(), ceremonyId: getActiveCeremonyId(), confirmed: true }) });
                 const data = await response.json();
                 if (!response.ok || !data.ok) throw new Error(data.error || 'delete-failed');
                 invitationImageState.image = null;
